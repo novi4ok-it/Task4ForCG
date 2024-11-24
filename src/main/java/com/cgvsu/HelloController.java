@@ -1,0 +1,236 @@
+package com.cgvsu;
+
+import com.cgvsu.container.ModelContainer;
+import com.cgvsu.model.Model;
+import com.cgvsu.objreader.ObjReader;
+import com.cgvsu.render_engine.Camera;
+import com.cgvsu.render_engine.RenderEngine;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import javax.vecmath.Vector3f;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+public class HelloController {
+
+    final private float TRANSLATION = 0.5F;
+
+    @FXML
+    AnchorPane anchorPane;
+
+    @FXML
+    private Canvas canvas;
+
+    private Model mesh = null;
+    private List<Model> meshes = new ArrayList<>();
+    @FXML
+    private javafx.scene.control.TextField index;
+
+    @FXML
+    private VBox vboxModel;
+
+    @FXML
+    private VBox vboxCamera;
+    private ObservableList<HBox> hboxesMod = FXCollections.observableArrayList();
+    private ObservableList<HBox> hboxesCam = FXCollections.observableArrayList();
+    private int modelCounter = 1;
+    private int cameraCounter = 1;
+    private final int MAX_MODELS = 4;
+    private final int MAX_CAMERAS = 2;
+
+    private ObservableList<ModelContainer> modelContainers = FXCollections.observableArrayList();
+
+
+    private Camera camera = new Camera(
+            new Vector3f(0, 0, 100),
+            new Vector3f(0, 0, 0),
+            1.0F, 1, 0.01F, 100);
+
+    private Timeline timeline;
+
+    @FXML
+    private void initialize() {
+        anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
+        anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
+
+        timeline = new Timeline();
+        timeline.setCycleCount(Animation.INDEFINITE);
+
+        canvas.setFocusTraversable(true);
+        canvas.requestFocus();
+
+        KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
+            double width = canvas.getWidth();
+            double height = canvas.getHeight();
+
+            canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
+            camera.setAspectRatio((float) (width / height));
+
+            for (ModelContainer container : modelContainers) { // Итерируем по ModelContainer
+                RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
+            }
+        });
+
+        timeline.getKeyFrames().add(frame);
+        timeline.play();
+    }
+
+    @FXML
+    private void onOpenModelMenuItemClick() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
+        fileChooser.setTitle("Load Model");
+
+        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+
+        Path fileName = Path.of(file.getAbsolutePath());
+
+        try {
+            String fileContent = Files.readString(fileName);
+            mesh = ObjReader.read(fileContent);
+            meshes.add(mesh);
+        } catch (IOException exception) {
+            throw new RuntimeException("Неверный файл");
+        }
+    }
+
+    @FXML
+    private void addHBoxModel() {
+        onOpenModelMenuItemClick();
+        if (hboxesMod.size() >= MAX_MODELS) {
+            showAlert("Предупреждение", "Вы достигли максимального количества моделей (4).");
+            return;
+        }
+        if (hboxesMod.isEmpty()){
+            modelCounter = 1;
+        }
+        HBox hboxMod = new HBox(10);
+
+        Button modelButton = new Button("Модель " + modelCounter);
+        Button deleteModButton = new Button("Удалить");
+        Button addTextureButton = new Button("Добавить текстуру");
+        Button deleteTextureButton = new Button("Удалить текстуру");
+
+        deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
+
+        hboxMod.getChildren().addAll(modelButton, deleteModButton, addTextureButton, deleteTextureButton);
+
+        hboxesMod.add(hboxMod);
+        vboxModel.getChildren().add(hboxMod);
+        modelCounter++;
+        modelContainers.add(new ModelContainer(hboxMod, mesh));
+        canvas.requestFocus();
+    }
+
+    private void removeHBoxMod(HBox hboxMod) {
+        ModelContainer containerToRemove = null;
+        for(ModelContainer container : modelContainers){
+            if(container.hbox == hboxMod){
+                containerToRemove = container;
+                break;
+            }
+        }
+        if(containerToRemove != null) {
+            modelContainers.remove(containerToRemove);
+            hboxesMod.remove(hboxMod);
+            vboxModel.getChildren().remove(hboxMod);
+            meshes.remove(containerToRemove.mesh);
+        }
+        canvas.requestFocus();
+    }
+
+    @FXML
+    private void addHBoxCamera() {
+        if (hboxesCam.size() >= MAX_CAMERAS) {
+            showAlert("Предупреждение", "Вы достигли максимального количества камер (2).");
+            return;
+        }
+        if (hboxesCam.isEmpty()){
+            cameraCounter = 1;
+        }
+        HBox hboxCam = new HBox(10);
+
+        Button camButton = new Button("Камера " + cameraCounter);
+        Button deleteCamButton = new Button("Удалить");
+
+
+        deleteCamButton.setOnAction(e -> removeHBoxCam(hboxCam));
+
+        hboxCam.getChildren().addAll(camButton, deleteCamButton);
+
+        hboxesCam.add(hboxCam);
+        vboxCamera.getChildren().add(hboxCam);
+        cameraCounter++;
+        canvas.requestFocus();
+    }
+
+    private void removeHBoxCam(HBox hboxCam) {
+        hboxesCam.remove(hboxCam);
+        vboxCamera.getChildren().remove(hboxCam);
+        canvas.requestFocus();
+    }
+    @FXML
+    private void deleteButtonIsPressed() {
+        mesh = ObjReader.deleteVertexes(index.getText());
+    }
+
+    @FXML
+    public void handleCameraForward(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+    }
+
+    @FXML
+    public void handleCameraBackward(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(0, 0, TRANSLATION));
+    }
+
+    @FXML
+    public void handleCameraLeft(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(TRANSLATION, 0, 0));
+    }
+
+    @FXML
+    public void handleCameraRight(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+    }
+
+    @FXML
+    public void handleCameraUp(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(0, TRANSLATION, 0));
+    }
+
+    @FXML
+    public void handleCameraDown(ActionEvent actionEvent) {
+        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING, message, ButtonType.OK);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.showAndWait();
+    }
+}
