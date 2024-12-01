@@ -133,7 +133,7 @@ public class HelloController {
             canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
             camera.setAspectRatio((float) (width / height));
 
-            for (ModelContainer container : modelContainers) { // Итерируем по ModelContainer
+            for (ModelContainer container : modelContainers) {
                 RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
             }
         });
