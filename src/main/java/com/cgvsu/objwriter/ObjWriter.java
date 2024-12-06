@@ -16,7 +16,7 @@ public class ObjWriter {
     private static final String OBJ_NORMAL_TOKEN = "vn";
     private static final String OBJ_FACE_TOKEN = "f";
 
-    public static void write(Model model, String filename) {
+    public void write(Model model, String filename) {
         File file = new File(filename);
         if (!createDir(file.getParentFile()))
             return;
@@ -32,7 +32,7 @@ public class ObjWriter {
         }
     }
 
-    private static boolean createDir(File directory) {
+    private boolean createDir(File directory) {
         if (directory != null && !directory.exists() && !directory.mkdirs()) {
             System.out.println("Couldn't create dir: " + directory);
             return false;
@@ -40,7 +40,7 @@ public class ObjWriter {
         return true;
     }
 
-    private static boolean createFile(File file) {
+    private boolean createFile(File file) {
         try {
             if (!file.createNewFile())
                 System.out.println("Warning: " + file.getName() + " already exists");
@@ -51,19 +51,19 @@ public class ObjWriter {
         return true;
     }
 
-    protected static String vertexToString(Vector3f vector) {
+    protected String vertexToString(Vector3f vector) {
         return OBJ_VERTEX_TOKEN + " " + vector.getX() + " " + vector.getY() + " " + vector.getZ();
     }
 
-    protected static String textureVertexToString(Vector2f vector) {
+    protected String textureVertexToString(Vector2f vector) {
         return OBJ_TEXTURE_TOKEN + " " + vector.getX() + " " + vector.getY();
     }
 
-    protected static String normalToString(Vector3f vector) {
+    protected String normalToString(Vector3f vector) {
         return OBJ_NORMAL_TOKEN + " " + vector.getX() + " " + vector.getY() + " " + vector.getZ();
     }
 
-    protected static String polygonToString(Polygon polygon) {
+    protected String polygonToString(Polygon polygon) {
         StringBuilder stringBuilder = new StringBuilder(OBJ_FACE_TOKEN);
         List<Integer> vertexIndices = polygon.getVertexIndices();
         List<Integer> textureVertexIndices = polygon.getTextureVertexIndices();
@@ -93,7 +93,7 @@ public class ObjWriter {
         return stringBuilder.toString();
     }
 
-    private static int getFormattedIndex(List<Integer> indices, int index) {
+    private int getFormattedIndex(List<Integer> indices, int index) {
         return indices.get(index) + 1;
     }
 }

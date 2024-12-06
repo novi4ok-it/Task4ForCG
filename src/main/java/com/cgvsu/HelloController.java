@@ -5,7 +5,6 @@ import com.cgvsu.model.Model;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
-import com.cgvsu.objwriter.ObjWriter;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -17,7 +16,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -42,51 +40,6 @@ public class HelloController {
 
     @FXML
     private Canvas canvas;
-
-    @FXML
-    private TextField pointOfDirX;
-
-    @FXML
-    private TextField pointOfDirY;
-
-    @FXML
-    private TextField pointOfDirZ;
-
-    @FXML
-    private TextField positionX;
-
-    @FXML
-    private TextField positionY;
-
-    @FXML
-    private TextField positionZ;
-
-    @FXML
-    private TextField rotateX;
-
-    @FXML
-    private TextField rotateY;
-
-    @FXML
-    private TextField rotateZ;
-
-    @FXML
-    private TextField scaleX;
-
-    @FXML
-    private TextField scaleY;
-
-    @FXML
-    private TextField scaleZ;
-
-    @FXML
-    private TextField translateX;
-
-    @FXML
-    private TextField translateY;
-
-    @FXML
-    private TextField translateZ;
 
     private Model mesh = null;
     private List<Model> meshes = new ArrayList<>();
@@ -133,7 +86,7 @@ public class HelloController {
             canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
             camera.setAspectRatio((float) (width / height));
 
-            for (ModelContainer container : modelContainers) {
+            for (ModelContainer container : modelContainers) { // Итерируем по ModelContainer
                 RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
             }
         });
@@ -177,36 +130,18 @@ public class HelloController {
         HBox hboxMod = new HBox(10);
 
         Button modelButton = new Button("Модель " + modelCounter);
-        Button saveObjModInFileButton = new Button("Сохранить");
         Button deleteModButton = new Button("Удалить");
         Button addTextureButton = new Button("Добавить текстуру");
         Button deleteTextureButton = new Button("Удалить текстуру");
 
-        saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
 
-        hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
+        hboxMod.getChildren().addAll(modelButton, deleteModButton, addTextureButton, deleteTextureButton);
 
         hboxesMod.add(hboxMod);
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
-        canvas.requestFocus();
-    }
-    private void saveModelToFile(Model mesh) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save OBJ Model");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("OBJ files (*.obj)", "*.obj")
-        );
-
-        File file = fileChooser.showSaveDialog((Stage) canvas.getScene().getWindow());
-        if (file != null) {
-            ObjWriter.write(mesh, file.getAbsolutePath()); // Используем ваш ObjWriter
-            showSuccessAlert("Успех!", "Модель успешно сохранена в файл: " + file.getAbsolutePath());
-        } else {
-            showErrorAlert("Ошибка!", "Ошибка при сохранении модели");
-        }
         canvas.requestFocus();
     }
 
@@ -252,7 +187,6 @@ public class HelloController {
         canvas.requestFocus();
     }
 
-
     private void removeHBoxCam(HBox hboxCam) {
         hboxesCam.remove(hboxCam);
         vboxCamera.getChildren().remove(hboxCam);
@@ -261,7 +195,6 @@ public class HelloController {
     @FXML
     private void deleteButtonIsPressed() {
         mesh = ObjReader.deleteVertexes(index.getText());
-        canvas.requestFocus();
     }
 
     @FXML
@@ -296,19 +229,6 @@ public class HelloController {
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-    private void showSuccessAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.showAndWait();
