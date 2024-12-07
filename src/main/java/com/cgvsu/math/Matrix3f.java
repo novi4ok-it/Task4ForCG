@@ -1,6 +1,9 @@
 package com.cgvsu.math;
 
 public class Matrix3f {
+
+    public float[][] mat;//мб одномерный
+
     public Matrix3f(float[][] mat){
         if (mat.length != 3 || mat[0].length != 3) {
             throw new IllegalArgumentException("Matrix must be 3x3");
@@ -8,49 +11,54 @@ public class Matrix3f {
         this.mat = mat;
     }
 
-    public Matrix3f() {
-        this.mat = new float[3][3];
-    }
     public Matrix3f(float numeric) {
         this.mat = new float[3][3];
         for (int i = 0; i < 3; i++) {
             this.mat[i][i] = numeric;
         }
     }
-    float[][] mat;//мб одномерный
 
-    public static Matrix3f add(Matrix3f m1, Matrix3f m2){
-        Matrix3f res = new Matrix3f(new float[3][3]);
-        for(int y = 0; y<3; y++){
-            for(int x = 0; x<3; x++){
-                res.mat[y][x] = m1.mat[y][x] + m2.mat[y][x];
+
+    public Matrix3f add(Matrix3f other) {
+        float[][] result = new float[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                result[i][j] = this.mat[i][j] + other.mat[i][j];
             }
         }
-        return res;
+        return new Matrix3f(result);
     }
 
-    public static Matrix3f sub(Matrix3f m1, Matrix3f m2){
-        Matrix3f res = new Matrix3f(new float[3][3]);
-        for(int y = 0; y<3; y++){
-            for(int x = 0; x<3; x++){
-                res.mat[y][x] = m1.mat[y][x] - m2.mat[y][x];
+
+    public Matrix3f sub(Matrix3f other) {
+        float[][] result = new float[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                result[i][j] = this.mat[i][j] - other.mat[i][j];
             }
         }
-        return res;
+        return new Matrix3f(result);
     }
 
-    public static Matrix3f multiply(Matrix3f m1, Matrix3f m2){
-        Matrix3f res = new Matrix3f(new float[3][3]);;
-        for (int arr1y = 0; arr1y<3; arr1y++){
-            for (int arr2x = 0; arr2x<3; arr2x++){
-                float a = 0;
-                for (int i = 0; i<3; i++){
-                    a+=m1.mat[arr1y][i] * m2.mat[i][arr2x];
+    public Matrix3f multiply(Matrix3f other) {
+        float[][] result = new float[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                result[i][j] = 0;
+                for (int k = 0; k < 3; k++) {
+                    result[i][j] += this.mat[i][k] * other.mat[k][j];
                 }
-                res.mat[arr1y][arr2x] = a;
             }
         }
-        return res;
+        return new Matrix3f(result);
+    }
+
+    public Vector3f multiplyvec(Vector3f vector) {
+        return new Vector3f(
+                this.mat[0][0] * vector.x() + this.mat[0][1] * vector.y() + this.mat[0][2] * vector.getZ(),
+                this.mat[1][0] * vector.x() + this.mat[1][1] * vector.y() + this.mat[1][2] * vector.getZ(),
+                this.mat[2][0] * vector.x() + this.mat[2][1] * vector.y() + this.mat[2][2] * vector.getZ()
+        );
     }
 
     public void transpose(){
@@ -62,6 +70,9 @@ public class Matrix3f {
             }
         }
     }
+
+
+
 
     public float determinant() {
         return mat[0][0] * (mat[1][1] * mat[2][2] - mat[1][2] * mat[2][1])
