@@ -3,6 +3,9 @@ package com.cgvsu.math;
 import static com.cgvsu.math.Global.EPS;
 
 public class Vector4f implements Vector<Vector4f> {
+
+    public float x, y, z, w;
+
     public Vector4f(float x, float y, float z, float w) {
         this.x = x;
         this.y = y;
@@ -10,27 +13,42 @@ public class Vector4f implements Vector<Vector4f> {
         this.w = w;
     }
 
-    float x, y, z, w;
 
-    public float x() {
+    @Override
+    public float x(){
         return x;
     }
-
-    public float y() {
+    @Override
+    public float y(){
         return y;
     }
+    public float getZ(){
+        return z;
+    }
+    public float getW(){
+        return w;
+    }
 
+
+    @Override
+    public void add(Vector4f v) {
+        this.x += v.x;
+        this.y += v.y;
+        this.z += v.z;
+        this.w += v.w;
+    }
 
     public static Vector4f addition(Vector4f v1, Vector4f v2) {
         return new Vector4f(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w);
     }
 
+
     @Override
-    public void add(Vector4f v) {
-        x += v.x;
-        y += v.y;
-        z += v.z;
-        w += v.w;
+    public void sub(Vector4f v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        this.z -= v.z;
+        this.w -= v.w;
     }
 
     public static Vector4f subtraction(Vector4f v1, Vector4f v2) {
@@ -38,11 +56,11 @@ public class Vector4f implements Vector<Vector4f> {
     }
 
     @Override
-    public void sub(Vector4f v) {
-        x -= v.x;
-        y -= v.y;
-        z -= v.z;
-        w -= v.w;
+    public void mult(float scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        this.w *= scalar;
     }
 
     @Override
@@ -51,35 +69,28 @@ public class Vector4f implements Vector<Vector4f> {
     }
 
     @Override
-    public void mult(float c) {
-        x *= c;
-        y *= c;
-        z *= c;
-        w *= c;
+    public void div(float scalar) {
+        if (scalar < EPS) {
+            throw new ArithmeticException("Division by zero is not allowed.");
+        }
+        this.x /= scalar;
+        this.y /= scalar;
+        this.z /= scalar;
+        this.w /= scalar;
     }
 
     @Override
-    public Vector4f divide(float c) {
-        if (c < EPS) {
+    public Vector4f divide(float scalar) {
+        if (scalar < EPS) {
             throw new ArithmeticException("Division by zero is not allowed.");
         }
-        return new Vector4f(x / c, y / c, z / c, w / c);
+        return new Vector4f(this.x / scalar, this.y / scalar, this.z / scalar, this.w / scalar);
     }
 
-    @Override
-    public void div(float c) {
-        if (c < EPS) {
-            throw new ArithmeticException("Division by zero is not allowed.");
-        }
-        x /= c;
-        y /= c;
-        z /= c;
-        w /= c;
-    }
 
     @Override
     public float length() {
-        return (float) Math.sqrt(x * x + y * y + z * z + w * w);
+        return (float) Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
     }
 
     @Override
@@ -88,8 +99,7 @@ public class Vector4f implements Vector<Vector4f> {
         if (length < EPS) {
             throw new ArithmeticException("Normalization of a zero vector is not allowed.");
         }
-        float invLength = 1 / length;
-        return this.multiply(invLength);
+        return this.divide(length);
     }
 
     public static float dotProduct(Vector4f v1, Vector4f v2) {

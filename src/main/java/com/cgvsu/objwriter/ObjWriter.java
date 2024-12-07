@@ -52,15 +52,15 @@ public class ObjWriter {
     }
 
     protected static String vertexToString(Vector3f vector) {
-        return OBJ_VERTEX_TOKEN + " " + vector.getX() + " " + vector.getY() + " " + vector.getZ();
+        return OBJ_VERTEX_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.getZ();
     }
 
     protected static String textureVertexToString(Vector2f vector) {
-        return OBJ_TEXTURE_TOKEN + " " + vector.getX() + " " + vector.getY();
+        return OBJ_TEXTURE_TOKEN + " " + vector.x() + " " + vector.y();
     }
 
     protected static String normalToString(Vector3f vector) {
-        return OBJ_NORMAL_TOKEN + " " + vector.getX() + " " + vector.getY() + " " + vector.getZ();
+        return OBJ_NORMAL_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.getZ();
     }
 
     protected static String polygonToString(Polygon polygon) {

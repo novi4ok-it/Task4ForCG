@@ -12,19 +12,13 @@ public class Vector3f implements Vector<Vector3f> {
     }
 
     public float x, y, z;
+
+    @Override
     public float x() {
         return x;
     }
-
+    @Override
     public float y() {
-        return y;
-    }
-
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
         return y;
     }
 
@@ -32,11 +26,22 @@ public class Vector3f implements Vector<Vector3f> {
         return z;
     }
 
+    public void setX(float x){
+        this.x = x;
+    }
+
+    public void setY(float y){
+        this.y = y;
+    }
+    public void setZ(float z){
+        this.z = z;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Vector3f vector3f)) return false;
-        return Float.compare(x, vector3f.x) == 0 && Float.compare(y, vector3f.y) == 0 && Float.compare(z, vector3f.z) == 0;
+        return Float.compare(this.x, vector3f.x) == 0 && Float.compare(this.y, vector3f.y) == 0 && Float.compare(this.z, vector3f.z) == 0;
     }
 
     @Override
@@ -44,15 +49,23 @@ public class Vector3f implements Vector<Vector3f> {
         return Objects.hash(x, y, z);
     }
 
+    @Override
+    public void add(Vector3f vec) {
+        this.x += vec.x;
+        this.y += vec.y;
+        this.z += vec.z;
+    }
+
     public static Vector3f addition(Vector3f v1, Vector3f v2) {
         return new Vector3f(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
     }
 
+
     @Override
-    public void add(Vector3f v) {
-        x += v.x;
-        y += v.y;
-        z += v.z;
+    public void sub(Vector3f vec) {
+        this.x -= vec.x;
+        this.y -= vec.y;
+        this.z -= vec.z;
     }
 
     public static Vector3f subtraction(Vector3f v1, Vector3f v2) {
@@ -60,45 +73,40 @@ public class Vector3f implements Vector<Vector3f> {
     }
 
     @Override
-    public void sub(Vector3f v) {
-        x -= v.x;
-        y -= v.y;
-        z -= v.z;
+    public void mult(float scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+    }
+
+
+    @Override
+    public Vector3f multiply(float scalar) {
+        return new Vector3f(this.x * scalar, this.y * scalar, this.z * scalar);
     }
 
     @Override
-    public Vector3f multiply(float c) {
-        return new Vector3f(c * x, c * y, c * z);
-    }
-
-    @Override
-    public void mult(float c) {
-        x *= c;
-        y *= c;
-        z *= c;
-    }
-
-    @Override
-    public Vector3f divide(float c) {
-        if (c < EPS) {
+    public void div(float scalar) {
+        if (scalar < EPS) {
             throw new ArithmeticException("Division by zero is not allowed.");
         }
-        return new Vector3f(x / c, y / c, z / c);
+        this.x /= scalar;
+        this.y /= scalar;
+        this.z /= scalar;
     }
 
     @Override
-    public void div(float c) {
-        if (c < EPS) {
+    public Vector3f divide(float scalar) {
+        if (scalar < EPS) {
             throw new ArithmeticException("Division by zero is not allowed.");
         }
-        x /= c;
-        y /= c;
-        z /= c;
+        return new Vector3f(this.x / scalar, this.y / scalar, this.z / scalar);
     }
+
 
     @Override
     public float length() {
-        return (float) Math.sqrt(x * x + y * y + z * z);
+        return (float) Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
     @Override
@@ -107,20 +115,30 @@ public class Vector3f implements Vector<Vector3f> {
         if (length < EPS) {
             throw new ArithmeticException("Normalization of a zero vector is not allowed.");
         }
-        float invLength = 1 / length;
-        this.mult(invLength);
-        return this;
+//        float invLength = 1 / length;
+//        this.mult(invLength);
+//        return this;
+        return this.divide(length);
+    }
+
+    public Vector3f cross(Vector3f other) {
+        return new Vector3f(
+                this.y * other.z - this.z * other.y,
+                this.z * other.x - this.x * other.z,
+                this.x * other.y - this.y * other.x
+        );
+    }
+
+    public static Vector3f crossProduct(Vector3f v1, Vector3f v2) {
+        return new Vector3f(
+                v1.y * v2.z - v1.z * v2.y,
+                v1.z * v2.x - v1.x * v2.z,
+                v1.x * v2.y - v1.y * v2.x
+        );
     }
 
     public static float dotProduct(Vector3f v1, Vector3f v2) {
         return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    }
-
-    public static Vector3f crossProduct(Vector3f v1, Vector3f v2) {
-        final float x = v1.y * v2.z - v1.z * v2.y;
-        final float y = v1.z * v2.x - v1.x * v2.z;
-        final float z = v1.x * v2.y - v1.y * v2.x;
-        return new Vector3f(x, y, z);
     }
 
     @Override
