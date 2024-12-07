@@ -126,6 +126,25 @@ public class HelloController {
         canvas.setFocusTraversable(true);
         canvas.requestFocus();
 
+        positionX.setOnKeyReleased(event -> handlePositionChange("x"));
+        positionY.setOnKeyReleased(event -> handlePositionChange("y"));
+        positionZ.setOnKeyReleased(event -> handlePositionChange("z"));
+
+        pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
+        pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
+
+        scaleX.setOnKeyReleased(event -> handleScaleChange("x"));
+        scaleY.setOnKeyReleased(event -> handleScaleChange("y"));
+        scaleZ.setOnKeyReleased(event -> handleScaleChange("z"));
+
+        rotateX.setOnKeyReleased(event -> handleRotateChange("x"));
+        rotateY.setOnKeyReleased(event -> handleRotateChange("y"));
+        rotateZ.setOnKeyReleased(event -> handleRotateChange("z"));
+
+        translateX.setOnKeyReleased(event -> handleTranslateChange("x"));
+        translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
+        translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
+
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
             double width = canvas.getWidth();
             double height = canvas.getHeight();
@@ -164,9 +183,118 @@ public class HelloController {
         }
     }
 
+    private void handlePositionChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
+            updateCamPosition(axis, value);
+        } catch (NumberFormatException e) {
+            // Обработка ошибки (некорректный ввод)
+            System.err.println("Некорректный ввод: " + e.getMessage());
+        }
+    }
+
+    private void handlePointToDirChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
+            updateCamPosition(axis, value);
+        } catch (NumberFormatException e) {
+            // Обработка ошибки (некорректный ввод)
+            System.err.println("Некорректный ввод: " + e.getMessage());
+        }
+    }
+
+    private void handleScaleChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "Scale"));
+            updateModelPosition(axis, value);
+        } catch (NumberFormatException e) {
+            // Обработка ошибки (некорректный ввод)
+            System.err.println("Некорректный ввод: " + e.getMessage());
+        }
+    }
+
+    private void handleRotateChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "Rotate"));
+            updateModelPosition(axis, value);
+        } catch (NumberFormatException e) {
+            // Обработка ошибки (некорректный ввод)
+            System.err.println("Некорректный ввод: " + e.getMessage());
+        }
+    }
+
+    private void handleTranslateChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "Translate"));
+            updateModelPosition(axis, value);
+        } catch (NumberFormatException e) {
+            // Обработка ошибки (некорректный ввод)
+            System.err.println("Некорректный ввод: " + e.getMessage());
+        }
+    }
+
+    private String getTextFieldValue(String axis) {
+        switch (axis) {
+            case "xPosition": return positionX.getText();
+            case "yPosition": return positionY.getText();
+            case "zPosition": return positionZ.getText();
+
+            case "xPointToDir": return pointOfDirX.getText();
+            case "yPointToDir": return pointOfDirY.getText();
+
+            case "xScale": return scaleX.getText();
+            case "yScale": return scaleY.getText();
+            case "zScale": return scaleZ.getText();
+
+            case "xRotate": return rotateX.getText();
+            case "yRotate": return rotateY.getText();
+            case "zRotate": return rotateZ.getText();
+
+            case "xTranslate": return translateX.getText();
+            case "yTranslate": return translateY.getText();
+            case "zTranslate": return translateZ.getText();
+
+            default: return "";
+        }
+    }
+
+    private void updateModelPosition(String axis, float value) {
+        switch (axis) {
+            case "x":
+                //mesh.translate(new Vector3f(value, 0, 0));
+                break;
+            case "y":
+                //mesh.translate(new Vector3f(0, value, 0));
+                break;
+            case "z":
+                //mesh.translate(new Vector3f(0, 0, value));
+                break;
+        }
+        // Обновить отображение вашей модели на канвасе
+        //renderScene();
+    }
+
+    private void updateCamPosition(String axis, float value) {
+        switch (axis) {
+            case "x":
+                camera.setPosition(new Vector3f(value, 0, 0));
+                break;
+            case "y":
+                camera.setPosition(new Vector3f(0, value, 0));
+                break;
+            case "z":
+                camera.setPosition(new Vector3f(0, 0, value));
+                break;
+        }
+        // Обновить отображение вашей камеры на канвасе
+        //renderScene();
+    }
     @FXML
     private void addHBoxModel() {
         onOpenModelMenuItemClick();
+        if (mesh == null) {
+            return;
+        }
         if (hboxesMod.size() >= MAX_MODELS) {
             showAlert("Предупреждение", "Вы достигли максимального количества моделей (4).");
             return;
@@ -181,9 +309,11 @@ public class HelloController {
         Button deleteModButton = new Button("Удалить");
         Button addTextureButton = new Button("Добавить текстуру");
         Button deleteTextureButton = new Button("Удалить текстуру");
+        //TextField deleteVertexButton = new TextField("Удалить вершину");
 
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
+        //deleteVertexButton.setOnAction(e -> deleteButtonIsPressed(deleteVertexButton));
 
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
@@ -259,8 +389,8 @@ public class HelloController {
         canvas.requestFocus();
     }
     @FXML
-    private void deleteButtonIsPressed() {
-        mesh = ObjReader.deleteVertexes(index.getText());
+    private void deleteButtonIsPressed(TextField deleteVertexButton) {
+        //mesh = Eraser.vertexDelete(mesh, List.of(Integer.valueOf(deleteVertexButton.getText())),true,true,true,true);
         canvas.requestFocus();
     }
 
