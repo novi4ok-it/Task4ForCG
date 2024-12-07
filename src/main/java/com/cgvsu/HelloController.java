@@ -132,6 +132,7 @@ public class HelloController {
 
         pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
         pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
+        pointOfDirZ.setOnKeyReleased(event -> handlePointToDirChange("z"));
 
         scaleX.setOnKeyReleased(event -> handleScaleChange("x"));
         scaleY.setOnKeyReleased(event -> handleScaleChange("y"));
@@ -243,6 +244,7 @@ public class HelloController {
 
             case "xPointToDir": return pointOfDirX.getText();
             case "yPointToDir": return pointOfDirY.getText();
+            case "zPointToDir": return pointOfDirZ.getText();
 
             case "xScale": return scaleX.getText();
             case "yScale": return scaleY.getText();
