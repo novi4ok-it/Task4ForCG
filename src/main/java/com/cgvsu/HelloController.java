@@ -145,6 +145,13 @@ public class HelloController {
         translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
+        canvas.setOnMouseClicked(event -> {
+            if (!canvas.isFocused()) {
+                canvas.requestFocus();
+                event.consume();
+            }
+        });
+
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
             double width = canvas.getWidth();
             double height = canvas.getHeight();
@@ -188,8 +195,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            // Обработка ошибки (некорректный ввод)
-            System.err.println("Некорректный ввод: " + e.getMessage());
+            showErrorAlert("Предупреждение", "Вы ввели неккоретное значение");
         }
     }
 
@@ -198,8 +204,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            // Обработка ошибки (некорректный ввод)
-            System.err.println("Некорректный ввод: " + e.getMessage());
+            showErrorAlert("Предупреждение", "Вы ввели неккоретное значение");
         }
     }
 
@@ -208,8 +213,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Scale"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            // Обработка ошибки (некорректный ввод)
-            System.err.println("Некорректный ввод: " + e.getMessage());
+            showErrorAlert("Предупреждение", "Вы ввели неккоретное значение");
         }
     }
 
@@ -218,8 +222,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Rotate"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            // Обработка ошибки (некорректный ввод)
-            System.err.println("Некорректный ввод: " + e.getMessage());
+            showErrorAlert("Предупреждение", "Вы ввели неккоретное значение");
         }
     }
 
@@ -228,8 +231,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Translate"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            // Обработка ошибки (некорректный ввод)
-            System.err.println("Некорректный ввод: " + e.getMessage());
+            showErrorAlert("Предупреждение", "Вы ввели неккоретное значение");
         }
     }
 
@@ -321,7 +323,6 @@ public class HelloController {
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
-        canvas.requestFocus();
     }
     private void saveModelToFile(Model mesh) {
         FileChooser fileChooser = new FileChooser();
@@ -337,7 +338,6 @@ public class HelloController {
         } else {
             showErrorAlert("Ошибка!", "Ошибка при сохранении модели");
         }
-        canvas.requestFocus();
     }
 
     private void removeHBoxMod(HBox hboxMod) {
@@ -354,7 +354,6 @@ public class HelloController {
             vboxModel.getChildren().remove(hboxMod);
             meshes.remove(containerToRemove.mesh);
         }
-        canvas.requestFocus();
     }
 
     @FXML
@@ -379,19 +378,16 @@ public class HelloController {
         hboxesCam.add(hboxCam);
         vboxCamera.getChildren().add(hboxCam);
         cameraCounter++;
-        canvas.requestFocus();
     }
 
 
     private void removeHBoxCam(HBox hboxCam) {
         hboxesCam.remove(hboxCam);
         vboxCamera.getChildren().remove(hboxCam);
-        canvas.requestFocus();
     }
     @FXML
     private void deleteButtonIsPressed(TextField deleteVertexButton) {
         //mesh = Eraser.vertexDelete(mesh, List.of(Integer.valueOf(deleteVertexButton.getText())),true,true,true,true);
-        canvas.requestFocus();
     }
 
     @FXML

@@ -9,7 +9,6 @@ public class Vector2f implements Vector<Vector2f> {
         this.x = x;
         this.y = y;
     }
-
     float x, y;
 
 	public float x() {
