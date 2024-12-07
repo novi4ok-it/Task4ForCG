@@ -2,6 +2,7 @@ package com.cgvsu.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Polygon {
 
@@ -39,6 +40,22 @@ public class Polygon {
         assert normalIndices.size() >= 3;
         this.normalIndices = normalIndices;
     }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Polygon polygon = (Polygon) obj;
+        return Objects.equals(vertexIndices, polygon.vertexIndices);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(vertexIndices);
+    }
 
     public ArrayList<Integer> getVertexIndices() {
         return vertexIndices;
@@ -51,4 +68,5 @@ public class Polygon {
     public ArrayList<Integer> getNormalIndices() {
         return normalIndices;
     }
+
 }
