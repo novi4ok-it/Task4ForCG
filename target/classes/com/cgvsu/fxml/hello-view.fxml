@@ -3,6 +3,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
@@ -67,7 +68,7 @@
          </children>
       </AnchorPane>
    </SplitPane>
-   <SplitPane dividerPositions="0.34338682899833967" layoutX="1015.0" layoutY="1.0" orientation="VERTICAL" prefHeight="724.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
+   <SplitPane dividerPositions="0.9286109573879356" layoutX="1015.0" layoutY="1.0" orientation="VERTICAL" prefHeight="724.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="478.0" style="-fx-background-color: #6b6b6b;">
          <Label layoutX="14.0" layoutY="14.0" prefHeight="18.0" prefWidth="62.0" text="Объекты" textFill="WHITE" AnchorPane.topAnchor="15.0" />
          <TitledPane animated="false" layoutX="4.0" layoutY="50.0" prefHeight="202.0" prefWidth="514.0" style="-fx-background-color: #6b6b6b;" text="Модели">
@@ -100,6 +101,9 @@
                </AnchorPane>
             </content>
          </TitledPane>
+         <CheckBox fx:id="poligonalGrid" layoutX="9.0" layoutY="471.0" mnemonicParsing="false" text="Нарисовать полигональную сетку" />
+         <CheckBox fx:id="lighting" layoutX="9.0" layoutY="495.0" mnemonicParsing="false" text="Использовать освещение" />
+         <CheckBox fx:id="texture" layoutX="9.0" layoutY="518.0" mnemonicParsing="false" text="Использовать текстуру" />
       </AnchorPane>
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="366.0" prefWidth="481.0" style="-fx-background-color: #6b6b6b;">
          <children>

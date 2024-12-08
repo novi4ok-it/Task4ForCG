@@ -1,11 +1,14 @@
 package com.cgvsu;
 
 import com.cgvsu.container.ModelContainer;
+import com.cgvsu.math.Vector2f;
 import com.cgvsu.model.Model;
+import com.cgvsu.model.Polygon;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
+import com.cgvsu.triangulation.EarClipping;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -14,10 +17,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -31,7 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HelloController {
-
+    private boolean showPoligonalGrid = false;
+    private boolean showTexture = false;
     final private float TRANSLATION = 0.5F;
 
     @FXML
@@ -45,6 +52,8 @@ public class HelloController {
 
     @FXML
     private CheckBox poligonalGrid;
+    @FXML
+    private CheckBox texture;
 
     @FXML
     private TextField pointOfDirX;
@@ -154,6 +163,9 @@ public class HelloController {
         translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
+        poligonalGrid.setOnAction(event -> showPoligonalGrid = poligonalGrid.isSelected());
+        texture.setOnAction(event -> showTexture = texture.isSelected());
+
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
             double width = canvas.getWidth();
             double height = canvas.getHeight();
@@ -163,11 +175,74 @@ public class HelloController {
 
             for (ModelContainer container : modelContainers) {
                 RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
+
+                // Рисуем полигональную сетку, если включена
+                if (showPoligonalGrid) {
+                    renderPoligonalGrid(canvas.getGraphicsContext2D(), container.mesh, (int) width, (int) height);
+                }
+
+                // Рисуем текстуру, если включена
+                if (showTexture) {
+                    renderTexture(canvas.getGraphicsContext2D(), container.mesh, (int) width, (int) height);
+                }
             }
         });
 
         timeline.getKeyFrames().add(frame);
         timeline.play();
+    }
+    private void renderPoligonalGrid(GraphicsContext gc, Model model, int width, int height) {
+        List<com.cgvsu.math.Vector3f> vertices = model.getVertices();
+        List<Polygon> polygons = model.getTriangulatedPolygons();
+
+        gc.setStroke(Color.BLACK);
+        for (Polygon polygon : polygons) {
+            List<com.cgvsu.math.Vector3f> points = polygon.getPoints(vertices);
+            for (int i = 0; i < points.size(); i++) {
+                com.cgvsu.math.Vector3f p1 = points.get(i);
+                com.cgvsu.math.Vector3f p2 = points.get((i + 1) % points.size());
+
+                // Преобразуем координаты и рисуем линии
+                int x1 = (int) (p1.x * width);
+                int y1 = (int) (p1.y * height);
+                int x2 = (int) (p2.x * width);
+                int y2 = (int) (p2.y * height);
+
+                gc.strokeLine(x1, y1, x2, y2);
+            }
+        }
+    }
+
+    // Логика для отрисовки текстуры
+    private void renderTexture(GraphicsContext gc, Model model, int width, int height) {
+        // Получаем данные текстуры из модели
+        Image texture = model.getTexture();
+        if (texture == null) {
+            return; // Если текстуры нет, ничего не делаем
+        }
+
+        List<com.cgvsu.math.Vector3f> vertices = model.getVertices();
+        List<Vector2f> texCoords = model.getTextureVertices();
+
+        List<Polygon> polygons = model.getTriangulatedPolygons();
+
+        for (Polygon polygon : polygons) {
+            List<com.cgvsu.math.Vector3f> points = polygon.getPoints();
+            List<Vector2f> uvs = polygon.getTexCoords();
+
+            // Преобразуем координаты для рисования
+            double[] xPoints = new double[points.size()];
+            double[] yPoints = new double[points.size()];
+            for (int i = 0; i < points.size(); i++) {
+                xPoints[i] = points.get(i).x * width;
+                yPoints[i] = points.get(i).y * height;
+            }
+
+            // Используем текстурные координаты для наложения текстуры
+            gc.drawImage(texture,
+                         0, 0, texture.getWidth(), texture.getHeight(),
+                         xPoints[0], yPoints[0], width, height);
+        }
     }
 
     @FXML

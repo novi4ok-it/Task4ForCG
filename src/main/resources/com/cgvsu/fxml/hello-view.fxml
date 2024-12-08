@@ -103,6 +103,7 @@
          </TitledPane>
          <CheckBox fx:id="poligonalGrid" layoutX="9.0" layoutY="471.0" mnemonicParsing="false" text="Нарисовать полигональную сетку" />
          <CheckBox fx:id="lighting" layoutX="9.0" layoutY="495.0" mnemonicParsing="false" text="Использовать освещение" />
+         <CheckBox fx:id="texture" layoutX="9.0" layoutY="518.0" mnemonicParsing="false" text="Использовать текстуру" />
       </AnchorPane>
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="366.0" prefWidth="481.0" style="-fx-background-color: #6b6b6b;">
          <children>
