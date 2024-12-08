@@ -1,7 +1,6 @@
 package com.cgvsu;
 
 import com.cgvsu.container.ModelContainer;
-import com.cgvsu.math.Vector2f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.objreader.ObjReader;
@@ -17,13 +16,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -37,8 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HelloController {
-    private boolean showPoligonalGrid = false;
-    private boolean showTexture = false;
+
     final private float TRANSLATION = 0.5F;
 
     @FXML
@@ -52,6 +47,7 @@ public class HelloController {
 
     @FXML
     private CheckBox poligonalGrid;
+
     @FXML
     private CheckBox texture;
 
@@ -101,6 +97,8 @@ public class HelloController {
     private TextField translateZ;
 
     private Model mesh = null;
+    private Model triangulatedModel = null; // Для хранения триангулированной модели
+
     private List<Model> meshes = new ArrayList<>();
     @FXML
     private javafx.scene.control.TextField index;
@@ -110,6 +108,7 @@ public class HelloController {
 
     @FXML
     private VBox vboxCamera;
+
     private ObservableList<HBox> hboxesMod = FXCollections.observableArrayList();
     private ObservableList<HBox> hboxesCam = FXCollections.observableArrayList();
     private int modelCounter = 1;
@@ -118,7 +117,6 @@ public class HelloController {
     private final int MAX_CAMERAS = 2;
 
     private ObservableList<ModelContainer> modelContainers = FXCollections.observableArrayList();
-
 
     private Camera camera = new Camera(
             new Vector3f(0, 0, 100),
@@ -163,8 +161,13 @@ public class HelloController {
         translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
-        poligonalGrid.setOnAction(event -> showPoligonalGrid = poligonalGrid.isSelected());
-        texture.setOnAction(event -> showTexture = texture.isSelected());
+        poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                triangulateCurrentModel();
+            } else {
+                triangulatedModel = null;
+            }
+        });
 
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
             double width = canvas.getWidth();
@@ -174,75 +177,36 @@ public class HelloController {
             camera.setAspectRatio((float) (width / height));
 
             for (ModelContainer container : modelContainers) {
-                RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
-
-                // Рисуем полигональную сетку, если включена
-                if (showPoligonalGrid) {
-                    renderPoligonalGrid(canvas.getGraphicsContext2D(), container.mesh, (int) width, (int) height);
-                }
-
-                // Рисуем текстуру, если включена
-                if (showTexture) {
-                    renderTexture(canvas.getGraphicsContext2D(), container.mesh, (int) width, (int) height);
-                }
+                RenderEngine.render(
+                        canvas.getGraphicsContext2D(),
+                        camera,
+                        poligonalGrid.isSelected() && triangulatedModel != null ? triangulatedModel : container.mesh,
+                        (int) width,
+                        (int) height
+                );
             }
         });
 
         timeline.getKeyFrames().add(frame);
         timeline.play();
     }
-    private void renderPoligonalGrid(GraphicsContext gc, Model model, int width, int height) {
-        List<com.cgvsu.math.Vector3f> vertices = model.getVertices();
-        List<Polygon> polygons = model.getTriangulatedPolygons();
 
-        gc.setStroke(Color.BLACK);
-        for (Polygon polygon : polygons) {
-            List<com.cgvsu.math.Vector3f> points = polygon.getPoints(vertices);
-            for (int i = 0; i < points.size(); i++) {
-                com.cgvsu.math.Vector3f p1 = points.get(i);
-                com.cgvsu.math.Vector3f p2 = points.get((i + 1) % points.size());
-
-                // Преобразуем координаты и рисуем линии
-                int x1 = (int) (p1.x * width);
-                int y1 = (int) (p1.y * height);
-                int x2 = (int) (p2.x * width);
-                int y2 = (int) (p2.y * height);
-
-                gc.strokeLine(x1, y1, x2, y2);
-            }
-        }
-    }
-
-    // Логика для отрисовки текстуры
-    private void renderTexture(GraphicsContext gc, Model model, int width, int height) {
-        // Получаем данные текстуры из модели
-        Image texture = model.getTexture();
-        if (texture == null) {
-            return; // Если текстуры нет, ничего не делаем
+    private void triangulateCurrentModel() {
+        if (mesh == null) {
+            return;
         }
 
-        List<com.cgvsu.math.Vector3f> vertices = model.getVertices();
-        List<Vector2f> texCoords = model.getTextureVertices();
+        Model triangulated = new Model();
+        triangulated.vertices.addAll(mesh.vertices);
+        triangulated.textureVertices.addAll(mesh.textureVertices);
+        triangulated.normals.addAll(mesh.normals);
 
-        List<Polygon> polygons = model.getTriangulatedPolygons();
-
-        for (Polygon polygon : polygons) {
-            List<com.cgvsu.math.Vector3f> points = polygon.getPoints();
-            List<Vector2f> uvs = polygon.getTexCoords();
-
-            // Преобразуем координаты для рисования
-            double[] xPoints = new double[points.size()];
-            double[] yPoints = new double[points.size()];
-            for (int i = 0; i < points.size(); i++) {
-                xPoints[i] = points.get(i).x * width;
-                yPoints[i] = points.get(i).y * height;
-            }
-
-            // Используем текстурные координаты для наложения текстуры
-            gc.drawImage(texture,
-                         0, 0, texture.getWidth(), texture.getHeight(),
-                         xPoints[0], yPoints[0], width, height);
+        for (Polygon polygon : mesh.polygons) {
+            List<Polygon> triangles = EarClipping.triangulate(polygon, triangulated.vertices);
+            triangulated.polygons.addAll(triangles);
         }
+
+        triangulatedModel = triangulated;
     }
 
     @FXML
@@ -272,7 +236,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение","Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
 
@@ -281,7 +245,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение","Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
 
@@ -290,7 +254,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Scale"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение","Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
 
@@ -299,7 +263,7 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Rotate"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение","Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
 
@@ -308,33 +272,49 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "Translate"));
             updateModelPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение","Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
 
     private String getTextFieldValue(String axis) {
         switch (axis) {
-            case "xPosition": return positionX.getText();
-            case "yPosition": return positionY.getText();
-            case "zPosition": return positionZ.getText();
+            case "xPosition":
+                return positionX.getText();
+            case "yPosition":
+                return positionY.getText();
+            case "zPosition":
+                return positionZ.getText();
 
-            case "xPointToDir": return pointOfDirX.getText();
-            case "yPointToDir": return pointOfDirY.getText();
-            case "zPointToDir": return pointOfDirZ.getText();
+            case "xPointToDir":
+                return pointOfDirX.getText();
+            case "yPointToDir":
+                return pointOfDirY.getText();
+            case "zPointToDir":
+                return pointOfDirZ.getText();
 
-            case "xScale": return scaleX.getText();
-            case "yScale": return scaleY.getText();
-            case "zScale": return scaleZ.getText();
+            case "xScale":
+                return scaleX.getText();
+            case "yScale":
+                return scaleY.getText();
+            case "zScale":
+                return scaleZ.getText();
 
-            case "xRotate": return rotateX.getText();
-            case "yRotate": return rotateY.getText();
-            case "zRotate": return rotateZ.getText();
+            case "xRotate":
+                return rotateX.getText();
+            case "yRotate":
+                return rotateY.getText();
+            case "zRotate":
+                return rotateZ.getText();
 
-            case "xTranslate": return translateX.getText();
-            case "yTranslate": return translateY.getText();
-            case "zTranslate": return translateZ.getText();
+            case "xTranslate":
+                return translateX.getText();
+            case "yTranslate":
+                return translateY.getText();
+            case "zTranslate":
+                return translateZ.getText();
 
-            default: return "";
+            default:
+                return "";
         }
     }
 
@@ -369,6 +349,7 @@ public class HelloController {
         // Обновить отображение вашей камеры на канвасе
         //renderScene();
     }
+
     @FXML
     private void addHBoxModel() {
         onOpenModelMenuItemClick();
@@ -379,7 +360,7 @@ public class HelloController {
             showAlert("Предупреждение", "Вы достигли максимального количества моделей (4).");
             return;
         }
-        if (hboxesMod.isEmpty()){
+        if (hboxesMod.isEmpty()) {
             modelCounter = 1;
         }
         HBox hboxMod = new HBox(10);
@@ -402,6 +383,7 @@ public class HelloController {
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
     }
+
     private void saveModelToFile(Model mesh) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save OBJ Model");
@@ -420,13 +402,13 @@ public class HelloController {
 
     private void removeHBoxMod(HBox hboxMod) {
         ModelContainer containerToRemove = null;
-        for(ModelContainer container : modelContainers){
-            if(container.hbox == hboxMod){
+        for (ModelContainer container : modelContainers) {
+            if (container.hbox == hboxMod) {
                 containerToRemove = container;
                 break;
             }
         }
-        if(containerToRemove != null) {
+        if (containerToRemove != null) {
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
@@ -440,7 +422,7 @@ public class HelloController {
             showAlert("Предупреждение", "Вы достигли максимального количества камер (2).");
             return;
         }
-        if (hboxesCam.isEmpty()){
+        if (hboxesCam.isEmpty()) {
             cameraCounter = 1;
         }
         HBox hboxCam = new HBox(10);
@@ -463,6 +445,7 @@ public class HelloController {
         hboxesCam.remove(hboxCam);
         vboxCamera.getChildren().remove(hboxCam);
     }
+
     @FXML
     private void deleteButtonIsPressed(TextField deleteVertexButton) {
         //mesh = Eraser.vertexDelete(mesh, List.of(Integer.valueOf(deleteVertexButton.getText())),true,true,true,true);
@@ -504,6 +487,7 @@ public class HelloController {
         alert.setHeaderText(null);
         alert.showAndWait();
     }
+
     private void showSuccessAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
         alert.setTitle(title);
