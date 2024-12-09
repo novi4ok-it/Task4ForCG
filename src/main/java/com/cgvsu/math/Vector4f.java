@@ -113,4 +113,20 @@ public class Vector4f implements Vector<Vector4f> {
                 && Math.abs(z - other.z) < EPS
                 && Math.abs(w - other.w) < EPS;
     }
+
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
 }

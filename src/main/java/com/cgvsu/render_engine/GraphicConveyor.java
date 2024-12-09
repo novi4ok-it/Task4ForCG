@@ -37,41 +37,41 @@ public class GraphicConveyor {
         resultZ.normalize();
 
         Matrix4f result = new Matrix4f();
-    result.set(0, 0, resultX.x());
-    result.set(0, 1, resultY.x());
-    result.set(0, 2, resultZ.x());
-    result.set(0, 3, 0);
+        result.set(0, 0, resultX.x());
+        result.set(0, 1, resultY.x());
+        result.set(0, 2, resultZ.x());
+        result.set(0, 3, 0);
 
-    result.set(1, 0, resultX.y());
-    result.set(1, 1, resultY.y());
-    result.set(1, 2, resultZ.y());
-    result.set(1, 3, 0);
+        result.set(1, 0, resultX.y());
+        result.set(1, 1, resultY.y());
+        result.set(1, 2, resultZ.y());
+        result.set(1, 3, 0);
 
-    result.set(2, 0, resultX.z());
-    result.set(2, 1, resultY.z());
-    result.set(2, 2, resultZ.z());
-    result.set(2, 3, 0);
+        result.set(2, 0, resultX.z());
+        result.set(2, 1, resultY.z());
+        result.set(2, 2, resultZ.z());
+        result.set(2, 3, 0);
 
-    result.set(3, 0, -resultX.dot(eye));
-    result.set(3, 1, -resultY.dot(eye));
-    result.set(3, 2, -resultZ.dot(eye));
-    result.set(3, 3, 1);
+        result.set(3, 0, -resultX.dot(eye));
+        result.set(3, 1, -resultY.dot(eye));
+        result.set(3, 2, -resultZ.dot(eye));
+        result.set(3, 3, 1);
 
-    return result;
-}
+        return result;
+    }
 
     public static Matrix4f perspective(
             final float fov,
             final float aspectRatio,
             final float nearPlane,
             final float farPlane) {
-        Matrix4f result = new Matrix4f();
-        float tangentMinusOnDegree = (float) (1.0F / (Math.tan(fov * 0.5F)));
-        result.set(0, 0, tangentMinusOnDegree / aspectRatio);
-        result.set(1, 1, tangentMinusOnDegree);
-        result.set(2, 2, (farPlane + nearPlane) / (farPlane - nearPlane));
-        result.set(2, 3, 1.0F);
-        result.set(3, 2, 2 * (nearPlane * farPlane) / (nearPlane - farPlane));
+        float tanHalfFov = (float) Math.tan(fov / 2.0);
+        Matrix4f result = new Matrix4f(new float[]{
+                1 / (aspectRatio * tanHalfFov), 0, 0, 0,
+                0, 1 / tanHalfFov, 0, 0,
+                0, 0, -(farPlane + nearPlane) / (farPlane - nearPlane), -1,
+                0, 0, -(2 * farPlane * nearPlane) / (farPlane - nearPlane), 0
+        });
         return result;
     }
 

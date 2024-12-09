@@ -52,7 +52,7 @@ public class ObjWriter {
     }
 
     protected static String vertexToString(Vector3f vector) {
-        return OBJ_VERTEX_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.getZ();
+        return OBJ_VERTEX_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.z();
     }
 
     protected static String textureVertexToString(Vector2f vector) {
@@ -60,7 +60,7 @@ public class ObjWriter {
     }
 
     protected static String normalToString(Vector3f vector) {
-        return OBJ_NORMAL_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.getZ();
+        return OBJ_NORMAL_TOKEN + " " + vector.x() + " " + vector.y() + " " + vector.z();
     }
 
     protected static String polygonToString(Polygon polygon) {

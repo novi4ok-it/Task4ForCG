@@ -8,7 +8,8 @@ import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
 import com.cgvsu.math.Matrix4f;
-import javax.vecmath.Point2f;
+
+import com.cgvsu.math.Point2f;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
@@ -54,8 +55,8 @@ public class RenderEngine {
                 double[] xPoints = new double[nVerticesInPolygon];
                 double[] yPoints = new double[nVerticesInPolygon];
                 for (int i = 0; i < nVerticesInPolygon; ++i) {
-                    xPoints[i] = resultPoints.get(i).x;
-                    yPoints[i] = resultPoints.get(i).y;
+                    xPoints[i] = resultPoints.get(i).getX();
+                    yPoints[i] = resultPoints.get(i).getY();
                 }
 
                 // Задаем цвет заливки
@@ -67,33 +68,48 @@ public class RenderEngine {
             graphicsContext.setStroke(javafx.scene.paint.Color.BLACK); // Цвет линий
             for (int vertexInPolygonInd = 1; vertexInPolygonInd < nVerticesInPolygon; ++vertexInPolygonInd) {
                 graphicsContext.strokeLine(
-                        resultPoints.get(vertexInPolygonInd - 1).x,
-                        resultPoints.get(vertexInPolygonInd - 1).y,
-                        resultPoints.get(vertexInPolygonInd).x,
-                        resultPoints.get(vertexInPolygonInd).y);
+                        resultPoints.get(vertexInPolygonInd - 1).getX(),
+                        resultPoints.get(vertexInPolygonInd - 1).getY(),
+                        resultPoints.get(vertexInPolygonInd).getX(),
+                        resultPoints.get(vertexInPolygonInd).getY());
             }
 
             // Замыкаем контур (линия от последней вершины к первой)
             if (nVerticesInPolygon > 0) {
                 graphicsContext.strokeLine(
-                        resultPoints.get(nVerticesInPolygon - 1).x,
-                        resultPoints.get(nVerticesInPolygon - 1).y,
-                        resultPoints.get(0).x,
-                        resultPoints.get(0).y);
+                        resultPoints.get(nVerticesInPolygon - 1).getX(),
+                        resultPoints.get(nVerticesInPolygon - 1).getY(),
+                        resultPoints.get(0).getX(),
+                        resultPoints.get(0).getY());
             }
         }
     }
 
     private static Matrix4f rotateScaleTranslate() {
-        // Пример создания матрицы преобразования
-        return new Matrix4f(new float[]{1.0f}); // Единичная матрица
+        float scale = 1.0f; // Масштабирование
+        float tx = 0.0f, ty = 0.0f, tz = 0.0f; // Сдвиг по осям
+        return new Matrix4f(new float[]{
+                scale, 0.0f, 0.0f, tx, // Первая строка
+                0.0f, scale, 0.0f, ty, // Вторая строка
+                0.0f, 0.0f, scale, tz, // Третья строка
+                0.0f, 0.0f, 0.0f, 1.0f  // Четвёртая строка
+        });
     }
 
     private static Point2f vertexToPoint(Vector4f vertex, int width, int height) {
-        // Нормализуем координаты и преобразуем в экранные
-        return new Point2f(
-                (vertex.x() / vertex.getW() + 1) * 0.5f * width,
-                (1 - vertex.y() / vertex.getW()) * 0.5f * height
-        );
+        // Проверяем, что W не равно 0
+        if (Math.abs(vertex.getW()) < 1e-6) {
+            throw new IllegalArgumentException("Invalid W component for vertex transformation.");
+        }
+
+        // Нормализуем координаты
+        float normalizedX = vertex.getX() / vertex.getW();
+        float normalizedY = vertex.getY() / vertex.getW();
+
+        // Преобразуем к экранным координатам
+        float screenX = (normalizedX + 1) * 0.5f * width;
+        float screenY = (1 - normalizedY) * 0.5f * height;
+
+        return new Point2f(screenX, screenY);
     }
 }

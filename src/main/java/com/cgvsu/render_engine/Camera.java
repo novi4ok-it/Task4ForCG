@@ -1,4 +1,5 @@
 package com.cgvsu.render_engine;
+
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.math.Matrix4f;
 
@@ -18,6 +19,13 @@ public class Camera {
             final float aspectRatio,
             final float nearPlane,
             final float farPlane) {
+        if (aspectRatio <= 0.0f) {
+            throw new IllegalArgumentException("Aspect ratio must be greater than 0.");
+        }
+        if (nearPlane <= 0.0f || farPlane <= nearPlane) {
+            throw new IllegalArgumentException("Invalid near or far plane values.");
+        }
+
         this.position = position;
         this.target = target;
         this.fov = fov;
@@ -26,7 +34,6 @@ public class Camera {
         this.farPlane = farPlane;
     }
 
-    // Геттеры и сеттеры
     public Vector3f getPosition() {
         return position;
     }
@@ -75,7 +82,6 @@ public class Camera {
         this.farPlane = farPlane;
     }
 
-    // Методы перемещения
     public void movePosition(final Vector3f translation) {
         this.position.add(translation);
     }
@@ -84,7 +90,6 @@ public class Camera {
         this.target.add(translation);
     }
 
-    // Методы получения матриц
     public Matrix4f getViewMatrix() {
         return GraphicConveyor.lookAt(position, target);
     }

@@ -12,6 +12,9 @@ public class Matrix4f {
     }
 
     public Matrix4f(float[] mat) {
+        if (mat == null) {
+            throw new IllegalArgumentException("Matrix array cannot be null.");
+        }
         if (mat.length != 16) {
             throw new IllegalArgumentException("Matrix must contain exactly 16 elements.");
         }
@@ -32,6 +35,14 @@ public class Matrix4f {
             result[i] = this.mat[i] + other.mat[i];
         }
         return new Matrix4f(result);
+    }
+
+    public Vector4f multiplyvec(Vector4f vector) {
+        float x = this.get(0, 0) * vector.x + this.get(0, 1) * vector.y + this.get(0, 2) * vector.z + this.get(0, 3) * vector.w;
+        float y = this.get(1, 0) * vector.x + this.get(1, 1) * vector.y + this.get(1, 2) * vector.z + this.get(1, 3) * vector.w;
+        float z = this.get(2, 0) * vector.x + this.get(2, 1) * vector.y + this.get(2, 2) * vector.z + this.get(2, 3) * vector.w;
+        float w = this.get(3, 0) * vector.x + this.get(3, 1) * vector.y + this.get(3, 2) * vector.z + this.get(3, 3) * vector.w;
+        return new Vector4f(x, y, z, w);
     }
 
     public Matrix4f sub(Matrix4f other) {
