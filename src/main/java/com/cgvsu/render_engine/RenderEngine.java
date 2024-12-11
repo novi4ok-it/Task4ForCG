@@ -7,7 +7,7 @@ import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
 import javax.vecmath.Matrix4f;
-import javax.vecmath.Point2f;
+import com.cgvsu.math.Point2f;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 

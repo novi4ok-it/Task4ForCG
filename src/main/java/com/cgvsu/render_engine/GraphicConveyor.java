@@ -1,5 +1,9 @@
 package com.cgvsu.render_engine;
-import javax.vecmath.*;
+import com.cgvsu.math.Vector3f;
+
+import javax.vecmath.Matrix4f;
+import com.cgvsu.math.Point2f;
+
 
 public class GraphicConveyor {
 
