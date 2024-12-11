@@ -1,21 +1,22 @@
 package com.cgvsu.render_engine;
 import com.cgvsu.math.Vector3f;
 
-import javax.vecmath.Matrix4f;
+import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
 
 
 public class GraphicConveyor {
 
+    // Создание единичной матрицы (вращение, масштаб, перенос)
     public static Matrix4f rotateScaleTranslate() {
-        float[] matrix = new float[]{
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1};
-        return new Matrix4f(matrix);
+        Matrix4f result = new Matrix4f();
+        for (int i = 0; i < 4; i++) {
+            result.set(i, i, 1.0F);
+        }
+        return result;
     }
 
+    // Создание матрицы вида
     public static Matrix4f lookAt(Vector3f eye, Vector3f target) {
         return lookAt(eye, target, new Vector3f(0F, 1.0F, 0F));
     }
@@ -33,35 +34,48 @@ public class GraphicConveyor {
         resultY.normalize();
         resultZ.normalize();
 
-        float[] matrix = new float[]{
-                resultX.x, resultY.x, resultZ.x, 0,
-                resultX.y, resultY.y, resultZ.y, 0,
-                resultX.z, resultY.z, resultZ.z, 0,
-                -resultX.dot(eye), -resultY.dot(eye), -resultZ.dot(eye), 1};
-        return new Matrix4f(matrix);
-    }
-
-    public static Matrix4f perspective(
-            final float fov,
-            final float aspectRatio,
-            final float nearPlane,
-            final float farPlane) {
         Matrix4f result = new Matrix4f();
-        float tangentMinusOnDegree = (float) (1.0F / (Math.tan(fov * 0.5F)));
-        result.m00 = tangentMinusOnDegree / aspectRatio;
-        result.m11 = tangentMinusOnDegree;
-        result.m22 = (farPlane + nearPlane) / (farPlane - nearPlane);
-        result.m23 = 1.0F;
-        result.m32 = 2 * (nearPlane * farPlane) / (nearPlane - farPlane);
+        result.set(0, 0, resultX.x());
+        result.set(0, 1, resultY.x());
+        result.set(0, 2, resultZ.x());
+        result.set(1, 0, resultX.y());
+        result.set(1, 1, resultY.y());
+        result.set(1, 2, resultZ.y());
+        result.set(2, 0, resultX.z());
+        result.set(2, 1, resultY.z());
+        result.set(2, 2, resultZ.z());
+        result.set(3, 0, -resultX.dot(eye));
+        result.set(3, 1, -resultY.dot(eye));
+        result.set(3, 2, -resultZ.dot(eye));
+        result.set(3, 3, 1.0F);
+
         return result;
     }
 
-    public static Vector3f multiplyMatrix4ByVector3(final Matrix4f matrix, final com.cgvsu.math.Vector3f vertex) {
-        final float x = (vertex.x * matrix.m00) + (vertex.y * matrix.m10) + (vertex.z * matrix.m20) + matrix.m30;
-        final float y = (vertex.x * matrix.m01) + (vertex.y * matrix.m11) + (vertex.z * matrix.m21) + matrix.m31;
-        final float z = (vertex.x * matrix.m02) + (vertex.y * matrix.m12) + (vertex.z * matrix.m22) + matrix.m32;
-        final float w = (vertex.x * matrix.m03) + (vertex.y * matrix.m13) + (vertex.z * matrix.m23) + matrix.m33;
-        return new Vector3f(x / w, y / w, z / w);
+     public static Matrix4f perspective(float fov, float aspectRatio, float nearPlane, float farPlane) {
+        Matrix4f result = new Matrix4f();
+        float tangentMinusOnDegree = (float) (1.0F / Math.tan(fov * 0.5F));
+        result.set(0, 0, tangentMinusOnDegree / aspectRatio);
+        result.set(1, 1, tangentMinusOnDegree);
+        result.set(2, 2, (farPlane + nearPlane) / (farPlane - nearPlane));
+        result.set(2, 3, 1.0F);
+        result.set(3, 2, 2 * (nearPlane * farPlane) / (nearPlane - farPlane));
+        return result;
+    }
+
+    public static Vector3f multiplyMatrix4ByVector3(Matrix4f matrix, Vector3f vertex) {
+        float x = vertex.x() * matrix.get(0, 0) + vertex.y() * matrix.get(1, 0) + vertex.z() * matrix.get(2, 0) + matrix.get(3, 0);
+        float y = vertex.x() * matrix.get(0, 1) + vertex.y() * matrix.get(1, 1) + vertex.z() * matrix.get(2, 1) + matrix.get(3, 1);
+        float z = vertex.x() * matrix.get(0, 2) + vertex.y() * matrix.get(1, 2) + vertex.z() * matrix.get(2, 2) + matrix.get(3, 2);
+        float w = vertex.x() * matrix.get(0, 3) + vertex.y() * matrix.get(1, 3) + vertex.z() * matrix.get(2, 3) + matrix.get(3, 3);
+
+        if (w != 0) {
+            x /= w;
+            y /= w;
+            z /= w;
+        }
+
+        return new Vector3f(x, y, z);
     }
 
     public static Point2f vertexToPoint(final Vector3f vertex, final int width, final int height) {

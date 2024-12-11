@@ -55,9 +55,9 @@ public class Matrix3f {
 
     public Vector3f multiplyvec(Vector3f vector) {
         return new Vector3f(
-                this.mat[0][0] * vector.x() + this.mat[0][1] * vector.y() + this.mat[0][2] * vector.getZ(),
-                this.mat[1][0] * vector.x() + this.mat[1][1] * vector.y() + this.mat[1][2] * vector.getZ(),
-                this.mat[2][0] * vector.x() + this.mat[2][1] * vector.y() + this.mat[2][2] * vector.getZ()
+                this.mat[0][0] * vector.x() + this.mat[0][1] * vector.y() + this.mat[0][2] * vector.z(),
+                this.mat[1][0] * vector.x() + this.mat[1][1] * vector.y() + this.mat[1][2] * vector.z(),
+                this.mat[2][0] * vector.x() + this.mat[2][1] * vector.y() + this.mat[2][2] * vector.z()
         );
     }
 

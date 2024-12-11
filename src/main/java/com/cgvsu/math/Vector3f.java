@@ -1,6 +1,5 @@
 package com.cgvsu.math;
 
-import javax.vecmath.Tuple3f;
 import java.util.Objects;
 
 import static com.cgvsu.math.Global.EPS;
@@ -25,7 +24,7 @@ public class Vector3f implements Vector<Vector3f> {
         return y;
     }
 
-    public float getZ() {
+    public float z() {
         return z;
     }
 
