@@ -3,6 +3,7 @@ package com.cgvsu;
 import com.cgvsu.container.ModelContainer;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
+import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
@@ -241,6 +242,20 @@ public class HelloController {
             mesh = ObjReader.read(fileContent);
             meshes.add(mesh);
             triangulateModel();
+            // Пересчёт нормалей
+            List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);
+            mesh.normals.clear();
+            mesh.normals.addAll(recalculatedNormals);
+
+            // Обновляем индексы нормалей для каждого полигона
+            for (Polygon polygon : mesh.polygons) {
+                List<Integer> normalIndices = new ArrayList<>();
+                for (int vertexIndex : polygon.getVertexIndices()) {
+                    normalIndices.add(vertexIndex); // Индексы нормалей совпадают с индексами вершин
+                }
+                polygon.setNormalIndices(new ArrayList<>(normalIndices));
+            }
+
         } catch (IOException exception) {
             throw new RuntimeException("Неверный файл");
         }

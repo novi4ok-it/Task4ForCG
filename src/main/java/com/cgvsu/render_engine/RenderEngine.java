@@ -45,6 +45,7 @@ public class RenderEngine {
             int[] arrY = new int[3];
             float[] arrZ = new float[3];
             Point2f[] texCoords = new Point2f[3];
+            float[] lightIntensities = new float[3];
 
             for (int vertexInd = 0; vertexInd < nVerticesInPolygon; ++vertexInd) {
                 int vertexIndex = polygon.getVertexIndices().get(vertexInd);
@@ -69,13 +70,21 @@ public class RenderEngine {
                 } else {
                     texCoords[vertexInd] = new Point2f(0, 0);
                 }
+                int normalIndex = polygon.getNormalIndices().get(vertexInd);
+                Vector3f normal = mesh.normals.get(normalIndex);
+
+                // Направление на источник света (камера является источником света)
+                Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();
+                // Интенсивность света
+                lightIntensities[vertexInd] = Math.max(0, normal.dot(lightDir));
             }
 
             // Растеризация треугольника с текстурой или стандартным цветом
             if (mesh.hasTexture()) {
-                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture);
+                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities);
             } else {
-                Rasterization.fillTriangle(graphicsContext, arrX, arrY, arrZ, Color.BLUE);
+                // Средняя интенсивность света для треугольника (если текстуры нет)
+                Rasterization.fillTriangleWithShading(graphicsContext, arrX, arrY, arrZ, lightIntensities, Color.BLUE);
             }
         }
     }

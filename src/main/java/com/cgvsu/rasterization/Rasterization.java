@@ -27,50 +27,82 @@ public class Rasterization {
         }
     }
 
-    public static void fillTriangle(
-            final GraphicsContext graphicsContext,
-            final int[] arrX,
-            final int[] arrY,
-            final float[] arrZ,
-            final Color color) {
+    public static boolean checkZBuffer(int x, int y, float z) {
+        // Проверяем, находится ли точка в пределах экрана
+        if (x < 0 || x >= zBuffer.length || y < 0 || y >= zBuffer[0].length) {
+            return false;
+        }
 
-        // Упорядочиваем вершины по Y
-        sortVerticesByY(arrX, arrY, arrZ);
+        // Проверяем глубину: рисовать только если точка ближе
+        return z < zBuffer[x][y];
+    }
 
-        for (int y = arrY[0]; y <= arrY[2]; y++) {
-            if (y < 0 || y >= zBuffer[0].length) continue; // Проверяем границы Y
+    public static void updateZBuffer(int x, int y, float z) {
+        // Обновляем Z-буфер только для допустимых координат
+        if (x >= 0 && x < zBuffer.length && y >= 0 && y < zBuffer[0].length) {
+            zBuffer[x][y] = z;
+        }
+    }
 
-            int x1, x2;
-            float z1, z2;
+    public static void fillTriangleWithShading(
+            GraphicsContext graphicsContext,
+            int[] arrX, int[] arrY, float[] arrZ,
+            float[] lightIntensities, Color baseColor) {
 
-            if (y <= arrY[1]) {
-                // Нижняя часть треугольника
-                x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolateZ(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
-                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-            } else {
-                // Верхняя часть треугольника
-                x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolateZ(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
-                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
+        // Сортируем вершины треугольника по Y (для упрощения растеризации)
+        int[] indices = {0, 1, 2};
+        for (int i = 0; i < 3; i++) {
+            for (int j = i + 1; j < 3; j++) {
+                if (arrY[indices[i]] > arrY[indices[j]]) {
+                    int temp = indices[i];
+                    indices[i] = indices[j];
+                    indices[j] = temp;
+                }
+            }
+        }
+
+        int x1 = arrX[indices[0]], y1 = arrY[indices[0]];
+        int x2 = arrX[indices[1]], y2 = arrY[indices[1]];
+        int x3 = arrX[indices[2]], y3 = arrY[indices[2]];
+
+        float z1 = arrZ[indices[0]], z2 = arrZ[indices[1]], z3 = arrZ[indices[2]];
+        float i1 = lightIntensities[indices[0]], i2 = lightIntensities[indices[1]], i3 = lightIntensities[indices[2]];
+
+        // Растеризация треугольника с интерполяцией интенсивности света
+        for (int y = y1; y <= y3; y++) {
+            float alpha = (y3 == y1) ? 1 : (float) (y - y1) / (y3 - y1);
+            float beta = (y2 == y1 || y < y2) ? 0 : (float) (y - y2) / (y3 - y2);
+
+            int xa = x1 + Math.round(alpha * (x3 - x1));
+            int xb = (y < y2) ? (x1 + Math.round(alpha * (x2 - x1))) : (x2 + Math.round(beta * (x3 - x2)));
+
+            float za = z1 + alpha * (z3 - z1);
+            float zb = (y < y2) ? (z1 + alpha * (z2 - z1)) : (z2 + beta * (z3 - z2));
+
+            float ia = i1 + alpha * (i3 - i1);
+            float ib = (y < y2) ? (i1 + alpha * (i2 - i1)) : (i2 + beta * (i3 - i2));
+
+            if (xa > xb) {
+                int tempX = xa;
+                xa = xb;
+                xb = tempX;
+                float tempZ = za;
+                za = zb;
+                zb = tempZ;
+                float tempI = ia;
+                ia = ib;
+                ib = tempI;
             }
 
-            if (x1 > x2) {
-                int tempX = x1;
-                x1 = x2;
-                x2 = tempX;
-                float tempZ = z1;
-                z1 = z2;
-                z2 = tempZ;
-            }
+            for (int x = xa; x <= xb; x++) {
+                float t = (xb == xa) ? 0 : (float) (x - xa) / (xb - xa);
+                float z = za + t * (zb - za);
+                float intensity = ia + t * (ib - ia);
 
-            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
-                float z = interpolateZ(x, x1, x2, z1, z2);
-                if (z < zBuffer[x][y]) {
-                    zBuffer[x][y] = z;
-                    graphicsContext.getPixelWriter().setColor(x, y, color);
+                if (checkZBuffer(x, y, z)) {
+                    Color shadedColor = baseColor.deriveColor(0, 1, intensity, 1);
+                    graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
+                    updateZBuffer(x, y, z);
                 }
             }
         }
@@ -108,10 +140,11 @@ public class Rasterization {
             final int[] arrY,
             final float[] arrZ,
             final Point2f[] texCoords,
-            final Image texture) {
+            final Image texture,
+            final float[] lightIntensities) {
 
         // Упорядочиваем вершины по Y
-        sortVerticesByY(arrX, arrY, arrZ, texCoords);
+        sortVerticesByY(arrX, arrY, arrZ, texCoords, lightIntensities);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
             if (y < 0 || y >= graphicsContext.getCanvas().getHeight()) continue;
@@ -119,6 +152,7 @@ public class Rasterization {
             int x1, x2;
             float z1, z2;
             Point2f t1, t2;
+            float i1, i2;
 
             if (y <= arrY[1]) {
                 x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
@@ -127,6 +161,8 @@ public class Rasterization {
                 z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
                 t1 = interpolateTexCoord(y, arrY[0], arrY[1], texCoords[0], texCoords[1]);
                 t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
+                i1 = interpolate(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
+                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
             } else {
                 x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
                 x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
@@ -134,9 +170,12 @@ public class Rasterization {
                 z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
                 t1 = interpolateTexCoord(y, arrY[1], arrY[2], texCoords[1], texCoords[2]);
                 t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
+                i1 = interpolate(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
+                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
             }
 
             if (x1 > x2) {
+                // Swap
                 int tempX = x1;
                 x1 = x2;
                 x2 = tempX;
@@ -148,18 +187,55 @@ public class Rasterization {
                 Point2f tempT = t1;
                 t1 = t2;
                 t2 = tempT;
+
+                float tempI = i1;
+                i1 = i2;
+                i2 = tempI;
             }
 
             for (int x = x1; x <= x2; x++) {
                 float z = interpolate(x, x1, x2, z1, z2);
                 if (z < zBuffer[x][y]) {
                     Point2f texCoord = interpolateTexCoord(x, x1, x2, t1, t2);
+                    float intensity = interpolate(x, x1, x2, i1, i2);
+
+                    // Применяем интенсивность света к цвету
                     Color color = sampleTexture(texture, texCoord.x, texCoord.y);
+                    color = color.deriveColor(0, 1, intensity, 1);
+
                     graphicsContext.getPixelWriter().setColor(x, y, color);
                     zBuffer[x][y] = z;
                 }
             }
         }
+    }
+
+    private static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities) {
+        if (arrY[0] > arrY[1]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 0, 1);
+        if (arrY[1] > arrY[2]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 1, 2);
+        if (arrY[0] > arrY[1]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 0, 1);
+    }
+
+    private static void swap(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities, int i, int j) {
+        int tempX = arrX[i];
+        arrX[i] = arrX[j];
+        arrX[j] = tempX;
+
+        int tempY = arrY[i];
+        arrY[i] = arrY[j];
+        arrY[j] = tempY;
+
+        float tempZ = arrZ[i];
+        arrZ[i] = arrZ[j];
+        arrZ[j] = tempZ;
+
+        Point2f tempT = texCoords[i];
+        texCoords[i] = texCoords[j];
+        texCoords[j] = tempT;
+
+        float tempI = lightIntensities[i];
+        lightIntensities[i] = lightIntensities[j];
+        lightIntensities[j] = tempI;
     }
 
     private static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords) {

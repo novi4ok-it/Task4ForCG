@@ -38,6 +38,14 @@ public class Vector3f implements Vector<Vector3f> {
     public void setZ(float z){
         this.z = z;
     }
+    // Линейная интерполяция между двумя векторами
+    public static Vector3f lerp(Vector3f start, Vector3f end, float t) {
+        return new Vector3f(
+                start.x + t * (end.x - start.x),
+                start.y + t * (end.y - start.y),
+                start.z + t * (end.z - start.z)
+        );
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -86,6 +94,13 @@ public class Vector3f implements Vector<Vector3f> {
     }
     public final float dot(Vector3f var1) {
         return this.x * var1.x + this.y * var1.y + this.z * var1.z;
+    }
+    public Vector3f normalizek() {
+        float length = (float) Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        if (length == 0) {
+            return new Vector3f(0, 0, 0); // Нулевой вектор
+        }
+        return new Vector3f(this.x / length, this.y / length, this.z / length);
     }
 
     @Override
