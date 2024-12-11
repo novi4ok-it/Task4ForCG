@@ -3,11 +3,12 @@ package com.cgvsu;
 import com.cgvsu.container.ModelContainer;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
+import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
-import com.cgvsu.triangulation.EarClipping;
+import com.cgvsu.triangulation.Triangulation;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -16,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -25,6 +27,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import com.cgvsu.math.Vector3f;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -97,8 +100,6 @@ public class HelloController {
     private TextField translateZ;
 
     private Model mesh = null;
-    private Model triangulatedModel = null; // Для хранения триангулированной модели
-
     private List<Model> meshes = new ArrayList<>();
     @FXML
     private javafx.scene.control.TextField index;
@@ -108,7 +109,6 @@ public class HelloController {
 
     @FXML
     private VBox vboxCamera;
-
     private ObservableList<HBox> hboxesMod = FXCollections.observableArrayList();
     private ObservableList<HBox> hboxesCam = FXCollections.observableArrayList();
     private int modelCounter = 1;
@@ -117,6 +117,7 @@ public class HelloController {
     private final int MAX_CAMERAS = 2;
 
     private ObservableList<ModelContainer> modelContainers = FXCollections.observableArrayList();
+
 
     private Camera camera = new Camera(
             new Vector3f(0, 0, 100),
@@ -162,11 +163,8 @@ public class HelloController {
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                triangulateCurrentModel();
-            } else {
-                triangulatedModel = null;
-            }
+            isPolygonalGridEnabled = newValue;
+            drawPolygonalGrid();
         });
 
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
@@ -177,36 +175,53 @@ public class HelloController {
             camera.setAspectRatio((float) (width / height));
 
             for (ModelContainer container : modelContainers) {
-                RenderEngine.render(
-                        canvas.getGraphicsContext2D(),
-                        camera,
-                        poligonalGrid.isSelected() && triangulatedModel != null ? triangulatedModel : container.mesh,
-                        (int) width,
-                        (int) height
-                );
+                RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
             }
+
         });
 
-        timeline.getKeyFrames().add(frame);
+        timeline.getKeyFrames().
+
+                add(frame);
         timeline.play();
     }
 
-    private void triangulateCurrentModel() {
-        if (mesh == null) {
-            return;
+    private boolean isPolygonalGridEnabled = false; // Флаг для отображения сетки (стандартной или триангулированной)
+
+    // Метод для рисования сетки
+    private void drawPolygonalGrid() {
+//        if (mesh == null) {
+//            return;
+//        }
+//        GraphicsContext gc = canvas.getGraphicsContext2D();
+//        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+//
+//        List<Polygon> originalPolygons = new ArrayList<>();
+//        for (Polygon polygon : mesh.polygons) {
+//            originalPolygons.add(polygon);
+//        }
+//
+//        // Если флаг включен, рисуем триангулированную сетку
+        if (isPolygonalGridEnabled) {
+
+        } else {
+
         }
+    }
 
-        Model triangulated = new Model();
-        triangulated.vertices.addAll(mesh.vertices);
-        triangulated.textureVertices.addAll(mesh.textureVertices);
-        triangulated.normals.addAll(mesh.normals);
+    private void triangulateModel() {
+        // Преобразуем полигоны модели в треугольники
+        if (mesh != null) {
+            List<Polygon> triangulatedPolygons = new ArrayList<>();
 
-        for (Polygon polygon : mesh.polygons) {
-            List<Polygon> triangles = EarClipping.triangulate(polygon, triangulated.vertices);
-            triangulated.polygons.addAll(triangles);
+            for (Polygon polygon : mesh.polygons) {
+                List<Polygon> triangles = Triangulation.triangulate(polygon, mesh.vertices);
+                triangulatedPolygons.addAll(triangles);
+            }
+
+            // Перезаписываем полигоны с результатами триангуляции
+            mesh.polygons = (ArrayList<Polygon>) triangulatedPolygons;
         }
-
-        triangulatedModel = triangulated;
     }
 
     @FXML
@@ -226,10 +241,26 @@ public class HelloController {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
             meshes.add(mesh);
+            triangulateModel();
+            // Пересчёт нормалей
+            List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);
+            mesh.normals.clear();
+            mesh.normals.addAll(recalculatedNormals);
+
+            // Обновляем индексы нормалей для каждого полигона
+            for (Polygon polygon : mesh.polygons) {
+                List<Integer> normalIndices = new ArrayList<>();
+                for (int vertexIndex : polygon.getVertexIndices()) {
+                    normalIndices.add(vertexIndex); // Индексы нормалей совпадают с индексами вершин
+                }
+                polygon.setNormalIndices(new ArrayList<>(normalIndices));
+            }
+
         } catch (IOException exception) {
             throw new RuntimeException("Неверный файл");
         }
     }
+
 
     private void handlePositionChange(String axis) {
         try {

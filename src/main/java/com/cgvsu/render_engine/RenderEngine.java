@@ -2,14 +2,16 @@ package com.cgvsu.render_engine;
 
 import java.util.ArrayList;
 
+import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
-import com.cgvsu.math.Vector4f;
+import com.cgvsu.model.Polygon;
+import com.cgvsu.rasterization.Rasterization;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
 import com.cgvsu.math.Matrix4f;
-
 import com.cgvsu.math.Point2f;
+import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
@@ -21,95 +23,71 @@ public class RenderEngine {
             final Model mesh,
             final int width,
             final int height) {
-        // Получаем матрицы модели, вида и проекции
+
+        // Инициализируем Z-буфер
+        Rasterization.initializeZBuffer(width, height);
+
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
-        // Умножаем матрицы в порядке Model -> View -> Projection
-        Matrix4f modelViewProjectionMatrix = modelMatrix
-                .multiply(viewMatrix)
-                .multiply(projectionMatrix);
+        Matrix4f modelViewProjectionMatrix = new Matrix4f(modelMatrix);
+        modelViewProjectionMatrix.mul(viewMatrix);
+        modelViewProjectionMatrix.mul(projectionMatrix);
 
         final int nPolygons = mesh.polygons.size();
-        for (int polygonInd = 0; polygonInd < nPolygons; ++polygonInd) {
-            final int nVerticesInPolygon = mesh.polygons.get(polygonInd).getVertexIndices().size();
+        for (Polygon polygon : mesh.polygons) {
+            final int nVerticesInPolygon = polygon.getVertexIndices().size();
 
-            ArrayList<Point2f> resultPoints = new ArrayList<>();
-            for (int vertexInPolygonInd = 0; vertexInPolygonInd < nVerticesInPolygon; ++vertexInPolygonInd) {
-                Vector3f vertex = mesh.vertices.get(mesh.polygons.get(polygonInd).getVertexIndices().get(vertexInPolygonInd));
+            if (nVerticesInPolygon != 3) continue; // Обрабатываем только треугольники
 
-                // Преобразуем Vector3f в Vector4f для умножения
-                Vector4f vertexVecmath = new Vector4f(vertex.x, vertex.y, vertex.z, 1);
+            int[] arrX = new int[3];
+            int[] arrY = new int[3];
+            float[] arrZ = new float[3];
+            Point2f[] texCoords = new Point2f[3];
+            float[] lightIntensities = new float[3];
 
-                // Преобразуем вершину через MVP-матрицу
-                Vector4f transformedVertex = modelViewProjectionMatrix.multiplyvec(vertexVecmath);
+            for (int vertexInd = 0; vertexInd < nVerticesInPolygon; ++vertexInd) {
+                int vertexIndex = polygon.getVertexIndices().get(vertexInd);
+                Vector3f vertex = mesh.vertices.get(vertexIndex);
 
-                // Преобразуем вектор обратно в 2D-точку для отрисовки
-                Point2f resultPoint = vertexToPoint(transformedVertex, width, height);
-                resultPoints.add(resultPoint);
-            }
+                // Преобразуем вершину в пространство экрана
+                Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
 
-            // Заполнение полигона (если у него больше 2-х вершин)
-            if (nVerticesInPolygon > 2) {
-                double[] xPoints = new double[nVerticesInPolygon];
-                double[] yPoints = new double[nVerticesInPolygon];
-                for (int i = 0; i < nVerticesInPolygon; ++i) {
-                    xPoints[i] = resultPoints.get(i).getX();
-                    yPoints[i] = resultPoints.get(i).getY();
+                // Преобразуем координаты в экранные
+                Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
+
+                // Заполняем массивы для растеризации
+                arrX[vertexInd] = (int) screenPoint.x;
+                arrY[vertexInd] = (int) screenPoint.y;
+                arrZ[vertexInd] = transformedVertex.z; // Z-координата
+
+                // Получаем текстурные координаты, если они есть
+                if (!polygon.getTextureVertexIndices().isEmpty()) {
+                    int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
+                    Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
+                    texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
+                } else {
+                    texCoords[vertexInd] = new Point2f(0, 0);
                 }
+                int normalIndex = polygon.getNormalIndices().get(vertexInd);
+                Vector3f normal = mesh.normals.get(normalIndex);
 
-                // Задаем цвет заливки
-                graphicsContext.setFill(javafx.scene.paint.Color.LIGHTGRAY); // Цвет можно изменить по желанию
-                graphicsContext.fillPolygon(xPoints, yPoints, nVerticesInPolygon);
+                // Направление на источник света (камера является источником света)
+                Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();
+                // Интенсивность света
+                lightIntensities[vertexInd] = Math.max(0, normal.dot(lightDir));
             }
 
-            // Отрисовка граней полигона
-            graphicsContext.setStroke(javafx.scene.paint.Color.BLACK); // Цвет линий
-            for (int vertexInPolygonInd = 1; vertexInPolygonInd < nVerticesInPolygon; ++vertexInPolygonInd) {
-                graphicsContext.strokeLine(
-                        resultPoints.get(vertexInPolygonInd - 1).getX(),
-                        resultPoints.get(vertexInPolygonInd - 1).getY(),
-                        resultPoints.get(vertexInPolygonInd).getX(),
-                        resultPoints.get(vertexInPolygonInd).getY());
-            }
-
-            // Замыкаем контур (линия от последней вершины к первой)
-            if (nVerticesInPolygon > 0) {
-                graphicsContext.strokeLine(
-                        resultPoints.get(nVerticesInPolygon - 1).getX(),
-                        resultPoints.get(nVerticesInPolygon - 1).getY(),
-                        resultPoints.get(0).getX(),
-                        resultPoints.get(0).getY());
+            // Растеризация треугольника с текстурой или стандартным цветом
+            if (mesh.hasTexture()) {
+                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities);
+            } else {
+                // Средняя интенсивность света для треугольника (если текстуры нет)
+                float avgIntensity = (lightIntensities[0] + lightIntensities[1] + lightIntensities[2]) / 3.0f;
+                Color shadedColor = Color.BLUE.deriveColor(0, 1, avgIntensity, 1);
+                Rasterization.fillTriangle(graphicsContext, arrX, arrY, arrZ, shadedColor);
             }
         }
-    }
-
-    private static Matrix4f rotateScaleTranslate() {
-        float scale = 1.0f; // Масштабирование
-        float tx = 0.0f, ty = 0.0f, tz = 0.0f; // Сдвиг по осям
-        return new Matrix4f(new float[]{
-                scale, 0.0f, 0.0f, tx, // Первая строка
-                0.0f, scale, 0.0f, ty, // Вторая строка
-                0.0f, 0.0f, scale, tz, // Третья строка
-                0.0f, 0.0f, 0.0f, 1.0f  // Четвёртая строка
-        });
-    }
-
-    private static Point2f vertexToPoint(Vector4f vertex, int width, int height) {
-        // Проверяем, что W не равно 0
-        if (Math.abs(vertex.getW()) < 1e-6) {
-            throw new IllegalArgumentException("Invalid W component for vertex transformation.");
-        }
-
-        // Нормализуем координаты
-        float normalizedX = vertex.getX() / vertex.getW();
-        float normalizedY = vertex.getY() / vertex.getW();
-
-        // Преобразуем к экранным координатам
-        float screenX = (normalizedX + 1) * 0.5f * width;
-        float screenY = (1 - normalizedY) * 0.5f * height;
-
-        return new Point2f(screenX, screenY);
     }
 }

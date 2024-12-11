@@ -1,16 +1,8 @@
 package com.cgvsu.render_engine;
-
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.math.Matrix4f;
 
 public class Camera {
-
-    private Vector3f position;
-    private Vector3f target;
-    private float fov;
-    private float aspectRatio;
-    private float nearPlane;
-    private float farPlane;
 
     public Camera(
             final Vector3f position,
@@ -19,67 +11,32 @@ public class Camera {
             final float aspectRatio,
             final float nearPlane,
             final float farPlane) {
-        if (aspectRatio <= 0.0f) {
-            throw new IllegalArgumentException("Aspect ratio must be greater than 0.");
-        }
-        if (nearPlane <= 0.0f || farPlane <= nearPlane) {
-            throw new IllegalArgumentException("Invalid near or far plane values.");
-        }
-
         this.position = position;
         this.target = target;
         this.fov = fov;
         this.aspectRatio = aspectRatio;
         this.nearPlane = nearPlane;
         this.farPlane = farPlane;
-    }
-
-    public Vector3f getPosition() {
-        return position;
     }
 
     public void setPosition(final Vector3f position) {
         this.position = position;
     }
 
-    public Vector3f getTarget() {
-        return target;
-    }
-
     public void setTarget(final Vector3f target) {
         this.target = target;
-    }
-
-    public float getFov() {
-        return fov;
-    }
-
-    public void setFov(final float fov) {
-        this.fov = fov;
-    }
-
-    public float getAspectRatio() {
-        return aspectRatio;
     }
 
     public void setAspectRatio(final float aspectRatio) {
         this.aspectRatio = aspectRatio;
     }
 
-    public float getNearPlane() {
-        return nearPlane;
+    public Vector3f getPosition() {
+        return position;
     }
 
-    public void setNearPlane(final float nearPlane) {
-        this.nearPlane = nearPlane;
-    }
-
-    public float getFarPlane() {
-        return farPlane;
-    }
-
-    public void setFarPlane(final float farPlane) {
-        this.farPlane = farPlane;
+    public Vector3f getTarget() {
+        return target;
     }
 
     public void movePosition(final Vector3f translation) {
@@ -87,14 +44,21 @@ public class Camera {
     }
 
     public void moveTarget(final Vector3f translation) {
-        this.target.add(translation);
+        this.target.add(target);
     }
 
-    public Matrix4f getViewMatrix() {
+    Matrix4f getViewMatrix() {
         return GraphicConveyor.lookAt(position, target);
     }
 
-    public Matrix4f getProjectionMatrix() {
+    Matrix4f getProjectionMatrix() {
         return GraphicConveyor.perspective(fov, aspectRatio, nearPlane, farPlane);
     }
+
+    private Vector3f position;
+    private Vector3f target;
+    private float fov;
+    private float aspectRatio;
+    private float nearPlane;
+    private float farPlane;
 }

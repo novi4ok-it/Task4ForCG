@@ -10,51 +10,33 @@ public class Polygon {
     private ArrayList<Integer> textureVertexIndices;
     private ArrayList<Integer> normalIndices;
 
-
     public Polygon() {
-        vertexIndices = new ArrayList<Integer>();
-        textureVertexIndices = new ArrayList<Integer>();
-        normalIndices = new ArrayList<Integer>();
+        vertexIndices = new ArrayList<>();
+        textureVertexIndices = new ArrayList<>();
+        normalIndices = new ArrayList<>();
     }
 
-    public Polygon(List<Integer> a) {
-		vertexIndices = new ArrayList<Integer>();
-		for (Integer i : a) {
-			vertexIndices.add(i);
-		}
-		textureVertexIndices = new ArrayList<Integer>();
-		normalIndices = new ArrayList<Integer>();
-	}
+    public Polygon(List<Integer> vertexIndices) {
+        this.vertexIndices = new ArrayList<>(vertexIndices);
+        textureVertexIndices = new ArrayList<>();
+        normalIndices = new ArrayList<>();
+    }
 
     public void setVertexIndices(ArrayList<Integer> vertexIndices) {
-        assert vertexIndices.size() >= 3;
+        assert vertexIndices.size() >= 3 : "Polygon must have at least 3 vertices.";
         this.vertexIndices = vertexIndices;
     }
 
     public void setTextureVertexIndices(ArrayList<Integer> textureVertexIndices) {
-        assert textureVertexIndices.size() >= 3;
+        assert textureVertexIndices.size() == vertexIndices.size() :
+            "Number of texture vertex indices must match number of vertex indices.";
         this.textureVertexIndices = textureVertexIndices;
     }
 
     public void setNormalIndices(ArrayList<Integer> normalIndices) {
-        assert normalIndices.size() >= 3;
+        assert normalIndices.size() == vertexIndices.size() :
+            "Number of normal indices must match number of vertex indices.";
         this.normalIndices = normalIndices;
-    }
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Polygon polygon = (Polygon) obj;
-        return Objects.equals(vertexIndices, polygon.vertexIndices);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(vertexIndices);
     }
 
     public ArrayList<Integer> getVertexIndices() {
@@ -69,4 +51,16 @@ public class Polygon {
         return normalIndices;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Polygon polygon = (Polygon) obj;
+        return vertexIndices.equals(polygon.vertexIndices);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(vertexIndices);
+    }
 }

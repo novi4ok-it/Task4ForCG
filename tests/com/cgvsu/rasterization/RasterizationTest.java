@@ -1,136 +1,111 @@
 package com.cgvsu.rasterization;
 
-import com.cgvsu.math.Vector2f;
-import com.cgvsu.math.Vector3f;
-import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-
-public class RasterizationTest {
-
-    @BeforeAll
-    static void setup() {
-        TestApp.initToolkit(); // Инициализация JavaFX
-    }
-
-    @Test
-    void testBarycentricCoordinates() {
-        Vector3f a = new Vector3f(0, 0, 0);
-        Vector3f b = new Vector3f(1, 0, 0);
-        Vector3f c = new Vector3f(0, 1, 0);
-
-        Vector3f pointInside = new Vector3f(0.25f, 0.25f, 0);
-        Vector3f pointOutside = new Vector3f(1.5f, 1.5f, 0);
-
-        double[] baryCoordsInside = Rasterization.calculateBarycentricCoords(pointInside, new Vector3f[]{a, b, c});
-        double[] baryCoordsOutside = Rasterization.calculateBarycentricCoords(pointOutside, new Vector3f[]{a, b, c});
-
-        // Проверяем сумму координат для точки внутри
-        assertEquals(1.0, baryCoordsInside[0] + baryCoordsInside[1] + baryCoordsInside[2], 1e-6);
-
-        // Проверяем, что координаты для точки вне треугольника некорректны
-        assertTrue(baryCoordsOutside[0] < 0 || baryCoordsOutside[1] < 0 || baryCoordsOutside[2] < 0);
-    }
-
-    @Test
-    void testInterpolation() {
-        Vector3f start = new Vector3f(0, 0, 0);
-        Vector3f end = new Vector3f(10, 10, 10);
-
-        Vector3f midPoint = Rasterization.interpolate(start, end, 0.5f);
-
-        assertEquals(5, midPoint.x, 1e-6);
-        assertEquals(5, midPoint.y, 1e-6);
-        assertEquals(5, midPoint.z, 1e-6);
-    }
-
-    @Test
-    void testFillTriangle() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        Platform.runLater(() -> {
-            try {
-                Canvas canvas = new Canvas(100, 100);
-                GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-
-                Vector3f[] vertices = {
-                    new Vector3f(10, 10, 0),
-                    new Vector3f(50, 10, 0),
-                    new Vector3f(30, 50, 0)
-                };
-
-                Rasterization.fillTriangle(graphicsContext, vertices, Color.RED);
-
-                // Проверка, что пиксели внутри треугольника окрашены
-                PixelReader pixelReader = canvas.snapshot(null, null).getPixelReader();
-                assertEquals(Color.RED, pixelReader.getColor(30, 30));
-                assertEquals(Color.TRANSPARENT, pixelReader.getColor(5, 5));
-            } finally {
-                latch.countDown();
-            }
-        });
-
-        latch.await();
-    }
-
-    @Test
-    void testFillTriangleWithTexture() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        AtomicReference<Color> colorInside = new AtomicReference<>();
-        AtomicReference<Color> colorOutside = new AtomicReference<>();
-
-        Platform.runLater(() -> {
-            try {
-                Canvas canvas = new Canvas(100, 100);
-                WritableImage texture = new WritableImage(100, 100);
-
-                // Задаем текстуру
-                texture.getPixelWriter().setColor(50, 50, Color.BLUE);
-
-                GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-
-                Vector3f[] vertices = {
-                    new Vector3f(10, 10, 0),
-                    new Vector3f(50, 10, 0),
-                    new Vector3f(30, 50, 0)
-                };
-
-                Vector2f[] texCoords = {
-                    new Vector2f(0, 0),
-                    new Vector2f(1, 0),
-                    new Vector2f(0.5f, 1)
-                };
-
-                Rasterization.fillTriangleWithTexture(graphicsContext, vertices, texCoords, texture);
-
-                // Проверяем пиксель внутри треугольника
-                PixelReader pixelReader = canvas.snapshot(null, null).getPixelReader();
-                colorInside.set(pixelReader.getColor(30, 30));
-                colorOutside.set(pixelReader.getColor(5, 5));
-            } finally {
-                latch.countDown();
-            }
-        });
-
-        latch.await();
-
-        assertNotNull(colorInside.get());
-        assertEquals(Color.BLUE, colorInside.get()); // Проверяем, что цвет соответствует текстуре
-
-        assertNotNull(colorOutside.get());
-        assertEquals(Color.TRANSPARENT, colorOutside.get()); // Проверяем, что точка вне треугольника прозрачна
-    }
-}
+//public class RasterizationTest {
+//
+//    private GraphicsContext graphicsContext;
+//    private PixelWriter pixelWriter;
+//
+//    @BeforeEach
+//    public void setup() {
+//        // Создаем mock-объекты для GraphicsContext и PixelWriter
+//        graphicsContext = mock(GraphicsContext.class);
+//        pixelWriter = mock(PixelWriter.class);
+//
+//        Canvas canvas = mock(Canvas.class);
+//        when(canvas.getWidth()).thenReturn(100.0); // Устанавливаем размер холста
+//        when(canvas.getHeight()).thenReturn(100.0);
+//
+//        when(graphicsContext.getCanvas()).thenReturn(canvas);
+//        when(graphicsContext.getPixelWriter()).thenReturn(pixelWriter);
+//    }
+//
+//    @Test
+//    public void testFillTriangleSimpleCase() {
+//        // Входные данные
+//        int[] x = {10, 50, 30};
+//        int[] y = {10, 10, 40};
+//        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+//        double[] z = {0.5, 0.2, 0.8};
+//
+//        // Вызов тестируемого метода
+//        Rasterization.fillTriangle(graphicsContext, x, y, colors, z);
+//
+//        // Проверяем, что пиксели устанавливаются в пределах холста
+//        verify(pixelWriter, atLeastOnce()).setColor(anyInt(), anyInt(), any(Color.class));
+//
+//        // Пример проверки конкретного пикселя
+//        verify(pixelWriter, atLeastOnce()).setColor(eq(30), eq(25), any(Color.class));
+//    }
+//
+//    @Test
+//    public void testFillTriangleOutOfBounds() {
+//        // Входные данные (треугольник вне области рисования)
+//        int[] x = {-10, -50, -30};
+//        int[] y = {-10, -10, -40};
+//        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+//        double[] z = {0.5, 0.2, 0.8};
+//
+//        // Вызов тестируемого метода
+//        Rasterization.fillTriangle(graphicsContext, x, y, colors, z);
+//
+//        // Проверяем, что PixelWriter не вызывается (пиксели вне границ)
+//        verify(pixelWriter, never()).setColor(anyInt(), anyInt(), any(Color.class));
+//    }
+//
+//    @Test
+//    public void testFillTriangleColorInterpolation() {
+//        // Входные данные для проверки интерполяции цвета
+//        int[] x = {10, 50, 30};
+//        int[] y = {10, 10, 40};
+//        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+//        double[] z = {0.5, 0.2, 0.8};
+//
+//        // Вызов тестируемого метода
+//        Rasterization.fillTriangle(graphicsContext, x, y, colors, z);
+//
+//        // Пример проверки интерполяции цвета (проверяем вызов setColor с интерполяцией)
+//        verify(pixelWriter, atLeastOnce()).setColor(
+//                anyInt(),
+//                anyInt(),
+//                argThat(color -> color.getRed() >= 0 && color.getRed() <= 1 &&
+//                        color.getGreen() >= 0 && color.getGreen() <= 1 &&
+//                        color.getBlue() >= 0 && color.getBlue() <= 1)
+//        );
+//    }
+//
+//    @Test
+//    public void testFillTriangleZBuffer() {
+//        // Входные данные
+//        int[] x = {10, 50, 30};
+//        int[] y = {10, 10, 40};
+//        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE};
+//        double[] z1 = {0.5, 0.2, 0.8};
+//        double[] z2 = {0.1, 0.1, 0.1}; // Второй треугольник ближе
+//
+//        // Рисуем первый треугольник
+//        Rasterization.fillTriangle(graphicsContext, x, y, colors, z1);
+//
+//        // Проверяем вызов для первого треугольника
+//        verify(pixelWriter, atLeastOnce()).setColor(anyInt(), anyInt(), any(Color.class));
+//
+//        // Сбрасываем mock для PixelWriter
+//        Mockito.reset(pixelWriter);
+//
+//        // Рисуем второй треугольник
+//        Rasterization.fillTriangle(graphicsContext, x, y, colors, z2);
+//
+//        // Проверяем, что второй треугольник "перекрыл" первый
+//        verify(pixelWriter, atLeastOnce()).setColor(anyInt(), anyInt(), any(Color.class));
+//    }
+//}

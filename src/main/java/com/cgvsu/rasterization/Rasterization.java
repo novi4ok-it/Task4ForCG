@@ -1,218 +1,264 @@
 package com.cgvsu.rasterization;
 
-import com.cgvsu.math.Vector2f;
-import com.cgvsu.math.Vector3f;
-import com.cgvsu.math.VectorMath;
+import com.cgvsu.math.Point2f;
+import com.cgvsu.model.Model;
+import com.cgvsu.model.Polygon;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
-import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
+import javafx.scene.image.PixelWriter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-
-import static java.util.Arrays.sort;
+import java.util.List;
+import java.util.Objects;
 
 public class Rasterization {
-    public static void fillTriangle(
-            GraphicsContext graphicsContext,
-            Vector3f[] vertices,
-            Color fillColor) {
 
-        PixelWriter pixelWriter = graphicsContext.getPixelWriter();
-        int width = (int) graphicsContext.getCanvas().getWidth();
-        int height = (int) graphicsContext.getCanvas().getHeight();
-        double[][] zBuffer = initializeZBuffer(width, height);
+    private static double[][] zBuffer;
 
-        // Сортировка вершин треугольника по Y
-        Arrays.sort(vertices, Comparator.comparingDouble(Vector3f::y));
-
-        // Растеризация треугольника
-        rasterizeTriangle(vertices, fillColor, zBuffer, pixelWriter, width, height);
+    public static void initializeZBuffer(int width, int height) {
+        zBuffer = new double[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                zBuffer[i][j] = Double.POSITIVE_INFINITY; // Инициализируем максимальной глубиной
+            }
+        }
     }
 
-    private static void rasterizeTriangle(
-            Vector3f[] vertices,
-            Color fillColor,
-            double[][] zBuffer,
-            PixelWriter pixelWriter,
-            int width,
-            int height) {
+    public static void fillTriangle(
+            final GraphicsContext graphicsContext,
+            final int[] arrX,
+            final int[] arrY,
+            final float[] arrZ,
+            final Color color) {
 
-        for (boolean isLower : new boolean[]{true, false}) {
-            Vector3f top = isLower ? vertices[1] : vertices[0];
-            Vector3f bottom = vertices[2];
-            Vector3f middle = isLower ? vertices[0] : vertices[1];
+        // Упорядочиваем вершины по Y
+        sortVerticesByY(arrX, arrY, arrZ);
 
-            for (int y = (int) top.y(); y <= (int) bottom.y(); y++) {
-                if (y < 0 || y >= height) continue;
+        for (int y = arrY[0]; y <= arrY[2]; y++) {
+            if (y < 0 || y >= zBuffer[0].length) continue; // Проверяем границы Y
 
-                float alpha = (y - top.y()) / (bottom.y() - top.y());
-                float beta = (y - middle.y()) / (bottom.y() - middle.y());
+            int x1, x2;
+            float z1, z2;
 
-                Vector3f edge1 = interpolate(top, bottom, alpha);
-                Vector3f edge2 = interpolate(middle, bottom, beta);
+            if (y <= arrY[1]) {
+                // Нижняя часть треугольника
+                x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
+                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
+                z1 = interpolateZ(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
+                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
+            } else {
+                // Верхняя часть треугольника
+                x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
+                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
+                z1 = interpolateZ(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
+                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
+            }
 
-                if (edge1.x > edge2.x) {
-                    Vector3f temp = edge1;
-                    edge1 = edge2;
-                    edge2 = temp;
-                }
+            if (x1 > x2) {
+                int tempX = x1;
+                x1 = x2;
+                x2 = tempX;
+                float tempZ = z1;
+                z1 = z2;
+                z2 = tempZ;
+            }
 
-                for (int x = Math.max(0, (int) edge1.x()); x <= Math.min(width - 1, (int) edge2.x()); x++) {
-                    Vector3f pixelPos = new Vector3f(x, y, 0);
-                    double[] baryCoords = calculateBarycentricCoords(pixelPos, vertices);
-
-                    double z = baryCoords[0] * vertices[0].z +
-                            baryCoords[1] * vertices[1].z +
-                            baryCoords[2] * vertices[2].z;
-
-                    if (z < zBuffer[x][y]) {
-                        zBuffer[x][y] = z;
-                        pixelWriter.setColor(x, y, fillColor);
-                    }
+            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
+                float z = interpolateZ(x, x1, x2, z1, z2);
+                if (z < zBuffer[x][y]) {
+                    zBuffer[x][y] = z;
+                    graphicsContext.getPixelWriter().setColor(x, y, color);
                 }
             }
         }
+    }
+
+    private static float interpolateZ(int value, int start, int end, float zStart, float zEnd) {
+        return end == start ? zStart : (value - start) * (zEnd - zStart) / (end - start) + zStart;
+    }
+
+    private static int interpolateX(int y, int y1, int y2, int x1, int x2) {
+        return y2 == y1 ? x1 : (y - y1) * (x2 - x1) / (y2 - y1) + x1;
+    }
+
+    private static void sortVerticesByY(int[] x, int[] y, float[] z) {
+        if (y[0] > y[1]) swap(x, y, z, 0, 1);
+        if (y[1] > y[2]) swap(x, y, z, 1, 2);
+        if (y[0] > y[1]) swap(x, y, z, 0, 1);
+    }
+
+    private static void swap(int[] x, int[] y, float[] z, int i, int j) {
+        int tempX = x[i];
+        int tempY = y[i];
+        float tempZ = z[i];
+        x[i] = x[j];
+        y[i] = y[j];
+        z[i] = tempZ;
+        x[j] = tempX;
+        y[j] = tempY;
+        z[j] = tempZ;
     }
 
     public static void fillTriangleWithTexture(
-            GraphicsContext graphicsContext,
-            Vector3f[] vertices,
-            Vector2f[] texCoords, // Текстурные координаты (u, v)
-            Image texture) {
+            final GraphicsContext graphicsContext,
+            final int[] arrX,
+            final int[] arrY,
+            final float[] arrZ,
+            final Point2f[] texCoords,
+            final Image texture,
+            final float[] lightIntensities) {
 
-        PixelWriter pixelWriter = graphicsContext.getPixelWriter();
-        PixelReader textureReader = texture.getPixelReader();
-        int width = (int) graphicsContext.getCanvas().getWidth();
-        int height = (int) graphicsContext.getCanvas().getHeight();
-        double[][] zBuffer = initializeZBuffer(width, height);
+        // Упорядочиваем вершины по Y
+        sortVerticesByY(arrX, arrY, arrZ, texCoords, lightIntensities);
 
-        // Сортировка вершин треугольника по Y
-        Arrays.sort(vertices, Comparator.comparingDouble(Vector3f::y));
+        for (int y = arrY[0]; y <= arrY[2]; y++) {
+            if (y < 0 || y >= graphicsContext.getCanvas().getHeight()) continue;
 
-        // Растеризация треугольника
-        rasterizeTriangleWithTexture(vertices, texCoords, zBuffer, pixelWriter, textureReader, texture, width, height);
-    }
+            int x1, x2;
+            float z1, z2;
+            Point2f t1, t2;
+            float i1, i2;
 
-    private static void rasterizeTriangleWithTexture(
-            Vector3f[] vertices,
-            Vector2f[] texCoords,
-            double[][] zBuffer,
-            PixelWriter pixelWriter,
-            PixelReader textureReader,
-            Image texture,
-            int width,
-            int height) {
+            if (y <= arrY[1]) {
+                x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
+                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
+                z1 = interpolate(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
+                z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
+                t1 = interpolateTexCoord(y, arrY[0], arrY[1], texCoords[0], texCoords[1]);
+                t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
+                i1 = interpolate(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
+                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
+            } else {
+                x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
+                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
+                z1 = interpolate(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
+                z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
+                t1 = interpolateTexCoord(y, arrY[1], arrY[2], texCoords[1], texCoords[2]);
+                t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
+                i1 = interpolate(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
+                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
+            }
 
-        for (boolean isLower : new boolean[]{true, false}) {
-            Vector3f top = isLower ? vertices[1] : vertices[0];
-            Vector3f bottom = vertices[2];
-            Vector3f middle = isLower ? vertices[0] : vertices[1];
+            if (x1 > x2) {
+                // Swap
+                int tempX = x1;
+                x1 = x2;
+                x2 = tempX;
 
-            Vector2f topTex = isLower ? texCoords[1] : texCoords[0];
-            Vector2f bottomTex = texCoords[2];
-            Vector2f middleTex = isLower ? texCoords[0] : texCoords[1];
+                float tempZ = z1;
+                z1 = z2;
+                z2 = tempZ;
 
-            for (int y = (int) top.y(); y <= (int) bottom.y(); y++) {
-                if (y < 0 || y >= height) continue;
+                Point2f tempT = t1;
+                t1 = t2;
+                t2 = tempT;
 
-                float alpha = (y - top.y()) / (bottom.y() - top.y());
-                float beta = (y - middle.y()) / (bottom.y() - middle.y());
+                float tempI = i1;
+                i1 = i2;
+                i2 = tempI;
+            }
 
-                Vector3f edge1 = interpolate(top, bottom, alpha);
-                Vector3f edge2 = interpolate(middle, bottom, beta);
+            for (int x = x1; x <= x2; x++) {
+                float z = interpolate(x, x1, x2, z1, z2);
+                if (z < zBuffer[x][y]) {
+                    Point2f texCoord = interpolateTexCoord(x, x1, x2, t1, t2);
+                    float intensity = interpolate(x, x1, x2, i1, i2);
 
-                Vector2f tex1 = interpolate(topTex, bottomTex, alpha);
-                Vector2f tex2 = interpolate(middleTex, bottomTex, beta);
+                    // Применяем интенсивность света к цвету
+                    Color color = sampleTexture(texture, texCoord.x, texCoord.y);
+                    color = color.deriveColor(0, 1, intensity, 1);
 
-                if (edge1.x > edge2.x) {
-                    Vector3f temp = edge1;
-                    edge1 = edge2;
-                    edge2 = temp;
-
-                    Vector2f tempTex = tex1;
-                    tex1 = tex2;
-                    tex2 = tempTex;
-                }
-
-                for (int x = Math.max(0, (int) edge1.x()); x <= Math.min(width - 1, (int) edge2.x()); x++) {
-                    Vector3f pixelPos = new Vector3f(x, y, 0);
-                    double[] baryCoords = calculateBarycentricCoords(pixelPos, vertices);
-
-                    double z = baryCoords[0] * vertices[0].z +
-                            baryCoords[1] * vertices[1].z +
-                            baryCoords[2] * vertices[2].z;
-
-                    if (z < zBuffer[x][y]) {
-                        zBuffer[x][y] = z;
-
-                        // Интерполяция текстурных координат
-                        double u = baryCoords[0] * texCoords[0].x +
-                                baryCoords[1] * texCoords[1].x +
-                                baryCoords[2] * texCoords[2].x;
-
-                        double v = baryCoords[0] * texCoords[0].y +
-                                baryCoords[1] * texCoords[1].y +
-                                baryCoords[2] * texCoords[2].y;
-
-                        // Получение цвета из текстуры
-                        int texX = (int) (u * (texture.getWidth() - 1));
-                        int texY = (int) (v * (texture.getHeight() - 1));
-
-                        Color texColor = textureReader.getColor(texX, texY);
-                        pixelWriter.setColor(x, y, texColor);
-                    }
+                    graphicsContext.getPixelWriter().setColor(x, y, color);
+                    zBuffer[x][y] = z;
                 }
             }
         }
     }
 
-    private static double[][] initializeZBuffer(int width, int height) {
-        double[][] zBuffer = new double[width][height];
-        for (int x = 0; x < width; x++) {
-            Arrays.fill(zBuffer[x], Double.POSITIVE_INFINITY);
+    private static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities) {
+        if (arrY[0] > arrY[1]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 0, 1);
+        if (arrY[1] > arrY[2]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 1, 2);
+        if (arrY[0] > arrY[1]) swap(arrX, arrY, arrZ, texCoords, lightIntensities, 0, 1);
+    }
+    private static void swap(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities, int i, int j) {
+        int tempX = arrX[i];
+        arrX[i] = arrX[j];
+        arrX[j] = tempX;
+
+        int tempY = arrY[i];
+        arrY[i] = arrY[j];
+        arrY[j] = tempY;
+
+        float tempZ = arrZ[i];
+        arrZ[i] = arrZ[j];
+        arrZ[j] = tempZ;
+
+        Point2f tempT = texCoords[i];
+        texCoords[i] = texCoords[j];
+        texCoords[j] = tempT;
+
+        float tempI = lightIntensities[i];
+        lightIntensities[i] = lightIntensities[j];
+        lightIntensities[j] = tempI;
+    }
+
+    private static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords) {
+        for (int i = 0; i < arrY.length - 1; i++) {
+            for (int j = 0; j < arrY.length - 1 - i; j++) {
+                if (arrY[j] > arrY[j + 1]) {
+                    // Меняем местами Y
+                    int tempY = arrY[j];
+                    arrY[j] = arrY[j + 1];
+                    arrY[j + 1] = tempY;
+
+                    // Меняем местами X
+                    int tempX = arrX[j];
+                    arrX[j] = arrX[j + 1];
+                    arrX[j + 1] = tempX;
+
+                    // Меняем местами Z
+                    float tempZ = arrZ[j];
+                    arrZ[j] = arrZ[j + 1];
+                    arrZ[j + 1] = tempZ;
+
+                    // Меняем местами текстурные координаты
+                    Point2f tempTex = texCoords[j];
+                    texCoords[j] = texCoords[j + 1];
+                    texCoords[j + 1] = tempTex;
+                }
+            }
         }
-        return zBuffer;
     }
 
-    public static void drawTriangle(
-            GraphicsContext graphicsContext,
-            Vector3f[] vertices,
-            Color fillColor) {
-        fillTriangle(graphicsContext, vertices, fillColor);
+    private static float interpolate(int y, int y1, int y2, float value1, float value2) {
+        if (y1 == y2) return value1; // Защита от деления на 0
+        return value1 + (value2 - value1) * (y - y1) / (float) (y2 - y1);
     }
 
-    public static void drawTriangle(
-            GraphicsContext graphicsContext,
-            Vector3f[] vertices,
-            Vector2f[] texCoords,
-            Image texture) {
-        fillTriangleWithTexture(graphicsContext, vertices, texCoords, texture);
+    private static Point2f interpolateTexCoord(int y, int y1, int y2, Point2f coord1, Point2f coord2) {
+        if (y1 == y2) return new Point2f(coord1.x, coord1.y); // Защита от деления на 0
+        float t = (y - y1) / (float) (y2 - y1);
+        float x = coord1.x + t * (coord2.x - coord1.x);
+        float yCoord = coord1.y + t * (coord2.y - coord1.y);
+        return new Point2f(x, yCoord);
     }
 
-    static Vector3f interpolate(Vector3f v1, Vector3f v2, float alpha) {
-        return Vector3f.addition(v1.multiply(1 - alpha), v2.multiply(alpha));
-    }
+    private static Color sampleTexture(Image texture, float u, float v) {
+        int texWidth = (int) texture.getWidth();
+        int texHeight = (int) texture.getHeight();
 
-    private static Vector2f interpolate(Vector2f v1, Vector2f v2, float alpha) {
-        return new Vector2f(
-                v1.x * (1 - alpha) + v2.x * alpha,
-                v1.y * (1 - alpha) + v2.y * alpha
-        );
-    }
+        // Преобразуем текстурные координаты [0, 1] в пиксельные координаты текстуры
+        int texX = Math.min((int) (u * texWidth), texWidth - 1);
+        int texY = Math.min((int) ((1 - v) * texHeight), texHeight - 1); // Инверсия Y для соответствия системе координат
 
-    static double[] calculateBarycentricCoords(Vector3f point, Vector3f[] vertices) {
-        Vector3f a = vertices[0];
-        Vector3f b = vertices[1];
-        Vector3f c = vertices[2];
+        PixelReader pixelReader = texture.getPixelReader();
+        if (pixelReader != null) {
+            return pixelReader.getColor(texX, texY);
+        }
 
-        float area = VectorMath.crossProduct(a, b, c);
-        float alpha = VectorMath.crossProduct(point, b, c) / area;
-        float beta = VectorMath.crossProduct(point, c, a) / area;
-        float gamma = 1 - alpha - beta;
-
-        return new double[]{alpha, beta, gamma};
+        return Color.BLACK; // Возвращаем черный цвет, если текстура недоступна
     }
 }

@@ -1,139 +1,140 @@
 package com.cgvsu.triangulation;
 
-import com.cgvsu.math.Vector2f;
-import com.cgvsu.math.VectorMath;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.RepeatedTest;
+import com.cgvsu.math.Vector3f;
+import com.cgvsu.model.Polygon;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TriangulationTest {
-    private final static Random RANDOM = new Random();
-
-    private final static List<Vector2f> TRIANGLE = Arrays.asList(
-        new Vector2f(0, 0),
-        new Vector2f(3, 0),
-        new Vector2f(0, 4)
-    );
-
-    private final static List<Vector2f> SELF_INTERSECTING_POLYGON = Arrays.asList(
-        new Vector2f(0, 0),
-        new Vector2f(0, 2),
-        new Vector2f(-1, 1),
-        new Vector2f(2, 0)
-    );
 
     @Test
-    public void testConvexTriangulation() {
-        List<int[]> triangleList = Triangulation.convexPolygonTriangulate(Arrays.asList(0, 1, 2, 3, 4));
-        Assertions.assertArrayEquals(triangleList.get(0), new int[]{0, 2, 1});
-        Assertions.assertArrayEquals(triangleList.get(1), new int[]{0, 3, 2});
-        Assertions.assertArrayEquals(triangleList.get(2), new int[]{0, 4, 3});
-    }
+    public void testSimplePolygon() {
+        // Простой четырёхугольник
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0),
+                new Vector3f(1, 1, 0),
+                new Vector3f(0, 1, 0)
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3));
 
-    @Test
-    public void testIncorrectVertexIndicesCount() {
-        try {
-            Triangulation.convexPolygonTriangulate(2);
-            Assertions.fail();
-        } catch (IllegalArgumentException exception) {
-            String expectedError = "Not enough vertex indices for a polygon";
-            Assertions.assertEquals(expectedError, exception.getMessage());
-        }
-    }
+        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
 
-    @Test
-    public void testVertexIndexOutsideOfVertices() {
-        try {
-            Triangulation.earClippingTriangulate(TRIANGLE, Arrays.asList(1, 2, 3));
-            Assertions.fail();
-        } catch (IllegalArgumentException exception) {
-            String expectedError = "Vertex index 3 is outside of vertex list of length 3";
-            Assertions.assertEquals(expectedError, exception.getMessage());
-        }
-    }
+        assertEquals(2, result.size()); // Должно получиться 2 треугольника
 
-    @Test
-    public void testSelfIntersectingPolygon() {
-        try {
-            Triangulation.earClippingTriangulate(SELF_INTERSECTING_POLYGON);
-            Assertions.fail();
-        } catch (TriangulationException exception) {
-            String expectedError = "Polygon has self-intersections";
-            Assertions.assertEquals(expectedError, exception.getMessage());
-        }
-    }
-
-    @Test
-    public void testCrossProduct() {
-        float cwCrossProduct = VectorMath.crossProduct(
-            TRIANGLE.get(1),
-            TRIANGLE.get(0),
-            TRIANGLE.get(2)
+        List<List<Integer>> expectedTriangles = List.of(
+                List.of(0, 1, 2),
+                List.of(0, 2, 3)
         );
 
-        float ccwCrossProduct = VectorMath.crossProduct(
-            TRIANGLE.get(2),
-            TRIANGLE.get(0),
-            TRIANGLE.get(1)
-        );
-
-        float zeroCrossProduct = VectorMath.crossProduct(
-            TRIANGLE.get(1),
-            TRIANGLE.get(0),
-            TRIANGLE.get(1)
-        );
-
-        Assertions.assertEquals(-12, cwCrossProduct);
-        Assertions.assertEquals(12, ccwCrossProduct);
-        // float my beloved
-        Assertions.assertEquals(0, Math.abs(zeroCrossProduct));
+        for (Polygon triangle : result) {
+            assertTrue(expectedTriangles.contains(triangle.getVertexIndices()));
+        }
     }
 
     @Test
-    public void testPointWithinTriangle() {
-        Assertions.assertTrue(VectorMath.isPointInTriangle(
-            TRIANGLE.get(1),
-            TRIANGLE.get(0),
-            TRIANGLE.get(2),
-            new Vector2f(1, 1)
-        ));
+    public void testPolygonWithCollinearPoints() {
+        // Полигон с коллинеарными точками
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0),
+                new Vector3f(2, 0, 0), // Коллинеарная точка
+                new Vector3f(1, 1, 0)
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3));
 
-        Assertions.assertFalse(VectorMath.isPointInTriangle(
-            TRIANGLE.get(1),
-            TRIANGLE.get(0),
-            TRIANGLE.get(2),
-            new Vector2f(10, 10)
-        ));
+        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
+
+        assertEquals(2, result.size()); // Должно получиться 2 треугольника
+
+        List<List<Integer>> expectedTriangles = List.of(
+                List.of(0, 1, 3),
+                List.of(1, 2, 3)
+        );
+
+        for (Polygon triangle : result) {
+            assertTrue(expectedTriangles.contains(triangle.getVertexIndices()));
+        }
     }
 
     @Test
-    public void testEdgeLength() {
-        Assertions.assertEquals(5, VectorMath.edgeLength(
-            TRIANGLE.get(1),
-            TRIANGLE.get(2)
-        ));
+    public void testFallbackTriangulation() {
+        // Сложный полигон, который не может быть обработан методом "ушей"
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0),
+                new Vector3f(1, 1, 0),
+                new Vector3f(0, 1, 0),
+                new Vector3f(0.5f, 0.5f, 0) // Центральная точка, делающая полигон "проблемным"
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3, 4));
+
+        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
+
+        assertTrue(result.size() >= 3); // Должно быть хотя бы 3 треугольника
     }
 
-    @RepeatedTest(10)
-    public void testRandomPolygon() {
-        int verticesCount = 10;
-        float size = 10;
-        List<Vector2f> randomPolygon = new ArrayList<>(10);
+    @Test
+    public void testInvalidPolygon() {
+        // Полигон с недостаточным количеством точек
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0)
+        );
+        Polygon polygon = new Polygon(List.of(0, 1));
 
-        for (int i = 0; i < verticesCount; i++) {
-            float randomSize = RANDOM.nextFloat(size, size + size);
-            randomPolygon.add(new Vector2f(
-                (float) (Math.cos(i * 2 * Math.PI / verticesCount) * randomSize),
-                (float) (Math.sin(i * 2 * Math.PI / verticesCount) * randomSize)
-            ));
+        assertThrows(IllegalArgumentException.class, () -> {
+            Triangulation.triangulate(polygon, vertices);
+        });
+    }
+
+    @Test
+    public void testNullInputs() {
+        // Проверка на null значения
+        assertThrows(IllegalArgumentException.class, () -> {
+            Triangulation.triangulate(null, null);
+        });
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            Triangulation.triangulate(new Polygon(new ArrayList<>()), null);
+        });
+    }
+
+    @Test
+    public void testSingleTrianglePolygon() {
+        // Полигон, который уже является треугольником
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0),
+                new Vector3f(0, 1, 0)
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2));
+
+        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
+
+        assertEquals(1, result.size()); // Должен быть один треугольник
+        assertEquals(new Polygon(List.of(0, 1, 2)), result.get(0));
+    }
+
+    @Test
+    public void testLargeConvexPolygon() {
+        // Большой выпуклый полигон
+        List<Vector3f> vertices = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            float angle = (float) (2 * Math.PI * i / 10);
+            vertices.add(new Vector3f((float) Math.cos(angle), (float) Math.sin(angle), 0));
+            indices.add(i);
         }
 
-        List<int[]> triangles = Triangulation.earClippingTriangulate(randomPolygon);
-        Assertions.assertEquals(triangles.size(), verticesCount - 2);
+        Polygon polygon = new Polygon(indices);
+        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
+
+        assertEquals(8, result.size()); // Для выпуклого десятиугольника будет 8 треугольников
     }
 }
