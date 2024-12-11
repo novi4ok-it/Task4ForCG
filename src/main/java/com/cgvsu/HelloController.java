@@ -7,7 +7,7 @@ import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
-import com.cgvsu.triangulation.EarClipping;
+import com.cgvsu.triangulation.Triangulation;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -189,22 +189,22 @@ public class HelloController {
 
     // Метод для рисования сетки
     private void drawPolygonalGrid() {
-        if (mesh == null) {
-            return;
-        }
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
-        List<Polygon> originalPolygons = new ArrayList<>();
-        for (Polygon polygon : mesh.polygons) {
-            originalPolygons.add(polygon);
-        }
-
-        // Если флаг включен, рисуем триангулированную сетку
+//        if (mesh == null) {
+//            return;
+//        }
+//        GraphicsContext gc = canvas.getGraphicsContext2D();
+//        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+//
+//        List<Polygon> originalPolygons = new ArrayList<>();
+//        for (Polygon polygon : mesh.polygons) {
+//            originalPolygons.add(polygon);
+//        }
+//
+//        // Если флаг включен, рисуем триангулированную сетку
         if (isPolygonalGridEnabled) {
-            triangulateModel();  // Триангулируем модель
+
         } else {
-            // Иначе рисуем стандартную сетку
-            mesh.polygons = (ArrayList<Polygon>) originalPolygons;
+
         }
     }
 
@@ -214,7 +214,7 @@ public class HelloController {
             List<Polygon> triangulatedPolygons = new ArrayList<>();
 
             for (Polygon polygon : mesh.polygons) {
-                List<Polygon> triangles = EarClipping.triangulate(polygon, mesh.vertices);
+                List<Polygon> triangles = Triangulation.triangulate(polygon, mesh.vertices);
                 triangulatedPolygons.addAll(triangles);
             }
 
@@ -239,12 +239,13 @@ public class HelloController {
         try {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
-
             meshes.add(mesh);
+            triangulateModel();
         } catch (IOException exception) {
             throw new RuntimeException("Неверный файл");
         }
     }
+
 
     private void handlePositionChange(String axis) {
         try {

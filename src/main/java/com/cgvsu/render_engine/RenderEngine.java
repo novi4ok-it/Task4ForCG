@@ -3,11 +3,13 @@ package com.cgvsu.render_engine;
 import java.util.ArrayList;
 
 import com.cgvsu.math.Vector3f;
+import com.cgvsu.rasterization.Rasterization;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
+import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
@@ -18,8 +20,8 @@ public class RenderEngine {
             final Camera camera,
             final Model mesh,
             final int width,
-            final int height)
-    {
+            final int height) {
+
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
@@ -42,20 +44,16 @@ public class RenderEngine {
                 resultPoints.add(resultPoint);
             }
 
-            for (int vertexInPolygonInd = 1; vertexInPolygonInd < nVerticesInPolygon; ++vertexInPolygonInd) {
-                graphicsContext.strokeLine(
-                        resultPoints.get(vertexInPolygonInd - 1).x,
-                        resultPoints.get(vertexInPolygonInd - 1).y,
-                        resultPoints.get(vertexInPolygonInd).x,
-                        resultPoints.get(vertexInPolygonInd).y);
+            // Rasterize the polygon (triangle)
+            if (nVerticesInPolygon == 3) {
+                int[] arrX = new int[3];
+                int[] arrY = new int[3];
+                for (int i = 0; i < 3; i++) {
+                    arrX[i] = (int) resultPoints.get(i).x;
+                    arrY[i] = (int) resultPoints.get(i).y;
+                }
+                Rasterization.fillTriangle(graphicsContext, arrX, arrY, Color.BLUE);
             }
-
-            if (nVerticesInPolygon > 0)
-                graphicsContext.strokeLine(
-                        resultPoints.get(nVerticesInPolygon - 1).x,
-                        resultPoints.get(nVerticesInPolygon - 1).y,
-                        resultPoints.get(0).x,
-                        resultPoints.get(0).y);
         }
     }
 }
