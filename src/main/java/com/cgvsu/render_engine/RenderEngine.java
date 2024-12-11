@@ -2,7 +2,9 @@ package com.cgvsu.render_engine;
 
 import java.util.ArrayList;
 
+import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
+import com.cgvsu.model.Polygon;
 import com.cgvsu.rasterization.Rasterization;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
@@ -22,6 +24,9 @@ public class RenderEngine {
             final int width,
             final int height) {
 
+        // Инициализируем Z-буфер
+        Rasterization.initializeZBuffer(width, height);
+
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
@@ -31,28 +36,46 @@ public class RenderEngine {
         modelViewProjectionMatrix.mul(projectionMatrix);
 
         final int nPolygons = mesh.polygons.size();
-        for (int polygonInd = 0; polygonInd < nPolygons; ++polygonInd) {
-            final int nVerticesInPolygon = mesh.polygons.get(polygonInd).getVertexIndices().size();
+        for (Polygon polygon : mesh.polygons) {
+            final int nVerticesInPolygon = polygon.getVertexIndices().size();
 
-            ArrayList<Point2f> resultPoints = new ArrayList<>();
-            for (int vertexInPolygonInd = 0; vertexInPolygonInd < nVerticesInPolygon; ++vertexInPolygonInd) {
-                Vector3f vertex = mesh.vertices.get(mesh.polygons.get(polygonInd).getVertexIndices().get(vertexInPolygonInd));
+            if (nVerticesInPolygon != 3) continue; // Обрабатываем только треугольники
 
-                Vector3f vertexVecmath = new Vector3f(vertex.x, vertex.y, vertex.z);
+            int[] arrX = new int[3];
+            int[] arrY = new int[3];
+            float[] arrZ = new float[3];
+            Point2f[] texCoords = new Point2f[3];
 
-                Point2f resultPoint = vertexToPoint(multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertexVecmath), width, height);
-                resultPoints.add(resultPoint);
+            for (int vertexInd = 0; vertexInd < nVerticesInPolygon; ++vertexInd) {
+                int vertexIndex = polygon.getVertexIndices().get(vertexInd);
+                Vector3f vertex = mesh.vertices.get(vertexIndex);
+
+                // Преобразуем вершину в пространство экрана
+                Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+
+                // Преобразуем координаты в экранные
+                Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
+
+                // Заполняем массивы для растеризации
+                arrX[vertexInd] = (int) screenPoint.x;
+                arrY[vertexInd] = (int) screenPoint.y;
+                arrZ[vertexInd] = transformedVertex.z; // Z-координата
+
+                // Получаем текстурные координаты, если они есть
+                if (!polygon.getTextureVertexIndices().isEmpty()) {
+                    int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
+                    Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
+                    texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
+                } else {
+                    texCoords[vertexInd] = new Point2f(0, 0);
+                }
             }
 
-            // Rasterize the polygon (triangle)
-            if (nVerticesInPolygon == 3) {
-                int[] arrX = new int[3];
-                int[] arrY = new int[3];
-                for (int i = 0; i < 3; i++) {
-                    arrX[i] = (int) resultPoints.get(i).x;
-                    arrY[i] = (int) resultPoints.get(i).y;
-                }
-                Rasterization.fillTriangle(graphicsContext, arrX, arrY, Color.BLUE);
+            // Растеризация треугольника с текстурой или стандартным цветом
+            if (mesh.hasTexture()) {
+                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture);
+            } else {
+                Rasterization.fillTriangle(graphicsContext, arrX, arrY, arrZ, Color.BLUE);
             }
         }
     }
