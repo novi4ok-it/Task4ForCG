@@ -4,7 +4,7 @@ public class Matrix4f {
 
     float[][] matrix;//мб одномерный
 
-public Matrix4f() {
+    public Matrix4f() {
         matrix = new float[4][4];
     }
 
@@ -65,7 +65,8 @@ public Matrix4f() {
         }
         return sb.toString();
     }
-    public Matrix4f(float[][] matrix){
+
+    public Matrix4f(float[][] matrix) {
         if (matrix.length != 4 || matrix[0].length != 4) {
             throw new IllegalArgumentException("Matrix must be 4x4");
         }
@@ -80,7 +81,6 @@ public Matrix4f() {
     }
 
 
-
     public Matrix4f add(Matrix4f other) {
         float[][] result = new float[4][4];
         for (int i = 0; i < 4; i++) {
@@ -90,6 +90,7 @@ public Matrix4f() {
         }
         return new Matrix4f(result);
     }
+
     public Matrix4f sub(Matrix4f other) {
         float[][] result = new float[4][4];
         for (int i = 0; i < 4; i++) {
@@ -122,8 +123,8 @@ public Matrix4f() {
         );
     }
 
-    public void transpose(){
-        for(int y = 0; y<4; y++) {
+    public void transpose() {
+        for (int y = 0; y < 4; y++) {
             for (int x = y + 1; x < 4; x++) {
                 float a = this.matrix[y][x];
                 this.matrix[y][x] = this.matrix[x][y];

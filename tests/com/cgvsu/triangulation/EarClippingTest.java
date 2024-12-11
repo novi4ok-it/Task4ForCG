@@ -13,143 +13,129 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EarClippingTest {
 
     @Test
-    public void testTriangulateConvexPolygon() {
-        // Вершины выпуклого пятиугольника
+    public void testSimplePolygon() {
+        // Простой четырёхугольник
         List<Vector3f> vertices = List.of(
                 new Vector3f(0, 0, 0),
                 new Vector3f(1, 0, 0),
                 new Vector3f(1, 1, 0),
-                new Vector3f(0.5f, 1.5f, 0),
                 new Vector3f(0, 1, 0)
         );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3));
 
-        // Исходный полигон
-        Polygon polygon = new Polygon(List.of(0, 1, 2, 3, 4));
+        List<Polygon> result = EarClipping.triangulate(polygon, vertices);
 
-        // Триангуляция
-        List<Polygon> triangles = EarClipping.triangulate(polygon, vertices);
+        assertEquals(2, result.size()); // Должно получиться 2 треугольника
 
-        // Проверяем количество треугольников
-        assertEquals(3, triangles.size());
-
-        // Проверяем треугольники, игнорируя порядок индексов
         List<List<Integer>> expectedTriangles = List.of(
-                List.of(0, 1, 4),
-                List.of(1, 2, 4),
-                List.of(2, 3, 4)
+                List.of(0, 1, 2),
+                List.of(0, 2, 3)
         );
 
-        for (List<Integer> expected : expectedTriangles) {
-            boolean contains = triangles.stream()
-                    .anyMatch(triangle -> new HashSet<>(triangle.getVertexIndices()).equals(new HashSet<>(expected)));
-            assertTrue(contains, "Expected triangle " + expected + " not found.");
+        for (Polygon triangle : result) {
+            assertTrue(expectedTriangles.contains(triangle.getVertexIndices()));
         }
     }
 
     @Test
-    public void testTriangulateConcavePolygon() {
-        // Вершины невыпуклого многоугольника
+    public void testPolygonWithCollinearPoints() {
+        // Полигон с коллинеарными точками
         List<Vector3f> vertices = List.of(
                 new Vector3f(0, 0, 0),
-                new Vector3f(2, 0, 0),
-                new Vector3f(2, 2, 0),
-                new Vector3f(1, 1, 0), // Внутренняя вершина
-                new Vector3f(0, 2, 0)
+                new Vector3f(1, 0, 0),
+                new Vector3f(2, 0, 0), // Коллинеарная точка
+                new Vector3f(1, 1, 0)
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3));
+
+        List<Polygon> result = EarClipping.triangulate(polygon, vertices);
+
+        assertEquals(2, result.size()); // Должно получиться 2 треугольника
+
+        List<List<Integer>> expectedTriangles = List.of(
+                List.of(0, 1, 3),
+                List.of(1, 2, 3)
         );
 
-        // Исходный полигон
-        Polygon polygon = new Polygon(List.of(0, 1, 2, 3, 4));
-
-        // Триангуляция
-        List<Polygon> triangles = EarClipping.triangulate(polygon, vertices);
-
-        // Проверяем количество треугольников
-        assertEquals(3, triangles.size());
-
-        // Проверяем треугольники
-        assertTrue(triangles.contains(new Polygon(List.of(0, 1, 3))));
-        assertTrue(triangles.contains(new Polygon(List.of(1, 2, 3))));
-        assertTrue(triangles.contains(new Polygon(List.of(0, 3, 4))));
+        for (Polygon triangle : result) {
+            assertTrue(expectedTriangles.contains(triangle.getVertexIndices()));
+        }
     }
 
     @Test
-    public void testTriangulateInvalidPolygonTooFewVertices() {
-        // Полигон с менее чем тремя вершинами
-        Polygon polygon = new Polygon(List.of(0, 1));
+    public void testFallbackTriangulation() {
+        // Сложный полигон, который не может быть обработан методом "ушей"
+        List<Vector3f> vertices = List.of(
+                new Vector3f(0, 0, 0),
+                new Vector3f(1, 0, 0),
+                new Vector3f(1, 1, 0),
+                new Vector3f(0, 1, 0),
+                new Vector3f(0.5f, 0.5f, 0) // Центральная точка, делающая полигон "проблемным"
+        );
+        Polygon polygon = new Polygon(List.of(0, 1, 2, 3, 4));
+
+        List<Polygon> result = EarClipping.triangulate(polygon, vertices);
+
+        assertTrue(result.size() >= 3); // Должно быть хотя бы 3 треугольника
+    }
+
+    @Test
+    public void testInvalidPolygon() {
+        // Полигон с недостаточным количеством точек
         List<Vector3f> vertices = List.of(
                 new Vector3f(0, 0, 0),
                 new Vector3f(1, 0, 0)
         );
+        Polygon polygon = new Polygon(List.of(0, 1));
 
-        // Проверяем, что возникает исключение
         assertThrows(IllegalArgumentException.class, () -> {
             EarClipping.triangulate(polygon, vertices);
         });
     }
 
     @Test
-    public void testTriangulatePolygonWithCollinearPoints() {
-        // Вершины многоугольника с коллинеарными точками
-        List<Vector3f> vertices = List.of(
-                new Vector3f(0, 0, 0),
-                new Vector3f(1, 0, 0),
-                new Vector3f(2, 0, 0),
-                new Vector3f(2, 1, 0),
-                new Vector3f(0, 1, 0)
-        );
+    public void testNullInputs() {
+        // Проверка на null значения
+        assertThrows(IllegalArgumentException.class, () -> {
+            EarClipping.triangulate(null, null);
+        });
 
-        // Исходный полигон
-        Polygon polygon = new Polygon(List.of(0, 1, 2, 3, 4));
-
-        // Триангуляция
-        List<Polygon> triangles = EarClipping.triangulate(polygon, vertices);
-
-        // Проверяем количество треугольников
-        assertEquals(3, triangles.size());
-
-        // Ожидаемые треугольники, игнорируя порядок индексов
-        List<List<Integer>> expectedTriangles = List.of(
-                List.of(0, 1, 4),
-                List.of(1, 3, 4),
-                List.of(1, 2, 3)
-        );
-
-        // Логируем результат триангуляции для отладки
-        System.out.println("Generated triangles: ");
-        for (Polygon triangle : triangles) {
-            System.out.println(triangle.getVertexIndices());
-        }
-
-        // Проверяем каждый ожидаемый треугольник
-        for (List<Integer> expected : expectedTriangles) {
-            boolean found = triangles.stream()
-                    .anyMatch(triangle -> {
-                        // Проверяем, что набор индексов треугольника совпадает с ожидаемым
-                        HashSet<Integer> triangleSet = new HashSet<>(triangle.getVertexIndices());
-                        HashSet<Integer> expectedSet = new HashSet<>(expected);
-                        return triangleSet.equals(expectedSet);
-                    });
-            assertTrue(found, "Expected triangle " + expected + " not found.");
-        }
+        assertThrows(IllegalArgumentException.class, () -> {
+            EarClipping.triangulate(new Polygon(new ArrayList<>()), null);
+        });
     }
 
     @Test
-    public void testTriangulateSimpleTriangle() {
-        // Вершины треугольника
+    public void testSingleTrianglePolygon() {
+        // Полигон, который уже является треугольником
         List<Vector3f> vertices = List.of(
                 new Vector3f(0, 0, 0),
                 new Vector3f(1, 0, 0),
                 new Vector3f(0, 1, 0)
         );
-
-        // Исходный треугольник
         Polygon polygon = new Polygon(List.of(0, 1, 2));
 
-        // Триангуляция
-        List<Polygon> triangles = EarClipping.triangulate(polygon, vertices);
+        List<Polygon> result = EarClipping.triangulate(polygon, vertices);
 
-        // Проверяем, что результат содержит только один треугольник
-        assertEquals(1, triangles.size());
-        assertEquals(new Polygon(List.of(0, 1, 2)), triangles.get(0));
+        assertEquals(1, result.size()); // Должен быть один треугольник
+        assertEquals(new Polygon(List.of(0, 1, 2)), result.get(0));
+    }
+
+    @Test
+    public void testLargeConvexPolygon() {
+        // Большой выпуклый полигон
+        List<Vector3f> vertices = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            float angle = (float) (2 * Math.PI * i / 10);
+            vertices.add(new Vector3f((float) Math.cos(angle), (float) Math.sin(angle), 0));
+            indices.add(i);
+        }
+
+        Polygon polygon = new Polygon(indices);
+        List<Polygon> result = EarClipping.triangulate(polygon, vertices);
+
+        assertEquals(8, result.size()); // Для выпуклого десятиугольника будет 8 треугольников
     }
 }

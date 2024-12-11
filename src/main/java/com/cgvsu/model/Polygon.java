@@ -18,13 +18,13 @@ public class Polygon {
     }
 
     public Polygon(List<Integer> a) {
-		vertexIndices = new ArrayList<Integer>();
-		for (Integer i : a) {
-			vertexIndices.add(i);
-		}
-		textureVertexIndices = new ArrayList<Integer>();
-		normalIndices = new ArrayList<Integer>();
-	}
+        vertexIndices = new ArrayList<Integer>();
+        for (Integer i : a) {
+            vertexIndices.add(i);
+        }
+        textureVertexIndices = new ArrayList<Integer>();
+        normalIndices = new ArrayList<Integer>();
+    }
 
     public void setVertexIndices(ArrayList<Integer> vertexIndices) {
         assert vertexIndices.size() >= 3;
@@ -40,16 +40,13 @@ public class Polygon {
         assert normalIndices.size() >= 3;
         this.normalIndices = normalIndices;
     }
+
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
         Polygon polygon = (Polygon) obj;
-        return Objects.equals(vertexIndices, polygon.vertexIndices);
+        return vertexIndices.equals(polygon.vertexIndices);
     }
 
     @Override
