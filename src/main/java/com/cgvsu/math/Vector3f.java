@@ -192,4 +192,11 @@ public class Vector3f implements Vector<Vector3f> {
                 && Math.abs(y - other.y) < EPS
                 && Math.abs(z - other.z) < EPS;
     }
+    public static Vector3f vectorProduct(Vector3f a, Vector3f b) {
+    return new Vector3f(
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    );
+}
 }

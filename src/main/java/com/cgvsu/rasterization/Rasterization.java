@@ -33,19 +33,18 @@ public class Rasterization {
             final int[] arrY,
             final float[] arrZ,
             final float[] lightIntensities,
-            final Color baseColor) {
+            final Color baseColor,
+            final boolean useLighting) {
 
-        // Упорядочиваем вершины по Y
         sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
-            if (y < 0 || y >= zBuffer[0].length) continue; // Проверяем границы Y
+            if (y < 0 || y >= zBuffer[0].length) continue;
 
             int x1, x2;
             float z1, z2, i1, i2;
 
             if (y <= arrY[1]) {
-                // Нижняя часть треугольника
                 x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
                 x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
                 z1 = interpolateZ(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
@@ -53,7 +52,6 @@ public class Rasterization {
                 i1 = interpolateZ(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
                 i2 = interpolateZ(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
             } else {
-                // Верхняя часть треугольника
                 x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
                 x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
                 z1 = interpolateZ(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
@@ -76,12 +74,11 @@ public class Rasterization {
 
             for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
                 float z = interpolateZ(x, x1, x2, z1, z2);
-                float intensity = interpolateZ(x, x1, x2, i1, i2); // Интерполяция интенсивности света
+                float intensity = useLighting ? interpolateZ(x, x1, x2, i1, i2) : 1.0f;
 
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;
 
-                    // Применяем интенсивность света к базовому цвету
                     Color shadedColor = baseColor.deriveColor(0, 1, intensity, 1);
                     graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
                 }
@@ -89,29 +86,31 @@ public class Rasterization {
         }
     }
 
-    private static float interpolateZ(int value, int start, int end, float zStart, float zEnd) {
-        return end == start ? zStart : (value - start) * (zEnd - zStart) / (end - start) + zStart;
-    }
 
-    private static int interpolateX(int y, int y1, int y2, int x1, int x2) {
-        return y2 == y1 ? x1 : (y - y1) * (x2 - x1) / (y2 - y1) + x1;
-    }
-
-    private static void sortVerticesByY(int[] x, int[] y, float[] z, float[] lightIntensities) {
-        // Сортируем вершины по Y (пузырьковая сортировка для трёх элементов)
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2 - i; j++) {
-                if (y[j] > y[j + 1]) {
-                    swap(x, j, j + 1);
-                    swap(y, j, j + 1);
-                    swap(z, j, j + 1);
-                    swap(lightIntensities, j, j + 1);
+    private static void sortVerticesByY(int[] arrX, int[] arrY, float[]... arrays) {
+        for (int i = 0; i < arrY.length - 1; i++) {
+            for (int j = 0; j < arrY.length - i - 1; j++) {
+                if (arrY[j] > arrY[j + 1]) {
+                    swap(arrX, j, j + 1);
+                    swap(arrY, j, j + 1);
+                    for (float[] array : arrays) {
+                        swap(array, j, j + 1);
+                    }
                 }
             }
         }
     }
 
-    // Вспомогательный метод для обмена значений в массиве
+    private static int interpolateX(int y, int y1, int y2, int x1, int x2) {
+        if (y1 == y2) return x1;
+        return x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+    }
+
+    private static float interpolateZ(float value, float start, float end, float valStart, float valEnd) {
+        if (start == end) return valStart;
+        return valStart + (valEnd - valStart) * (value - start) / (end - start);
+    }
+
     private static void swap(int[] array, int i, int j) {
         int temp = array[i];
         array[i] = array[j];
@@ -124,6 +123,8 @@ public class Rasterization {
         array[j] = temp;
     }
 
+
+//ПЕРЕКЛЮЧЕНИЕ ОСВЕЩЕНИЯ НЕ РОБИТ С ТЕКСТУРОЙ!!!
     public static void fillTriangleWithTexture(
             final GraphicsContext graphicsContext,
             final int[] arrX,
@@ -131,7 +132,8 @@ public class Rasterization {
             final float[] arrZ,
             final Point2f[] texCoords,
             final Image texture,
-            final float[] lightIntensities) {
+            final float[] lightIntensities,
+            final boolean useLighting) {
 
         // Упорядочиваем вершины по Y
         sortVerticesByY(arrX, arrY, arrZ, texCoords, lightIntensities);

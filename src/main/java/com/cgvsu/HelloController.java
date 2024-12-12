@@ -171,7 +171,10 @@ public class HelloController {
             isPolygonalGridEnabled = newValue;
             renderScene();
         });
-
+        lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
+        isLightingEnabled = newValue; // Обновляем флаг освещения
+        renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
+        });
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
@@ -179,7 +182,21 @@ public class HelloController {
     }
 
     // Отрисовка полигональной сетки (только триангулированной)
+    private double[][] zBuffer;
+
+    private void initializeZBuffer(int width, int height) {
+        zBuffer = new double[width][height];
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                zBuffer[x][y] = Double.POSITIVE_INFINITY; // Инициализируем максимальной глубиной
+            }
+        }
+    }
+
     private void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height) {
+        // Инициализируем Z-буфер
+        initializeZBuffer(width, height);
+
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
@@ -195,25 +212,82 @@ public class HelloController {
             final int nVertices = triangle.getVertexIndices().size();
             double[] xCoords = new double[nVertices];
             double[] yCoords = new double[nVertices];
+            float[] zCoords = new float[nVertices];
+            Vector3f[] transformedVertices = new Vector3f[nVertices];
 
             for (int i = 0; i < nVertices; i++) {
                 int vertexIndex = triangle.getVertexIndices().get(i);
                 Vector3f vertex = mesh.vertices.get(vertexIndex);
 
                 Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+                transformedVertices[i] = transformedVertex;
                 Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
 
                 xCoords[i] = screenPoint.x;
                 yCoords[i] = screenPoint.y;
+                zCoords[i] = transformedVertex.z; // Сохраняем глубину
             }
 
-            // Соединяем вершины треугольника
+            // Проверяем ориентацию нормали
+            if (!isFrontFacing(transformedVertices)) {
+                continue; // Пропускаем невидимые треугольники
+            }
+
+            // Соединяем вершины треугольника с учетом Z-буфера
             for (int i = 0; i < nVertices; i++) {
                 int next = (i + 1) % nVertices;
-                gc.strokeLine(xCoords[i], yCoords[i], xCoords[next], yCoords[next]);
+                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], zCoords[i], (int) xCoords[next], (int) yCoords[next], zCoords[next]);
             }
         }
     }
+
+    private boolean isFrontFacing(Vector3f[] vertices) {
+        Vector3f v0 = vertices[0];
+        Vector3f v1 = vertices[1];
+        Vector3f v2 = vertices[2];
+
+        // Вычисляем нормаль плоскости
+        Vector3f edge1 = Vector3f.subtraction(v1, v0);
+        Vector3f edge2 = Vector3f.subtraction(v2, v0);
+        Vector3f normal = Vector3f.vectorProduct(edge1, edge2);
+
+        // Проверяем, направлена ли нормаль к камере
+        return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
+    }
+
+    private void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+
+        while (true) {
+            if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
+                float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
+                float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
+
+                if (z < zBuffer[x0][y0]) {
+                    zBuffer[x0][y0] = z;
+                    gc.getPixelWriter().setColor(x0, y0, Color.GRAY);
+                }
+            }
+
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
+    private boolean isLightingEnabled = false;
+
 
     // Основной рендер сцены
     private void renderScene() {
@@ -227,7 +301,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height);
+            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height, isLightingEnabled);
             // Затем рисуем поверх них триангулированную сетку (если включена)
             if (isPolygonalGridEnabled) {
                 drawWireframe(gc, container.mesh, camera, (int) width, (int) height);

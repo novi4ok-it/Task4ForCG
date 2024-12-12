@@ -22,7 +22,8 @@ public class RenderEngine {
             final Camera camera,
             final Model mesh,
             final int width,
-            final int height) {
+            final int height,
+            final boolean isLightingEnabled) {
 
         // Инициализируем Z-буфер
         Rasterization.initializeZBuffer(width, height);
@@ -81,7 +82,7 @@ public class RenderEngine {
 
             // Растеризация треугольника с текстурой или стандартным цветом
             if (mesh.hasTexture()) {
-                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities);
+                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities, isLightingEnabled);
             } else {
                 // Средняя интенсивность света для треугольника (если текстуры нет)
                 Rasterization.fillTriangle(
@@ -90,7 +91,8 @@ public class RenderEngine {
                         arrY,
                         arrZ,
                         lightIntensities, // Передаем интенсивности света
-                        Color.BLUE // Базовый цвет
+                        Color.BLUE,
+                        isLightingEnabled
                 );
             }
         }
