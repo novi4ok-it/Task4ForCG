@@ -1,6 +1,8 @@
 package com.cgvsu;
 
 import com.cgvsu.container.ModelContainer;
+import com.cgvsu.math.Matrix4f;
+import com.cgvsu.math.Point2f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
@@ -22,6 +24,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -34,6 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.cgvsu.render_engine.GraphicConveyor.*;
 
 public class HelloController {
 
@@ -164,50 +169,74 @@ public class HelloController {
 
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
-            drawPolygonalGrid();
+            renderScene();
         });
 
-        KeyFrame frame = new KeyFrame(Duration.millis(15), event -> {
-            double width = canvas.getWidth();
-            double height = canvas.getHeight();
-
-            canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
-            camera.setAspectRatio((float) (width / height));
-
-            for (ModelContainer container : modelContainers) {
-                RenderEngine.render(canvas.getGraphicsContext2D(), camera, container.mesh, (int) width, (int) height);
-            }
-
-        });
-
-        timeline.getKeyFrames().
-
-                add(frame);
+        // Анимация для обновления кадра
+        KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
+        timeline.getKeyFrames().add(frame);
         timeline.play();
     }
 
-    private boolean isPolygonalGridEnabled = false; // Флаг для отображения сетки (стандартной или триангулированной)
+    // Отрисовка полигональной сетки (только триангулированной)
+    private void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height) {
+        Matrix4f modelMatrix = rotateScaleTranslate();
+        Matrix4f viewMatrix = camera.getViewMatrix();
+        Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
-    // Метод для рисования сетки
-    private void drawPolygonalGrid() {
-//        if (mesh == null) {
-//            return;
-//        }
-//        GraphicsContext gc = canvas.getGraphicsContext2D();
-//        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-//
-//        List<Polygon> originalPolygons = new ArrayList<>();
-//        for (Polygon polygon : mesh.polygons) {
-//            originalPolygons.add(polygon);
-//        }
-//
-//        // Если флаг включен, рисуем триангулированную сетку
-        if (isPolygonalGridEnabled) {
+        Matrix4f modelViewProjectionMatrix = new Matrix4f(modelMatrix);
+        modelViewProjectionMatrix.mul(viewMatrix);
+        modelViewProjectionMatrix.mul(projectionMatrix);
 
-        } else {
+        gc.setStroke(Color.GRAY);
+        gc.setLineWidth(1.0);
 
+        for (Polygon triangle : mesh.polygons) {
+            final int nVertices = triangle.getVertexIndices().size();
+            double[] xCoords = new double[nVertices];
+            double[] yCoords = new double[nVertices];
+
+            for (int i = 0; i < nVertices; i++) {
+                int vertexIndex = triangle.getVertexIndices().get(i);
+                Vector3f vertex = mesh.vertices.get(vertexIndex);
+
+                Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+                Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
+
+                xCoords[i] = screenPoint.x;
+                yCoords[i] = screenPoint.y;
+            }
+
+            // Соединяем вершины треугольника
+            for (int i = 0; i < nVertices; i++) {
+                int next = (i + 1) % nVertices;
+                gc.strokeLine(xCoords[i], yCoords[i], xCoords[next], yCoords[next]);
+            }
         }
     }
+
+    // Основной рендер сцены
+    private void renderScene() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0, 0, width, height);
+
+        camera.setAspectRatio((float) (width / height));
+
+        for (ModelContainer container : modelContainers) {
+            // Сначала закрашиваем полигоны
+            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height);
+            // Затем рисуем поверх них триангулированную сетку (если включена)
+            if (isPolygonalGridEnabled) {
+                drawWireframe(gc, container.mesh, camera, (int) width, (int) height);
+            }
+        }
+    }
+
+    // Флаг для отображения триангулированной сетки
+    private boolean isPolygonalGridEnabled = false;
 
     private void triangulateModel() {
         // Преобразуем полигоны модели в треугольники
