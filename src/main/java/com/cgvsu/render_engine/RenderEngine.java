@@ -84,9 +84,14 @@ public class RenderEngine {
                 Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities);
             } else {
                 // Средняя интенсивность света для треугольника (если текстуры нет)
-                float avgIntensity = (lightIntensities[0] + lightIntensities[1] + lightIntensities[2]) / 3.0f;
-                Color shadedColor = Color.BLUE.deriveColor(0, 1, avgIntensity, 1);
-                Rasterization.fillTriangle(graphicsContext, arrX, arrY, arrZ, shadedColor);
+                Rasterization.fillTriangle(
+                        graphicsContext,
+                        arrX,
+                        arrY,
+                        arrZ,
+                        lightIntensities, // Передаем интенсивности света
+                        Color.BLUE // Базовый цвет
+                );
             }
         }
     }
