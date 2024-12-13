@@ -23,7 +23,8 @@ public class RenderEngine {
             final Model mesh,
             final int width,
             final int height,
-            final boolean isLightingEnabled) {
+            final boolean isLightingEnabled,
+            final boolean isTextureEnabled) {
 
         // Инициализируем Z-буфер
         Rasterization.initializeZBuffer(width, height);
@@ -81,7 +82,7 @@ public class RenderEngine {
             }
 
             // Растеризация треугольника с текстурой или стандартным цветом
-            if (mesh.hasTexture()) {
+            if (mesh.hasTexture() && isTextureEnabled) {
                 Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities, isLightingEnabled);
             } else {
                 // Средняя интенсивность света для треугольника (если текстуры нет)

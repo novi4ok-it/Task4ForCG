@@ -21,6 +21,7 @@ import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -172,8 +173,12 @@ public class HelloController {
             renderScene();
         });
         lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
-        isLightingEnabled = newValue; // Обновляем флаг освещения
-        renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
+            isLightingEnabled = newValue; // Обновляем флаг освещения
+            renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
+        });
+        texture.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            isTextureEnabled = newValue; // Обновляем состояние текстур
+            renderScene(); // Перерисовываем сцену
         });
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
@@ -301,7 +306,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height, isLightingEnabled);
+            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height, isLightingEnabled, isTextureEnabled);
             // Затем рисуем поверх них триангулированную сетку (если включена)
             if (isPolygonalGridEnabled) {
                 drawWireframe(gc, container.mesh, camera, (int) width, (int) height);
@@ -326,6 +331,8 @@ public class HelloController {
             mesh.polygons = (ArrayList<Polygon>) triangulatedPolygons;
         }
     }
+
+    private boolean isTextureEnabled = false;
 
     @FXML
     private void onOpenModelMenuItemClick() {
@@ -508,6 +515,7 @@ public class HelloController {
 
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
+        addTextureButton.setOnAction(e -> addTexture(hboxMod, mesh));
         //deleteVertexButton.setOnAction(e -> deleteButtonIsPressed(deleteVertexButton));
 
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
@@ -516,6 +524,26 @@ public class HelloController {
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
+    }
+
+
+    private void addTexture(HBox hboxMod, Model model) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture (*.png)", "*.png", "*.jpg"));
+
+        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        if (file == null) {
+            return; // Если файл не выбран, просто выйти из метода
+        }
+
+        try {
+            // Загружаем изображение из файла
+            Image texture = new Image(file.toURI().toString());
+            // Устанавливаем текстуру для модели
+            model.texture = texture;
+        } catch (Exception exception) {
+            throw new RuntimeException("Ошибка при загрузке текстуры: " + exception.getMessage(), exception);
+        }
     }
 
     private void saveModelToFile(Model mesh) {
