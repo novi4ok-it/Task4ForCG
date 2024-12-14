@@ -8,6 +8,7 @@ import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
+import com.cgvsu.render_engine.CameraManager;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.triangulation.Triangulation;
@@ -120,15 +121,11 @@ public class HelloController {
     private int modelCounter = 1;
     private int cameraCounter = 1;
     private final int MAX_MODELS = 4;
-    private final int MAX_CAMERAS = 2;
+    private final int MAX_CAMERAS = 4;
 
     private ObservableList<ModelContainer> modelContainers = FXCollections.observableArrayList();
 
-
-    private Camera camera = new Camera(
-            new Vector3f(0, 0, 100),
-            new Vector3f(0, 0, 0),
-            1.0F, 1, 0.01F, 100);
+    private CameraManager cameraManager = new CameraManager();
 
     private Timeline timeline;
 
@@ -302,14 +299,18 @@ public class HelloController {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(0, 0, width, height);
 
-        camera.setAspectRatio((float) (width / height));
+        // Получаем активную камеру
+        Camera activeCamera = cameraManager.getActiveCamera();
+        if (activeCamera != null) {
+            activeCamera.setAspectRatio((float) (width / height));
+        }
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, camera, container.mesh, (int) width, (int) height, isLightingEnabled, isTextureEnabled);
+            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, isLightingEnabled, isTextureEnabled);
             // Затем рисуем поверх них триангулированную сетку (если включена)
             if (isPolygonalGridEnabled) {
-                drawWireframe(gc, container.mesh, camera, (int) width, (int) height);
+                drawWireframe(gc, container.mesh, activeCamera, (int) width, (int) height);
             }
         }
     }
@@ -478,13 +479,13 @@ public class HelloController {
     private void updateCamPosition(String axis, float value) {
         switch (axis) {
             case "x":
-                camera.setPosition(new Vector3f(value, 0, 0));
+                cameraManager.getActiveCamera().setPosition(new Vector3f(value, 0, 0));
                 break;
             case "y":
-                camera.setPosition(new Vector3f(0, value, 0));
+                cameraManager.getActiveCamera().setPosition(new Vector3f(0, value, 0));
                 break;
             case "z":
-                camera.setPosition(new Vector3f(0, 0, value));
+                cameraManager.getActiveCamera().setPosition(new Vector3f(0, 0, value));
                 break;
         }
         // Обновить отображение вашей камеры на канвасе
@@ -581,7 +582,7 @@ public class HelloController {
     @FXML
     private void addHBoxCamera() {
         if (hboxesCam.size() >= MAX_CAMERAS) {
-            showAlert("Предупреждение", "Вы достигли максимального количества камер (2).");
+            showAlert("Предупреждение", "Вы достигли максимального количества камер (4).");
             return;
         }
         if (hboxesCam.isEmpty()) {
@@ -589,11 +590,29 @@ public class HelloController {
         }
         HBox hboxCam = new HBox(10);
 
+        Camera camera = new Camera(
+                new Vector3f(0, 0, 100),
+                new Vector3f(0, 0, 0),
+                1.0F, 1, 0.01F, 100);
+        cameraManager.addCamera(camera);
+
+        int cameraIndex = cameraManager.getCameras().size() - 1; // Индекс только что добавленной камеры
+
         Button camButton = new Button("Камера " + cameraCounter);
         Button deleteCamButton = new Button("Удалить");
 
+        // Обработчик переключения на текущую камеру
+        camButton.setOnAction(e -> {
+            cameraManager.setActiveCamera(cameraIndex);
+            renderScene();
+        });
 
-        deleteCamButton.setOnAction(e -> removeHBoxCam(hboxCam));
+        // Обработчик удаления камеры
+        deleteCamButton.setOnAction(e -> {
+            removeHBoxCam(hboxCam);
+            cameraManager.removeCamera(cameraIndex);
+            cameraCounter--;
+        });
 
         hboxCam.getChildren().addAll(camButton, deleteCamButton);
 
@@ -615,32 +634,32 @@ public class HelloController {
 
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
     }
 
     @FXML
     public void handleCameraBackward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, TRANSLATION));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
     }
 
     @FXML
     public void handleCameraLeft(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(TRANSLATION, 0, 0));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
     }
 
     @FXML
     public void handleCameraRight(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
     }
 
     @FXML
     public void handleCameraUp(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, TRANSLATION, 0));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
     }
 
     @FXML
     public void handleCameraDown(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+        cameraManager.getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
 
     private void showAlert(String title, String message) {
