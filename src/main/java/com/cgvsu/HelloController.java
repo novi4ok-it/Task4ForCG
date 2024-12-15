@@ -611,7 +611,6 @@ public class HelloController {
         deleteCamButton.setOnAction(e -> {
             removeHBoxCam(hboxCam);
             cameraManager.removeCamera(cameraIndex);
-            cameraCounter--;
         });
 
         hboxCam.getChildren().addAll(camButton, deleteCamButton);
