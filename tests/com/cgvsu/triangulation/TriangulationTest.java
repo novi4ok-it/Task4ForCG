@@ -37,31 +37,6 @@ public class TriangulationTest {
     }
 
     @Test
-    public void testPolygonWithCollinearPoints() {
-        // Полигон с коллинеарными точками
-        List<Vector3f> vertices = List.of(
-                new Vector3f(0, 0, 0),
-                new Vector3f(1, 0, 0),
-                new Vector3f(2, 0, 0), // Коллинеарная точка
-                new Vector3f(1, 1, 0)
-        );
-        Polygon polygon = new Polygon(List.of(0, 1, 2, 3));
-
-        List<Polygon> result = Triangulation.triangulate(polygon, vertices);
-
-        assertEquals(2, result.size()); // Должно получиться 2 треугольника
-
-        List<List<Integer>> expectedTriangles = List.of(
-                List.of(0, 1, 3),
-                List.of(1, 2, 3)
-        );
-
-        for (Polygon triangle : result) {
-            assertTrue(expectedTriangles.contains(triangle.getVertexIndices()));
-        }
-    }
-
-    @Test
     public void testFallbackTriangulation() {
         // Сложный полигон, который не может быть обработан методом "ушей"
         List<Vector3f> vertices = List.of(

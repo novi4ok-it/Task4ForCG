@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Polygon;
+import com.cgvsu.rasterization.NonTexturedTriangleRenderer;
 import com.cgvsu.rasterization.Rasterization;
+import com.cgvsu.rasterization.TexturedTriangleRenderer;
+import com.cgvsu.rasterization.TriangleRenderer;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
@@ -39,63 +42,61 @@ public class RenderEngine {
 
         final int nPolygons = mesh.polygons.size();
         for (Polygon polygon : mesh.polygons) {
-            final int nVerticesInPolygon = polygon.getVertexIndices().size();
+            if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 
-            if (nVerticesInPolygon != 3) continue; // Обрабатываем только треугольники
+            TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
+            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE);
+            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, isLightingEnabled);
+        }
+    }
 
-            int[] arrX = new int[3];
-            int[] arrY = new int[3];
-            float[] arrZ = new float[3];
-            Point2f[] texCoords = new Point2f[3];
-            float[] lightIntensities = new float[3];
+    private static TriangleData prepareTriangleData(
+            Polygon polygon,
+            Model mesh,
+            Matrix4f modelViewProjectionMatrix,
+            int width,
+            int height,
+            Camera camera) {
 
-            for (int vertexInd = 0; vertexInd < nVerticesInPolygon; ++vertexInd) {
-                int vertexIndex = polygon.getVertexIndices().get(vertexInd);
-                Vector3f vertex = mesh.vertices.get(vertexIndex);
+        int[] arrX = new int[3];
+        int[] arrY = new int[3];
+        float[] arrZ = new float[3];
+        Point2f[] texCoords = new Point2f[3];
+        float[] lightIntensities = new float[3];
 
-                // Преобразуем вершину в пространство экрана
-                Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+        for (int vertexInd = 0; vertexInd < 3; ++vertexInd) {
+            int vertexIndex = polygon.getVertexIndices().get(vertexInd);
+            Vector3f vertex = mesh.vertices.get(vertexIndex);
 
-                // Преобразуем координаты в экранные
-                Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
+            Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+            Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
 
-                // Заполняем массивы для растеризации
-                arrX[vertexInd] = (int) screenPoint.x;
-                arrY[vertexInd] = (int) screenPoint.y;
-                arrZ[vertexInd] = transformedVertex.z; // Z-координата
+            arrX[vertexInd] = (int) screenPoint.x;
+            arrY[vertexInd] = (int) screenPoint.y;
+            arrZ[vertexInd] = transformedVertex.z;
 
-                // Получаем текстурные координаты, если они есть
-                if (!polygon.getTextureVertexIndices().isEmpty()) {
-                    int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
-                    Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
-                    texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
-                } else {
-                    texCoords[vertexInd] = new Point2f(0, 0);
-                }
-                int normalIndex = polygon.getNormalIndices().get(vertexInd);
-                Vector3f normal = mesh.normals.get(normalIndex);
-
-                // Направление на источник света (камера является источником света)
-                Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();
-                // Интенсивность света
-                lightIntensities[vertexInd] = Math.max(0, normal.dot(lightDir));
-            }
-
-            // Растеризация треугольника с текстурой или стандартным цветом
-            if (mesh.hasTexture() && isTextureEnabled) {
-                Rasterization.fillTriangleWithTexture(graphicsContext, arrX, arrY, arrZ, texCoords, mesh.texture, lightIntensities, isLightingEnabled);
+            if (!polygon.getTextureVertexIndices().isEmpty()) {
+                int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
+                Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
+                texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
             } else {
-                // Средняя интенсивность света для треугольника (если текстуры нет)
-                Rasterization.fillTriangle(
-                        graphicsContext,
-                        arrX,
-                        arrY,
-                        arrZ,
-                        lightIntensities, // Передаем интенсивности света
-                        Color.BLUE,
-                        isLightingEnabled
-                );
+                texCoords[vertexInd] = new Point2f(0, 0);
             }
+
+            int normalIndex = polygon.getNormalIndices().get(vertexInd);
+            Vector3f normal = mesh.normals.get(normalIndex);
+            Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();
+            lightIntensities[vertexInd] = Math.max(0, normal.dot(lightDir));
+        }
+
+        return new TriangleData(arrX, arrY, arrZ, texCoords, lightIntensities);
+    }
+
+    private static TriangleRenderer chooseTriangleRenderer(Model mesh, boolean isTextureEnabled, Color baseColor) {
+        if (mesh.hasTexture() && isTextureEnabled) {
+            return new TexturedTriangleRenderer(mesh.texture, Rasterization.zBuffer);
+        } else {
+            return new NonTexturedTriangleRenderer(baseColor, Rasterization.zBuffer);
         }
     }
 }

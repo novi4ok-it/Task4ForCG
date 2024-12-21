@@ -14,7 +14,7 @@ public class Triangulation {
         }
 
         List<Integer> remainingIndices = new ArrayList<>(polygon.getVertexIndices());
-        List<Polygon> triangles = new ArrayList<>();
+        List<Polygon> triangles;
 
         if (remainingIndices.size() < 3) {
             throw new IllegalArgumentException("Polygon must have at least three vertices.");

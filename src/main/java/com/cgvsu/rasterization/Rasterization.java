@@ -13,10 +13,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-
 public class Rasterization {
 
-    private static double[][] zBuffer;
+    public static double[][] zBuffer;
 
     public static void initializeZBuffer(int width, int height) {
         zBuffer = new double[width][height];
@@ -36,58 +35,25 @@ public class Rasterization {
             final Color baseColor,
             final boolean useLighting) {
 
-        sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
-
-        for (int y = arrY[0]; y <= arrY[2]; y++) {
-            if (y < 0 || y >= zBuffer[0].length) continue;
-
-            int x1, x2;
-            float z1, z2, i1, i2;
-
-            if (y <= arrY[1]) {
-                x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolateZ(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
-                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                i1 = interpolateZ(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
-                i2 = interpolateZ(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
-            } else {
-                x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolateZ(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
-                z2 = interpolateZ(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                i1 = interpolateZ(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
-                i2 = interpolateZ(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
-            }
-
-            if (x1 > x2) {
-                int tempX = x1;
-                x1 = x2;
-                x2 = tempX;
-                float tempZ = z1;
-                z1 = z2;
-                z2 = tempZ;
-                float tempI = i1;
-                i1 = i2;
-                i2 = tempI;
-            }
-
-            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
-                float z = interpolateZ(x, x1, x2, z1, z2);
-                float intensity = useLighting ? interpolateZ(x, x1, x2, i1, i2) : 1.0f;
-
-                if (z < zBuffer[x][y]) {
-                    zBuffer[x][y] = z;
-
-                    Color shadedColor = baseColor.deriveColor(0, 1, intensity, 1);
-                    graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
-                }
-            }
-        }
+        TriangleRenderer triangleRenderer = new NonTexturedTriangleRenderer(baseColor, zBuffer);
+        triangleRenderer.render(graphicsContext, arrX, arrY, arrZ, new Point2f[3], lightIntensities, useLighting);
     }
 
+    public static void fillTriangleWithTexture(
+            final GraphicsContext graphicsContext,
+            final int[] arrX,
+            final int[] arrY,
+            final float[] arrZ,
+            final Point2f[] texCoords,
+            final Image texture,
+            final float[] lightIntensities,
+            final boolean useLighting) {
 
-    private static void sortVerticesByY(int[] arrX, int[] arrY, float[]... arrays) {
+        TriangleRenderer triangleRenderer = new TexturedTriangleRenderer(texture, zBuffer);
+        triangleRenderer.render(graphicsContext, arrX, arrY, arrZ, texCoords, lightIntensities, useLighting);
+    }
+
+    static void sortVerticesByY(int[] arrX, int[] arrY, float[]... arrays) {
         for (int i = 0; i < arrY.length - 1; i++) {
             for (int j = 0; j < arrY.length - i - 1; j++) {
                 if (arrY[j] > arrY[j + 1]) {
@@ -101,151 +67,7 @@ public class Rasterization {
         }
     }
 
-    private static int interpolateX(int y, int y1, int y2, int x1, int x2) {
-        if (y1 == y2) return x1;
-        return x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-    }
-
-    private static float interpolateZ(float value, float start, float end, float valStart, float valEnd) {
-        if (start == end) return valStart;
-        return valStart + (valEnd - valStart) * (value - start) / (end - start);
-    }
-
-    private static void swap(int[] array, int i, int j) {
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-
-    private static void swap(float[] array, int i, int j) {
-        float temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-
-
-    //ПЕРЕКЛЮЧЕНИЕ ОСВЕЩЕНИЯ НЕ РОБИТ С ТЕКСТУРОЙ!!!
-    public static void fillTriangleWithTexture(
-            final GraphicsContext graphicsContext,
-            final int[] arrX,
-            final int[] arrY,
-            final float[] arrZ,
-            final Point2f[] texCoords,
-            final Image texture,
-            final float[] lightIntensities,
-            final boolean useLighting) {
-
-        // Проверка на корректные размеры массивов
-        if (arrX.length != 3 || arrY.length != 3 || arrZ.length != 3 || texCoords.length != 3 || lightIntensities.length != 3) {
-            throw new IllegalArgumentException("Все входные массивы должны содержать по 3 элемента.");
-        }
-
-        // Упорядочиваем вершины по Y
-        sortVerticesByY(arrX, arrY, arrZ, texCoords, lightIntensities);
-
-        int canvasWidth = (int) graphicsContext.getCanvas().getWidth();
-        int canvasHeight = (int) graphicsContext.getCanvas().getHeight();
-
-        for (int y = arrY[0]; y <= arrY[2]; y++) {
-            if (y < 0 || y >= canvasHeight) continue;
-
-            int x1, x2;
-            float z1, z2;
-            Point2f t1, t2;
-            float i1, i2;
-
-            if (y <= arrY[1]) {
-                x1 = interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolate(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
-                z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                t1 = interpolateTexCoord(y, arrY[0], arrY[1], texCoords[0], texCoords[1]);
-                t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
-                i1 = interpolate(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
-                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
-            } else {
-                x1 = interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
-                x2 = interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
-                z1 = interpolate(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
-                z2 = interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                t1 = interpolateTexCoord(y, arrY[1], arrY[2], texCoords[1], texCoords[2]);
-                t2 = interpolateTexCoord(y, arrY[0], arrY[2], texCoords[0], texCoords[2]);
-                i1 = interpolate(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
-                i2 = interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
-            }
-
-            if (x1 > x2) {
-                // Swap
-                int tempX = x1;
-                x1 = x2;
-                x2 = tempX;
-
-                float tempZ = z1;
-                z1 = z2;
-                z2 = tempZ;
-
-                Point2f tempT = t1;
-                t1 = t2;
-                t2 = tempT;
-
-                float tempI = i1;
-                i1 = i2;
-                i2 = tempI;
-            }
-
-            for (int x = Math.max(0, x1); x <= Math.min(x2, canvasWidth - 1); x++) {
-                float z = interpolate(x, x1, x2, z1, z2);
-                if (z < zBuffer[x][y]) {
-                    Point2f texCoord = interpolateTexCoord(x, x1, x2, t1, t2);
-                    float intensity = useLighting ? interpolate(x, x1, x2, i1, i2) : 1.0f;
-
-                    // Ограничиваем текстурные координаты
-                    texCoord.x = Math.max(0, Math.min(texCoord.x, 1));
-                    texCoord.y = Math.max(0, Math.min(texCoord.y, 1));
-
-                    // Применяем интенсивность света к цвету
-                    Color color = sampleTexture(texture, texCoord.x, texCoord.y);
-                    color = color.deriveColor(0, 1, intensity, 1);
-
-                    graphicsContext.getPixelWriter().setColor(x, y, color);
-                    zBuffer[x][y] = z;
-                }
-            }
-        }
-    }
-
-    // Интерполяция текстурных координат для каждого пикселя
-    private static Point2f interpolateTexCoord(int x, int x1, int x2, Point2f coord1, Point2f coord2) {
-        if (x1 == x2) return new Point2f(coord1.x, coord1.y);
-        float t = (x - x1) / (float) (x2 - x1);
-        float u = coord1.x + t * (coord2.x - coord1.x);
-        float v = coord1.y + t * (coord2.y - coord1.y);
-
-        // Дополнительная проверка, чтобы избежать значений вне диапазона [0, 1]
-        u = Math.max(0, Math.min(u, 1));
-        v = Math.max(0, Math.min(v, 1));
-
-        return new Point2f(u, v);
-    }
-
-    private static Color sampleTexture(Image texture, float u, float v) {
-        int texWidth = (int) texture.getWidth();
-        int texHeight = (int) texture.getHeight();
-
-        // Преобразуем текстурные координаты [0, 1] в пиксельные координаты текстуры
-        int texX = Math.min((int) (u * texWidth), texWidth - 1);
-        int texY = Math.min((int) ((1 - v) * texHeight), texHeight - 1); // Инверсия Y для соответствия системе координат
-
-        PixelReader pixelReader = texture.getPixelReader();
-        if (pixelReader != null) {
-            return pixelReader.getColor(texX, texY);
-        }
-
-        return Color.BLACK; // Возвращаем черный цвет, если текстура недоступна
-    }
-
-    // Сортировка вершина
-    private static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities) {
+    static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities) {
         for (int i = 0; i < 2; i++) {
             for (int j = i + 1; j < 3; j++) {
                 if (arrY[i] > arrY[j]) {
@@ -277,8 +99,56 @@ public class Rasterization {
         lightIntensities[j] = tempI;
     }
 
-    private static float interpolate(int y, int y1, int y2, float value1, float value2) {
-        if (y1 == y2) return value1; // Защита от деления на 0
-        return value1 + (value2 - value1) * (y - y1) / (float) (y2 - y1);
+
+    static int interpolateX(int y, int y1, int y2, int x1, int x2) {
+        if (y1 == y2) return x1;
+        return x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+    }
+
+    static float interpolate(float value, float start, float end, float valStart, float valEnd) {
+        if (start == end) return valStart;
+        return valStart + (valEnd - valStart) * (value - start) / (end - start);
+    }
+
+    private static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    private static void swap(float[] array, int i, int j) {
+        float temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    // Интерполяция текстурных координат для каждого пикселя
+    static Point2f interpolateTexCoord(float x, float x1, float x2, Point2f coord1, Point2f coord2) {
+        if (x1 == x2) return new Point2f(coord1.x, coord1.y);
+        float t = (x - x1) / (x2 - x1);
+        float u = coord1.x + t * (coord2.x - coord1.x);
+        float v = coord1.y + t * (coord2.y - coord1.y);
+
+        // Дополнительная проверка, чтобы избежать значений вне диапазона [0, 1]
+        u = Math.max(0, Math.min(u, 1));
+        v = Math.max(0, Math.min(v, 1));
+
+        return new Point2f(u, v);
+    }
+
+    static Color sampleTexture(Image texture, float u, float v) {
+        int texWidth = (int) texture.getWidth();
+        int texHeight = (int) texture.getHeight();
+
+        // Преобразуем текстурные координаты [0, 1] в пиксельные координаты текстуры
+        int texX = Math.min((int) (u * texWidth), texWidth - 1);
+        int texY = Math.min((int) ((1 - v) * texHeight), texHeight - 1); // Инверсия Y для соответствия системе координат
+
+        PixelReader pixelReader = texture.getPixelReader();
+        if (pixelReader != null) {
+            return pixelReader.getColor(texX, texY);
+        }
+
+        return Color.BLACK; // Возвращаем черный цвет, если текстура недоступна
     }
 }

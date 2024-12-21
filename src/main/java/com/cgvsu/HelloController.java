@@ -182,8 +182,6 @@ public class HelloController {
         timeline.getKeyFrames().add(frame);
         timeline.play();
     }
-
-    // Отрисовка полигональной сетки (только триангулированной)
     private double[][] zBuffer;
 
     private void initializeZBuffer(int width, int height) {
