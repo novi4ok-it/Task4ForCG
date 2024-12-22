@@ -46,12 +46,13 @@ public class DrawWireframe {
                 zCoords[i] = transformedVertex.z; // Сохраняем глубину
             }
 
-            // Проверяем ориентацию нормали
+
             if (!isFrontFacing(transformedVertices)) {
-                continue; // Пропускаем невидимые треугольники
+                continue;
+                // Пропускаем невидимые треугольники
             }
 
-            // Соединяем вершины треугольника с учетом Z-буфера
+            // Соединяем вершины
             for (int i = 0; i < nVertices; i++) {
                 int next = (i + 1) % nVertices;
                 drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], (int) xCoords[next], (int) yCoords[next], zBuffer);
@@ -72,8 +73,11 @@ public class DrawWireframe {
         // Проверяем, направлена ли нормаль к камере
         return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
     }
-
+    //алгоритм Брезенхэма
     private static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, int x1, int y1, double[][] zBuffer) {
+        //dx и dy — это расстояние по осям X и Y соответственно между конечной и начальной точками. Эти значения определяют, насколько нужно перемещаться по осям, чтобы нарисовать линию.
+        //sx и sy — это шаги для перехода по осям. Если конечная точка находится правее (или выше) начальной, то шаг будет положительным. Если нет — отрицательным.
+        //err — это начальная ошибка, которая определяет, когда нужно изменить направление рисования по одной из осей.
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -83,12 +87,12 @@ public class DrawWireframe {
         while (true) {
             if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
                 // Если текущая точка находится в пределах экрана
-                if (zBuffer[x0][y0] < Double.POSITIVE_INFINITY) { // Проверяем, есть ли значение в буфере
-                    gc.getPixelWriter().setColor(x0, y0, Color.GRAY); // Рисуем точку
+                if (zBuffer[x0][y0] < Double.POSITIVE_INFINITY) {
+                    gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
                 }
             }
 
-            if (x0 == x1 && y0 == y1) break; // Если линия закончилась
+            if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
             if (e2 > -dy) {
                 err -= dy;

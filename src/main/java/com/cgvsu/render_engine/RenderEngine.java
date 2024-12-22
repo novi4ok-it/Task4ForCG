@@ -38,7 +38,7 @@ public class RenderEngine {
         modelViewProjectionMatrix.mul(viewMatrix);
         modelViewProjectionMatrix.mul(projectionMatrix);
 
-        TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
+        TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.RED, zBuffer);
         for (Polygon polygon : mesh.polygons) {
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
@@ -76,14 +76,14 @@ public class RenderEngine {
         for (int vertexInd = 0; vertexInd < 3; ++vertexInd) {
             int vertexIndex = polygon.getVertexIndices().get(vertexInd);
             Vector3f vertex = mesh.vertices.get(vertexIndex);
-
+            //Трансформация вершины в экранные координаты
             Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
             Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
 
             arrX[vertexInd] = (int) screenPoint.x;
             arrY[vertexInd] = (int) screenPoint.y;
             arrZ[vertexInd] = transformedVertex.z;
-
+            //Получение текстурных координат
             if (!polygon.getTextureVertexIndices().isEmpty()) {
                 int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
                 Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
@@ -91,7 +91,7 @@ public class RenderEngine {
             } else {
                 texCoords[vertexInd] = new Point2f(0, 0);
             }
-
+            //Вычисление интенсивности освещения для каждой вершины
             int normalIndex = polygon.getNormalIndices().get(vertexInd);
             Vector3f normal = mesh.normals.get(normalIndex);
             Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();

@@ -10,14 +10,11 @@ import java.util.List;
 public class Triangulation {
 
     public static void triangulateModel(Model mesh) {
-        // Преобразуем полигоны модели в треугольники
         if (mesh != null) {
             List<Polygon> triangulatedPolygons = new ArrayList<>();
 
             for (Polygon polygon : mesh.polygons) {
                 List<Polygon> triangles = Triangulation.triangulate(polygon, mesh.vertices);
-
-                // Передаём текстурные и нормальные индексы в каждый треугольник
                 for (Polygon triangle : triangles) {
                     // Копируем текстурные координаты, если они есть
                     if (!polygon.getTextureVertexIndices().isEmpty()) {
@@ -53,7 +50,6 @@ public class Triangulation {
             throw new IllegalArgumentException("Polygon must have at least three vertices.");
         }
 
-        // Используем самую простую триангуляцию: первый треугольник с первой вершиной.
         triangles = simpleTriangulation(remainingIndices);
 
         return triangles;

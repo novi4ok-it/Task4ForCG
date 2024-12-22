@@ -5,35 +5,44 @@ import com.cgvsu.math.Point2f;
 public class Rasterization {
 
     public static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords) {
-        for (int i = 0; i < arrY.length - 1; i++) {
-            for (int j = 0; j < arrY.length - i - 1; j++) {
-                if (arrY[j] > arrY[j + 1]) {
-                    swap(arrX, j, j + 1);
-                    swap(arrY, j, j + 1);
-                    swap(arrZ, j, j + 1);
-                    swap(lightIntensities, j, j + 1);
-                    swap(texCoords, j, j + 1);
-                }
-            }
+        quickSort(arrX, arrY, arrZ, lightIntensities, texCoords, 0, arrY.length - 1);
+    }
+
+    private static void quickSort(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords, int low, int high) {
+        if (low < high) {
+            int pivotIndex = partition(arrX, arrY, arrZ, lightIntensities, texCoords, low, high);
+
+            quickSort(arrX, arrY, arrZ, lightIntensities, texCoords, low, pivotIndex - 1);
+            quickSort(arrX, arrY, arrZ, lightIntensities, texCoords, pivotIndex + 1, high);
         }
     }
 
-    static void sortVerticesByY(int[] arrX, int[] arrY, float[]... arrays) {
-        for (int i = 0; i < arrY.length - 1; i++) {
-            for (int j = 0; j < arrY.length - i - 1; j++) {
-                if (arrY[j] > arrY[j + 1]) {
-                    swap(arrX, j, j + 1);
-                    swap(arrY, j, j + 1);
-                    for (float[] array : arrays) {
-                        swap(array, j, j + 1);
-                    }
-                }
+    private static int partition(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords, int low, int high) {
+        int pivot = arrY[high];
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (arrY[j] <= pivot) {
+                i++;
+                swap(arrX, i, j);
+                swap(arrY, i, j);
+                swap(arrZ, i, j);
+                swap(lightIntensities, i, j);
+                swap(texCoords, i, j);
             }
         }
+
+        swap(arrX, i + 1, high);
+        swap(arrY, i + 1, high);
+        swap(arrZ, i + 1, high);
+        swap(lightIntensities, i + 1, high);
+        swap(texCoords, i + 1, high);
+
+        return i + 1;
     }
 
- private static <T> void swap(T[] array, int i, int j) {
-        T temp = array[i];
+    private static void swap(Point2f[] array, int i, int j) {
+        Point2f temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }
@@ -48,6 +57,45 @@ public class Rasterization {
         float temp = array[i];
         array[i] = array[j];
         array[j] = temp;
+    }
+
+    static void sortVerticesByY(int[] arrX, int[] arrY, float[]... arrays) {
+        quickSort(arrX, arrY, 0, arrY.length - 1, arrays);
+    }
+
+    private static void quickSort(int[] arrX, int[] arrY, int low, int high, float[]... arrays) {
+        if (low < high) {
+            int pivotIndex = partition(arrX, arrY, low, high, arrays);
+
+            quickSort(arrX, arrY, low, pivotIndex - 1, arrays);
+            quickSort(arrX, arrY, pivotIndex + 1, high, arrays);
+        }
+    }
+
+    private static int partition(int[] arrX, int[] arrY, int low, int high, float[]... arrays) {
+        int pivot = arrY[high];
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (arrY[j] <= pivot) {
+                i++;
+                swap(arrX, i, j);
+                swap(arrY, i, j);
+
+                for (float[] array : arrays) {
+                    swap(array, i, j);
+                }
+            }
+        }
+
+        swap(arrX, i + 1, high);
+        swap(arrY, i + 1, high);
+
+        for (float[] array : arrays) {
+            swap(array, i + 1, high);
+        }
+
+        return i + 1;
     }
 
     static int interpolateX(int y, int y1, int y2, int x1, int x2) {
