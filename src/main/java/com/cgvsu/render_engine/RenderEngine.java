@@ -1,12 +1,9 @@
 package com.cgvsu.render_engine;
 
-import java.util.ArrayList;
-
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.rasterization.NonTexturedTriangleRenderer;
-import com.cgvsu.rasterization.Rasterization;
 import com.cgvsu.rasterization.TexturedTriangleRenderer;
 import com.cgvsu.rasterization.TriangleRenderer;
 import com.cgvsu.triangulation.DrawWireframe;
@@ -31,7 +28,6 @@ public class RenderEngine {
             final boolean isTextureEnabled,
             final boolean isPolygonalGridEnabled) {
 
-        // Инициализируем Z-буфер
         double[][] zBuffer = initializeZBuffer(width, height);
 
         Matrix4f modelMatrix = rotateScaleTranslate();
@@ -42,20 +38,18 @@ public class RenderEngine {
         modelViewProjectionMatrix.mul(viewMatrix);
         modelViewProjectionMatrix.mul(projectionMatrix);
 
-        final int nPolygons = mesh.polygons.size();
+        TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
         for (Polygon polygon : mesh.polygons) {
-            if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
-            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
             triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, isLightingEnabled);
         }
         if (isPolygonalGridEnabled) {
-            DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height);
+            DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height, zBuffer);
         }
     }
 
-    public static double[][] initializeZBuffer(int width, int height) {
+    private static double[][] initializeZBuffer(int width, int height) {
         double[][] zBuffer = new double[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {

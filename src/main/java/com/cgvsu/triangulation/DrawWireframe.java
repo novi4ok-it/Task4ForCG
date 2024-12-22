@@ -5,19 +5,15 @@ import com.cgvsu.math.Point2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
-import com.cgvsu.rasterization.Rasterization;
 import com.cgvsu.render_engine.Camera;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
-import static com.cgvsu.render_engine.RenderEngine.initializeZBuffer;
 
 public class DrawWireframe {
 
-    public static void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height) {
-        // Инициализируем Z-буфер
-        double[][] zBuffer = initializeZBuffer(width, height);
+    public static void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height, double[][] zBuffer) {
 
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
@@ -58,7 +54,7 @@ public class DrawWireframe {
             // Соединяем вершины треугольника с учетом Z-буфера
             for (int i = 0; i < nVertices; i++) {
                 int next = (i + 1) % nVertices;
-                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], zCoords[i], (int) xCoords[next], (int) yCoords[next], zCoords[next], zBuffer);
+                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], (int) xCoords[next], (int) yCoords[next], zBuffer);
             }
         }
     }
@@ -77,7 +73,7 @@ public class DrawWireframe {
         return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
     }
 
-    private static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
+    private static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, int x1, int y1, double[][] zBuffer) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -86,16 +82,13 @@ public class DrawWireframe {
 
         while (true) {
             if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
-                float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
-                float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
-
-                if (z < zBuffer[x0][y0]) {
-                    zBuffer[x0][y0] = z;
-                    gc.getPixelWriter().setColor(x0, y0, Color.GRAY);
+                // Если текущая точка находится в пределах экрана
+                if (zBuffer[x0][y0] < Double.POSITIVE_INFINITY) { // Проверяем, есть ли значение в буфере
+                    gc.getPixelWriter().setColor(x0, y0, Color.GRAY); // Рисуем точку
                 }
             }
 
-            if (x0 == x1 && y0 == y1) break;
+            if (x0 == x1 && y0 == y1) break; // Если линия закончилась
             int e2 = 2 * err;
             if (e2 > -dy) {
                 err -= dy;
