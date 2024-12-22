@@ -1,6 +1,14 @@
 package com.cgvsu.rasterization;
 
+import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
+import com.cgvsu.math.Vector2f;
+import com.cgvsu.math.Vector3f;
+import com.cgvsu.model.Model;
+import com.cgvsu.model.Polygon;
+import com.cgvsu.render_engine.Camera;
+import com.cgvsu.render_engine.GraphicConveyor;
+import com.cgvsu.render_engine.TriangleData;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
@@ -17,6 +25,38 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
         this.zBuffer = zBuffer;
     }
 
+    public static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords) {
+        for (int i = 0; i < arrY.length - 1; i++) {
+            for (int j = 0; j < arrY.length - i - 1; j++) {
+                if (arrY[j] > arrY[j + 1]) {
+                    swap(arrX, j, j + 1);
+                    swap(arrY, j, j + 1);
+                    swap(arrZ, j, j + 1);
+                    swap(lightIntensities, j, j + 1);
+                    swap(texCoords, j, j + 1);
+                }
+            }
+        }
+    }
+
+    private static <T> void swap(T[] array, int i, int j) {
+        T temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    private static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    private static void swap(float[] array, int i, int j) {
+        float temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
     @Override
     public void render(
             final GraphicsContext graphicsContext,
@@ -27,7 +67,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
             float[] lightIntensities,
             final boolean useLighting) {
 
-        Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
+        sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
             if (y < 0 || y >= zBuffer[0].length) continue;
@@ -44,9 +84,9 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 i1 = Rasterization.interpolate(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
                 i2 = Rasterization.interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
                 u1 = Rasterization.interpolate(y, arrY[0], arrY[1], texCoords[0].x, texCoords[1].x);
-                v1 = Rasterization.interpolate(y, arrY[0], arrY[1], texCoords[0].y, texCoords[1].y);
+                v1 = 1.0f - Rasterization.interpolate(y, arrY[0], arrY[1], texCoords[0].y, texCoords[1].y);
                 u2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].x, texCoords[2].x);
-                v2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].y, texCoords[2].y);
+                v2 = 1.0f - Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].y, texCoords[2].y);
             } else {
                 x1 = Rasterization.interpolateX(y, arrY[1], arrY[2], arrX[1], arrX[2]);
                 x2 = Rasterization.interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
@@ -55,9 +95,9 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 i1 = Rasterization.interpolate(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
                 i2 = Rasterization.interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
                 u1 = Rasterization.interpolate(y, arrY[1], arrY[2], texCoords[1].x, texCoords[2].x);
-                v1 = Rasterization.interpolate(y, arrY[1], arrY[2], texCoords[1].y, texCoords[2].y);
+                v1 = 1.0f - Rasterization.interpolate(y, arrY[1], arrY[2], texCoords[1].y, texCoords[2].y);
                 u2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].x, texCoords[2].x);
-                v2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].y, texCoords[2].y);
+                v2 = 1.0f - Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].y, texCoords[2].y);
             }
 
             if (x1 > x2) {
@@ -86,10 +126,15 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
 
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;
+                    float uClamped = Math.min(1.0f, Math.max(0.0f, u));
+                    float vClamped = Math.min(1.0f, Math.max(0.0f, v));
+                    int textureX = (int) (uClamped * (texture.getWidth() - 1));
+                    int textureY = (int) (vClamped * (texture.getHeight() - 1));
+                    Color textureColor = textureReader.getColor(textureX, textureY);
 
-                    Color textureColor = textureReader.getColor((int) (u * texture.getWidth()), (int) (v * texture.getHeight()));
-                    Color shadedColor = textureColor.deriveColor(0, 1, intensity, 1);
-                    graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
+                    double avgIntensity = 0.5 * (intensity + 1.0);
+                    Color smoothedColor = textureColor.interpolate(Color.BLACK, 1 - avgIntensity);
+                    graphicsContext.getPixelWriter().setColor(x, y, smoothedColor);
                 }
             }
         }

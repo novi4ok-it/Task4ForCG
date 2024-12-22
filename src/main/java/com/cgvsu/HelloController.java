@@ -3,6 +3,7 @@ package com.cgvsu;
 import com.cgvsu.container.ModelContainer;
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
+import com.cgvsu.math.Vector2f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
@@ -182,6 +183,7 @@ public class HelloController {
         timeline.getKeyFrames().add(frame);
         timeline.play();
     }
+
     private double[][] zBuffer;
 
     private void initializeZBuffer(int width, int height) {
@@ -323,6 +325,24 @@ public class HelloController {
 
             for (Polygon polygon : mesh.polygons) {
                 List<Polygon> triangles = Triangulation.triangulate(polygon, mesh.vertices);
+
+                // Передаём текстурные и нормальные индексы в каждый треугольник
+                for (Polygon triangle : triangles) {
+                    // Копируем текстурные координаты, если они есть
+                    if (!polygon.getTextureVertexIndices().isEmpty()) {
+                        triangle.setTextureVertexIndices(
+                                new ArrayList<>(polygon.getTextureVertexIndices().subList(0, 3))
+                        );
+                    }
+
+                    // Копируем нормали, если они есть
+                    if (!polygon.getNormalIndices().isEmpty()) {
+                        triangle.setNormalIndices(
+                                new ArrayList<>(polygon.getNormalIndices().subList(0, 3))
+                        );
+                    }
+                }
+
                 triangulatedPolygons.addAll(triangles);
             }
 
@@ -350,6 +370,7 @@ public class HelloController {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
             meshes.add(mesh);
+            normalizeTextureCoordinates(mesh.textureVertices);
             triangulateModel();
             // Пересчёт нормалей
             List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);
@@ -369,6 +390,20 @@ public class HelloController {
             throw new RuntimeException("Неверный файл");
         }
     }
+    private void normalizeTextureCoordinates(ArrayList<Vector2f> texCoords) {
+    for (Vector2f texCoord : texCoords) {
+        if (texCoord.x < 0 || texCoord.x > 1 || texCoord.y < 0 || texCoord.y > 1) {
+            System.out.println("Ненормализованные текстурные координаты: " + texCoord);
+        }
+
+        // Нормализация координат
+        texCoord.x = texCoord.x % 1.0f;
+        texCoord.y = texCoord.y % 1.0f;
+
+        if (texCoord.x < 0) texCoord.x += 1.0f;
+        if (texCoord.y < 0) texCoord.y += 1.0f;
+    }
+}
 
 
     private void handlePositionChange(String axis) {
