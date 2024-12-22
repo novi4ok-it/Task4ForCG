@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
     private final Color baseColor;
-    private double[][] zBuffer;
+    private final double[][] zBuffer;
 
     public NonTexturedTriangleRenderer(Color baseColor, double[][] zBuffer) {
         this.baseColor = baseColor;

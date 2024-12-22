@@ -17,7 +17,7 @@ import javafx.scene.paint.Color;
 public class TexturedTriangleRenderer implements TriangleRenderer {
     private final Image texture;
     private final PixelReader textureReader;
-    private double[][] zBuffer;
+    private final double[][] zBuffer;
 
     public TexturedTriangleRenderer(Image texture, double[][] zBuffer) {
         this.texture = texture;

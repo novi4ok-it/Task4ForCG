@@ -1,47 +1,8 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
-import com.cgvsu.model.Model;
-import com.cgvsu.model.Polygon;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
-import javafx.scene.paint.Color;
-import javafx.scene.image.PixelWriter;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
 public class Rasterization {
-
-//    public static void fillTriangle(
-//            final GraphicsContext graphicsContext,
-//            final int[] arrX,
-//            final int[] arrY,
-//            final float[] arrZ,
-//            final float[] lightIntensities,
-//            final Color baseColor,
-//            final boolean useLighting) {
-//
-//        TriangleRenderer triangleRenderer = new NonTexturedTriangleRenderer(baseColor, zBuffer);
-//        triangleRenderer.render(graphicsContext, arrX, arrY, arrZ, new Point2f[3], lightIntensities, useLighting);
-//    }
-//
-//    public static void fillTriangleWithTexture(
-//            final GraphicsContext graphicsContext,
-//            final int[] arrX,
-//            final int[] arrY,
-//            final float[] arrZ,
-//            final Point2f[] texCoords,
-//            final Image texture,
-//            final float[] lightIntensities,
-//            final boolean useLighting) {
-//
-//        TriangleRenderer triangleRenderer = new TexturedTriangleRenderer(texture, zBuffer);
-//        triangleRenderer.render(graphicsContext, arrX, arrY, arrZ, texCoords, lightIntensities, useLighting);
-//    }
 
     public static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords) {
         for (int i = 0; i < arrY.length - 1; i++) {
