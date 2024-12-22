@@ -9,6 +9,7 @@ import com.cgvsu.rasterization.NonTexturedTriangleRenderer;
 import com.cgvsu.rasterization.Rasterization;
 import com.cgvsu.rasterization.TexturedTriangleRenderer;
 import com.cgvsu.rasterization.TriangleRenderer;
+import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
@@ -27,10 +28,11 @@ public class RenderEngine {
             final int width,
             final int height,
             final boolean isLightingEnabled,
-            final boolean isTextureEnabled) {
+            final boolean isTextureEnabled,
+            final boolean isPolygonalGridEnabled) {
 
         // Инициализируем Z-буфер
-        Rasterization.initializeZBuffer(width, height);
+        double[][] zBuffer = initializeZBuffer(width, height);
 
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
@@ -45,9 +47,22 @@ public class RenderEngine {
             if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
-            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE);
+            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
             triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, isLightingEnabled);
         }
+        if (isPolygonalGridEnabled) {
+            DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height);
+        }
+    }
+
+    public static double[][] initializeZBuffer(int width, int height) {
+        double[][] zBuffer = new double[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                zBuffer[i][j] = Double.POSITIVE_INFINITY; // Инициализируем максимальной глубиной
+            }
+        }
+        return zBuffer;
     }
 
     private static TriangleData prepareTriangleData(
@@ -92,11 +107,11 @@ public class RenderEngine {
         return new TriangleData(arrX, arrY, arrZ, texCoords, lightIntensities);
     }
 
-    private static TriangleRenderer chooseTriangleRenderer(Model mesh, boolean isTextureEnabled, Color baseColor) {
+    private static TriangleRenderer chooseTriangleRenderer(Model mesh, boolean isTextureEnabled, Color baseColor, double[][] zBuffer) {
         if (mesh.hasTexture() && isTextureEnabled) {
-            return new TexturedTriangleRenderer(mesh.texture, Rasterization.zBuffer);
+            return new TexturedTriangleRenderer(mesh.texture, zBuffer);
         } else {
-            return new NonTexturedTriangleRenderer(baseColor, Rasterization.zBuffer);
+            return new NonTexturedTriangleRenderer(baseColor, zBuffer);
         }
     }
 }

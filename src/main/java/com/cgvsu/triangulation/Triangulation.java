@@ -1,6 +1,7 @@
 package com.cgvsu.triangulation;
 
 import com.cgvsu.math.Vector3f;
+import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 
 import java.util.ArrayList;
@@ -8,6 +9,38 @@ import java.util.List;
 
 public class Triangulation {
 
+    public static void triangulateModel(Model mesh) {
+        // Преобразуем полигоны модели в треугольники
+        if (mesh != null) {
+            List<Polygon> triangulatedPolygons = new ArrayList<>();
+
+            for (Polygon polygon : mesh.polygons) {
+                List<Polygon> triangles = Triangulation.triangulate(polygon, mesh.vertices);
+
+                // Передаём текстурные и нормальные индексы в каждый треугольник
+                for (Polygon triangle : triangles) {
+                    // Копируем текстурные координаты, если они есть
+                    if (!polygon.getTextureVertexIndices().isEmpty()) {
+                        triangle.setTextureVertexIndices(
+                                new ArrayList<>(polygon.getTextureVertexIndices().subList(0, 3))
+                        );
+                    }
+
+                    // Копируем нормали, если они есть
+                    if (!polygon.getNormalIndices().isEmpty()) {
+                        triangle.setNormalIndices(
+                                new ArrayList<>(polygon.getNormalIndices().subList(0, 3))
+                        );
+                    }
+                }
+
+                triangulatedPolygons.addAll(triangles);
+            }
+
+            // Перезаписываем полигоны с результатами триангуляции
+            mesh.polygons = (ArrayList<Polygon>) triangulatedPolygons;
+        }
+    }
        public static List<Polygon> triangulate(Polygon polygon, List<Vector3f> vertices) {
         if (polygon == null || vertices == null) {
             throw new IllegalArgumentException("Polygon or vertices list cannot be null.");

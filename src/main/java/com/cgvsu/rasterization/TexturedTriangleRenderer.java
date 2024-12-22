@@ -25,38 +25,6 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
         this.zBuffer = zBuffer;
     }
 
-    public static void sortVerticesByY(int[] arrX, int[] arrY, float[] arrZ, float[] lightIntensities, Point2f[] texCoords) {
-        for (int i = 0; i < arrY.length - 1; i++) {
-            for (int j = 0; j < arrY.length - i - 1; j++) {
-                if (arrY[j] > arrY[j + 1]) {
-                    swap(arrX, j, j + 1);
-                    swap(arrY, j, j + 1);
-                    swap(arrZ, j, j + 1);
-                    swap(lightIntensities, j, j + 1);
-                    swap(texCoords, j, j + 1);
-                }
-            }
-        }
-    }
-
-    private static <T> void swap(T[] array, int i, int j) {
-        T temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-
-    private static void swap(int[] array, int i, int j) {
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-
-    private static void swap(float[] array, int i, int j) {
-        float temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-
     @Override
     public void render(
             final GraphicsContext graphicsContext,
@@ -67,7 +35,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
             float[] lightIntensities,
             final boolean useLighting) {
 
-        sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
+        Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
             if (y < 0 || y >= zBuffer[0].length) continue;
