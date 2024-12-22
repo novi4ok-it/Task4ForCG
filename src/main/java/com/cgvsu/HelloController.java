@@ -19,6 +19,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
@@ -39,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
@@ -51,15 +54,23 @@ public class HelloController {
 
     @FXML
     private Canvas canvas;
+    @FXML
+    private Button addCameraButton;
 
     @FXML
-    private CheckBox lighting;
+    private Button addLightButton;
+
+//    @FXML
+//    private CheckBox lighting;
 
     @FXML
     private CheckBox poligonalGrid;
 
     @FXML
     private CheckBox texture;
+
+    @FXML
+    private CheckBox themeSwitchButton;
 
     @FXML
     private TextField pointOfDirX;
@@ -98,6 +109,15 @@ public class HelloController {
     private TextField scaleZ;
 
     @FXML
+    private TextField lightingCoordX;
+
+    @FXML
+    private TextField lightingCoordY;
+
+    @FXML
+    private TextField lightingCoordZ;
+
+    @FXML
     private TextField translateX;
 
     @FXML
@@ -129,8 +149,12 @@ public class HelloController {
 
     private Timeline timeline;
 
+    private boolean isDarkTheme = false;
+
     @FXML
     private void initialize() {
+        anchorPane.getStylesheets().add(getClass().getResource("/com/cgvsu/fxml/styles.css").toExternalForm());
+
         anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
         anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
 
@@ -169,10 +193,10 @@ public class HelloController {
             isPolygonalGridEnabled = newValue;
             renderScene();
         });
-        lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            isLightingEnabled = newValue; // Обновляем флаг освещения
-            renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
-        });
+//        lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
+//            isLightingEnabled = newValue; // Обновляем флаг освещения
+//            renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
+//        });
         texture.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isTextureEnabled = newValue; // Обновляем состояние текстур
             renderScene(); // Перерисовываем сцену
@@ -181,6 +205,12 @@ public class HelloController {
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
         timeline.play();
+
+
+        themeSwitchButton.setSelected(false);
+        themeSwitchButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            switchTheme();
+        });
     }
 
     // Отрисовка полигональной сетки (только триангулированной)
@@ -627,6 +657,45 @@ public class HelloController {
         vboxCamera.getChildren().remove(hboxCam);
     }
 
+    @FXML
+    private void switchTheme() {
+        if (isDarkTheme) {
+            applyLightTheme();
+        } else {
+            applyDarkTheme();
+        }
+        isDarkTheme = !isDarkTheme;
+    }
+
+    private void applyLightTheme() {
+        anchorPane.getStyleClass().remove("dark-theme");
+        anchorPane.getStyleClass().add("light-theme");
+        anchorPane.getStyleClass().remove("dark-theme-title");
+        anchorPane.getStyleClass().add("light-theme-title");
+        updateStyleClass("light-theme", "light-theme-title");
+    }
+
+    private void applyDarkTheme() {
+        anchorPane.getStyleClass().remove("light-theme");
+        anchorPane.getStyleClass().add("dark-theme");
+        anchorPane.getStyleClass().remove("light-theme-title");
+        anchorPane.getStyleClass().add("dark-theme-title");
+        updateStyleClass("dark-theme", "dark-theme-title");
+    }
+
+    private void updateStyleClass(String themeClass, String themeClass1) {
+        Set<Node> nodes = anchorPane.lookupAll(".theme-element");
+        for (Node node : nodes) {
+            node.getStyleClass().removeAll("light-theme", "dark-theme");
+            node.getStyleClass().add(themeClass);
+        }
+
+        Set<Node> nodes1 = anchorPane.lookupAll(".theme-element-title");
+        for (Node node : nodes1) {
+            node.getStyleClass().removeAll("light-theme-title", "dark-theme-title");
+            node.getStyleClass().add(themeClass1);
+        }
+    }
     @FXML
     private void deleteButtonIsPressed(TextField deleteVertexButton) {
         //mesh = Eraser.vertexDelete(mesh, List.of(Integer.valueOf(deleteVertexButton.getText())),true,true,true,true);
