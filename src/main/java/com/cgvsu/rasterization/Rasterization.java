@@ -41,19 +41,19 @@ public class Rasterization {
         return i + 1;
     }
 
-    private static void swap(Point2f[] array, int i, int j) {
+    static void swap(Point2f[] array, int i, int j) {
         Point2f temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }
 
-    private static void swap(int[] array, int i, int j) {
+    static void swap(int[] array, int i, int j) {
         int temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }
 
-    private static void swap(float[] array, int i, int j) {
+    static void swap(float[] array, int i, int j) {
         float temp = array[i];
         array[i] = array[j];
         array[j] = temp;
