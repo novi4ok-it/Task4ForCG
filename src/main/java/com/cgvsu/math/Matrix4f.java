@@ -114,13 +114,12 @@ public class Matrix4f {
         return new Matrix4f(result);
     }
 
-    public Vector4f multiplyvec(Vector4f vector) {
-        return new Vector4f(
-                this.matrix[0][0] * vector.x() + this.matrix[0][1] * vector.y() + this.matrix[0][2] * vector.getZ() + this.matrix[0][3] * vector.getW(),
-                this.matrix[1][0] * vector.x() + this.matrix[1][1] * vector.y() + this.matrix[1][2] * vector.getZ() + this.matrix[1][3] * vector.getW(),
-                this.matrix[2][0] * vector.x() + this.matrix[2][1] * vector.y() + this.matrix[2][2] * vector.getZ() + this.matrix[2][3] * vector.getW(),
-                this.matrix[3][0] * vector.x() + this.matrix[3][1] * vector.y() + this.matrix[3][2] * vector.getZ() + this.matrix[3][3] * vector.getW()
-        );
+    public void multiplyvec(Vector4f vector) {
+        vector.setX(this.matrix[0][0] * vector.x() + this.matrix[0][1] * vector.y() + this.matrix[0][2] * vector.getZ() + this.matrix[0][3] * vector.getW());
+        vector.setY(this.matrix[1][0] * vector.x() + this.matrix[1][1] * vector.y() + this.matrix[1][2] * vector.getZ() + this.matrix[1][3] * vector.getW());
+        vector.setZ(this.matrix[2][0] * vector.x() + this.matrix[2][1] * vector.y() + this.matrix[2][2] * vector.getZ() + this.matrix[2][3] * vector.getW());
+        vector.setW(this.matrix[3][0] * vector.x() + this.matrix[3][1] * vector.y() + this.matrix[3][2] * vector.getZ() + this.matrix[3][3] * vector.getW());
+
     }
 
     public void transpose() {

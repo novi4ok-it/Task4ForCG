@@ -22,6 +22,10 @@ public class Vector4f implements Vector<Vector4f> {
     public float y(){
         return y;
     }
+
+    public float z() {
+        return z;
+    }
     public float getZ(){
         return z;
     }
@@ -128,5 +132,12 @@ public class Vector4f implements Vector<Vector4f> {
 
     public void setY(float y) {
         this.y = y;
+    }
+
+    public void setZ(float z){
+        this.z = z;
+    }
+    public void setW(float w){
+        this.w = w;
     }
 }

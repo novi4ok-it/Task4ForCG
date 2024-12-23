@@ -53,12 +53,10 @@ public class Matrix3f {
         return new Matrix3f(result);
     }
 
-    public Vector3f multiplyvec(Vector3f vector) {
-        return new Vector3f(
-                this.mat[0][0] * vector.x() + this.mat[0][1] * vector.y() + this.mat[0][2] * vector.z(),
-                this.mat[1][0] * vector.x() + this.mat[1][1] * vector.y() + this.mat[1][2] * vector.z(),
-                this.mat[2][0] * vector.x() + this.mat[2][1] * vector.y() + this.mat[2][2] * vector.z()
-        );
+    public void multiplyvec(Vector3f vector) {
+        vector.setX(this.mat[0][0] * vector.x() + this.mat[0][1] * vector.y() + this.mat[0][2] * vector.z());
+        vector.setY(this.mat[1][0] * vector.x() + this.mat[1][1] * vector.y() + this.mat[1][2] * vector.z());
+        vector.setZ(this.mat[2][0] * vector.x() + this.mat[2][1] * vector.y() + this.mat[2][2] * vector.z());
     }
 
     public void transpose(){
@@ -79,7 +77,5 @@ public class Matrix3f {
                 - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
                 + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
     }
-
-
 
 }

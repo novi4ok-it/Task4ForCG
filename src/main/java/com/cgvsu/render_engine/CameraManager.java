@@ -50,5 +50,6 @@ public class CameraManager {
     public List<Camera> getCameras() {
         return cameras;
     }
+
 }
 
