@@ -1,0 +1,19 @@
+.light-theme {
+    -fx-background-color: #f4f4f4;
+    -fx-text-fill: black;
+}
+
+.dark-theme {
+    -fx-background-color: #6b6b6b;
+    -fx-text-fill: #f4f4f4;
+}
+
+.light-theme-title {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: black;
+}
+
+.dark-theme-title {
+    -fx-background-color: #a3a3a3;
+    -fx-text-fill: #f4f4f4;
+}
