@@ -90,8 +90,9 @@ public class RenderEngine {
                 int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
                 Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
                 texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
-            } else {
-                texCoords[vertexInd] = new Point2f(0, 0);
+            }
+            else {
+                System.out.println("Капуто вальдемаро");
             }
 
             int normalIndex = polygon.getNormalIndices().get(vertexInd);

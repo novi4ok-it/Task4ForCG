@@ -1,6 +1,7 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
+import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -58,17 +59,36 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
                 i1 = i2;
                 i2 = tempI;
             }
+            drawLineWithZBuffer(graphicsContext, x1, y, z1, x2, y, z2, zBuffer);
+        }
+    }
+    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
 
-            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
-                float z = Rasterization.interpolate(x, x1, x2, z1, z2);
-                float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
+        while (true) {
+            if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
+                float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
+                float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
 
-                if (z < zBuffer[x][y]) {
-                    zBuffer[x][y] = z;
-
-                    Color shadedColor = baseColor.deriveColor(0, 1, intensity, 1);
-                    graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
+                if (z < zBuffer[x0][y0]) {
+                    zBuffer[x0][y0] = z;
+                    gc.getPixelWriter().setColor(x0, y0, Color.RED);
                 }
+            }
+
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
             }
         }
     }

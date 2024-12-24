@@ -77,7 +77,7 @@ public class DrawWireframe {
         return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
     }
 
-    private static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
+    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -91,7 +91,7 @@ public class DrawWireframe {
 
                 if (z < zBuffer[x0][y0]) {
                     zBuffer[x0][y0] = z;
-                    gc.getPixelWriter().setColor(x0, y0, Color.GRAY);
+                    gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
                 }
             }
 
