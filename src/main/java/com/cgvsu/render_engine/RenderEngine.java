@@ -38,7 +38,6 @@ public class RenderEngine {
         modelViewProjectionMatrix.mul(viewMatrix);
         modelViewProjectionMatrix.mul(projectionMatrix);
 
-        final int nPolygons = mesh.polygons.size();
         for (Polygon polygon : mesh.polygons) {
             if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 

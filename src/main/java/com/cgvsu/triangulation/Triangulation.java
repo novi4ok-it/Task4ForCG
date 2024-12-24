@@ -31,22 +31,20 @@ public class Triangulation {
 
         List<Integer> vertexIndices = new ArrayList<>(polygon.getVertexIndices());
         List<Integer> textureIndices = new ArrayList<>(polygon.getTextureVertexIndices());
-        List<Integer> normalIndices = new ArrayList<>(polygon.getNormalIndices());
 
         if (vertexIndices.size() < 3) {
             throw new IllegalArgumentException("Polygon must have at least three vertices.");
         }
 
-        return simpleTriangulation(vertexIndices, textureIndices, normalIndices);
+        return simpleTriangulation(vertexIndices, textureIndices);
     }
 
-    private static List<Polygon> simpleTriangulation(List<Integer> vertexIndices, List<Integer> textureIndices, List<Integer> normalIndices) {
+    private static List<Polygon> simpleTriangulation(List<Integer> vertexIndices, List<Integer> textureIndices) {
         List<Polygon> triangles = new ArrayList<>();
 
         // Используем первую вершину как фиксированную и создаём треугольники с остальными
         int fixedVertexIndex = vertexIndices.get(0);
         int fixedTextureIndex = textureIndices.isEmpty() ? -1 : textureIndices.get(0);
-        int fixedNormalIndex = normalIndices.isEmpty() ? -1 : normalIndices.get(0);
 
         for (int i = 1; i < vertexIndices.size() - 1; i++) {
             int currVertexIndex = vertexIndices.get(i);
@@ -55,20 +53,11 @@ public class Triangulation {
             int currTextureIndex = textureIndices.isEmpty() ? -1 : textureIndices.get(i);
             int nextTextureIndex = textureIndices.isEmpty() ? -1 : textureIndices.get(i + 1);
 
-            int currNormalIndex = normalIndices.isEmpty() ? -1 : normalIndices.get(i);
-            int nextNormalIndex = normalIndices.isEmpty() ? -1 : normalIndices.get(i + 1);
-
             Polygon triangle = new Polygon(List.of(fixedVertexIndex, currVertexIndex, nextVertexIndex));
 
             if (!textureIndices.isEmpty()) {
                 triangle.setTextureVertexIndices(
                         new ArrayList<>(List.of(fixedTextureIndex, currTextureIndex, nextTextureIndex))
-                );
-            }
-
-            if (!normalIndices.isEmpty()) {
-                triangle.setNormalIndices(
-                        new ArrayList<>(List.of(fixedNormalIndex, currNormalIndex, nextNormalIndex))
                 );
             }
 

@@ -6,7 +6,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
-    private final Color baseColor;
+    private static Color baseColor;
     private final double[][] zBuffer;
 
     public NonTexturedTriangleRenderer(Color baseColor, double[][] zBuffer) {
@@ -24,6 +24,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             float[] lightIntensities,
             final boolean useLighting) {
 
+        // Сортировка вершин по Y
         Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
@@ -32,6 +33,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             int x1, x2;
             float z1, z2, i1, i2;
 
+            // Интерполяция данных для каждой строки
             if (y <= arrY[1]) {
                 x1 = Rasterization.interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
                 x2 = Rasterization.interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
@@ -59,10 +61,11 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
                 i1 = i2;
                 i2 = tempI;
             }
-            drawLineWithZBuffer(graphicsContext, x1, y, z1, x2, y, z2, zBuffer);
+            drawLineWithZBuffer(graphicsContext, x1, y, z1, i1, x2, y, z2, i2, zBuffer, useLighting);
         }
     }
-    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
+
+    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, float i0, int x1, int y1, float z1, float i1, double[][] zBuffer, boolean useLighting) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -71,12 +74,22 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
 
         while (true) {
             if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
+                // Интерполяция между вершинами для Z и освещения
                 float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
                 float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
+                float intensity = i0 * (1 - t) + i1 * t; // Интерполяция освещения
 
                 if (z < zBuffer[x0][y0]) {
                     zBuffer[x0][y0] = z;
-                    gc.getPixelWriter().setColor(x0, y0, Color.RED);
+
+                    // Учитываем освещение, если оно включено
+                    Color colorToDraw = baseColor;
+                    if (useLighting) {
+                        intensity = Math.max(0, Math.min(1, intensity)); // Ограничиваем интенсивность в пределах [0, 1]
+                        colorToDraw = baseColor.deriveColor(0, 1, intensity, 1);
+                    }
+
+                    gc.getPixelWriter().setColor(x0, y0, colorToDraw);
                 }
             }
 
