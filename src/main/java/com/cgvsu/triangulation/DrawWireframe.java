@@ -10,10 +10,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
+import static com.cgvsu.render_engine.RenderEngine.initializeZBuffer;
+
 
 public class DrawWireframe {
 
-    public static void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height, double[][] zBuffer) {
+    public static void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height) {
+        // Инициализируем Z-буфер
+        double[][] zBuffer = initializeZBuffer(width, height);
 
         Matrix4f modelMatrix = rotateScaleTranslate();
         Matrix4f viewMatrix = camera.getViewMatrix();
@@ -46,16 +50,15 @@ public class DrawWireframe {
                 zCoords[i] = transformedVertex.z; // Сохраняем глубину
             }
 
-
+            // Проверяем ориентацию нормали
             if (!isFrontFacing(transformedVertices)) {
-                continue;
-                // Пропускаем невидимые треугольники
+                continue; // Пропускаем невидимые треугольники
             }
 
-            // Соединяем вершины
+            // Соединяем вершины треугольника с учетом Z-буфера
             for (int i = 0; i < nVertices; i++) {
                 int next = (i + 1) % nVertices;
-                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], (int) xCoords[next], (int) yCoords[next], zBuffer);
+                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], zCoords[i], (int) xCoords[next], (int) yCoords[next], zCoords[next], zBuffer);
             }
         }
     }
@@ -73,11 +76,8 @@ public class DrawWireframe {
         // Проверяем, направлена ли нормаль к камере
         return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
     }
-    //алгоритм Брезенхэма
-    private static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, int x1, int y1, double[][] zBuffer) {
-        //dx и dy — это расстояние по осям X и Y соответственно между конечной и начальной точками. Эти значения определяют, насколько нужно перемещаться по осям, чтобы нарисовать линию.
-        //sx и sy — это шаги для перехода по осям. Если конечная точка находится правее (или выше) начальной, то шаг будет положительным. Если нет — отрицательным.
-        //err — это начальная ошибка, которая определяет, когда нужно изменить направление рисования по одной из осей.
+
+    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -86,8 +86,11 @@ public class DrawWireframe {
 
         while (true) {
             if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
-                // Если текущая точка находится в пределах экрана
-                if (zBuffer[x0][y0] < Double.POSITIVE_INFINITY) {
+                float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
+                float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
+
+                if (z < zBuffer[x0][y0]) {
+                    zBuffer[x0][y0] = z;
                     gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
                 }
             }

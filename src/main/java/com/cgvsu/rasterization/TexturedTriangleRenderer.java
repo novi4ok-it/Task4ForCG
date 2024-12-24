@@ -86,7 +86,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 v2 = tempV;
             }
 
-            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
+            for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
                 float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
                 float u = Rasterization.interpolate(x, x1, x2, u1, u2);

@@ -298,7 +298,7 @@ public class HelloController {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
             meshes.add(mesh);
-            normalizeTextureCoordinates(mesh.textureVertices);
+            //normalizeTextureCoordinates(mesh.textureVertices);
             Triangulation.triangulateModel(mesh);
             // Пересчёт нормалей
             List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);

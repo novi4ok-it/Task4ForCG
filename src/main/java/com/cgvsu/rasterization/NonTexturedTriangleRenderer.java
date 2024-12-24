@@ -1,11 +1,12 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
+import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
-    private final Color baseColor;
+    private static Color baseColor;
     private final double[][] zBuffer;
 
     public NonTexturedTriangleRenderer(Color baseColor, double[][] zBuffer) {
@@ -23,6 +24,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             float[] lightIntensities,
             final boolean useLighting) {
 
+        // Сортировка вершин по Y
         Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
@@ -31,6 +33,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             int x1, x2;
             float z1, z2, i1, i2;
 
+            // Интерполяция данных для каждой строки
             if (y <= arrY[1]) {
                 x1 = Rasterization.interpolateX(y, arrY[0], arrY[1], arrX[0], arrX[1]);
                 x2 = Rasterization.interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
@@ -58,8 +61,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
                 i1 = i2;
                 i2 = tempI;
             }
-
-            for (int x = Math.max(0, x1); x <= Math.min(zBuffer.length - 1, x2); x++) {
+            for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
                 float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
 

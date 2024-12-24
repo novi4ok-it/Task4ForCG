@@ -15,7 +15,6 @@ import com.cgvsu.math.Point2f;
 import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
-
 public class RenderEngine {
 
     public static void render(
@@ -28,6 +27,7 @@ public class RenderEngine {
             final boolean isTextureEnabled,
             final boolean isPolygonalGridEnabled) {
 
+        // Инициализируем Z-буфер
         double[][] zBuffer = initializeZBuffer(width, height);
 
         Matrix4f modelMatrix = rotateScaleTranslate();
@@ -38,18 +38,19 @@ public class RenderEngine {
         modelViewProjectionMatrix.mul(viewMatrix);
         modelViewProjectionMatrix.mul(projectionMatrix);
 
-        TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.RED, zBuffer);
         for (Polygon polygon : mesh.polygons) {
+            if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
+            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
             triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, isLightingEnabled);
         }
         if (isPolygonalGridEnabled) {
-            DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height, zBuffer);
+            DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height);
         }
     }
 
-    private static double[][] initializeZBuffer(int width, int height) {
+    public static double[][] initializeZBuffer(int width, int height) {
         double[][] zBuffer = new double[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -76,22 +77,23 @@ public class RenderEngine {
         for (int vertexInd = 0; vertexInd < 3; ++vertexInd) {
             int vertexIndex = polygon.getVertexIndices().get(vertexInd);
             Vector3f vertex = mesh.vertices.get(vertexIndex);
-            //Трансформация вершины в экранные координаты
+
             Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
             Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
 
             arrX[vertexInd] = (int) screenPoint.x;
             arrY[vertexInd] = (int) screenPoint.y;
             arrZ[vertexInd] = transformedVertex.z;
-            //Получение текстурных координат
+
             if (!polygon.getTextureVertexIndices().isEmpty()) {
                 int texCoordIndex = polygon.getTextureVertexIndices().get(vertexInd);
                 Vector2f texCoord = mesh.textureVertices.get(texCoordIndex);
                 texCoords[vertexInd] = new Point2f(texCoord.x, texCoord.y);
-            } else {
-                texCoords[vertexInd] = new Point2f(0, 0);
             }
-            //Вычисление интенсивности освещения для каждой вершины
+            else {
+                System.out.println("Капуто вальдемаро");
+            }
+
             int normalIndex = polygon.getNormalIndices().get(vertexInd);
             Vector3f normal = mesh.normals.get(normalIndex);
             Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();

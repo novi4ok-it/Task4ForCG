@@ -2,7 +2,7 @@ package com.cgvsu.math;
 
 public class Matrix3f {
 
-    public float[][] mat;//мб одномерный
+    public float[][] mat;
 
     public Matrix3f(float[][] mat){
         if (mat.length != 3 || mat[0].length != 3) {
