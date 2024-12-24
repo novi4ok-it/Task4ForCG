@@ -11,14 +11,14 @@ public class CameraManager {
 
     public CameraManager() {
         cameras = new ArrayList<>();
-        activeCameraIndex = -1; // -1 означает, что активной камеры нет
+        activeCameraIndex = -1;
     }
 
     // Добавляет новую камеру
     public void addCamera(Camera camera) {
         cameras.add(camera);
         if (activeCameraIndex == -1) {
-            activeCameraIndex = 0; // Первая добавленная камера становится активной
+            activeCameraIndex = 0;
         }
     }
 
@@ -27,21 +27,19 @@ public class CameraManager {
         if (index >= 0 && index < cameras.size()) {
             cameras.remove(index);
             if (activeCameraIndex == index) {
-                activeCameraIndex = cameras.isEmpty() ? -1 : 0; // Переключение на первую камеру
+                activeCameraIndex = cameras.isEmpty() ? -1 : 0; //Переключение на первую камеру
             } else if (activeCameraIndex > index) {
                 activeCameraIndex--;
             }
         }
     }
 
-    // Устанавливает активную камеру по индексу
     public void setActiveCamera(int index) {
         if (index >= 0 && index < cameras.size()) {
             activeCameraIndex = index;
         }
     }
 
-    // Возвращает активную камеру или null, если камеры отсутствуют
     public Camera getActiveCamera() {
         if (activeCameraIndex >= 0 && activeCameraIndex < cameras.size()) {
             return cameras.get(activeCameraIndex);
@@ -49,7 +47,6 @@ public class CameraManager {
         return null;
     }
 
-    // Возвращает список всех камер
     public List<Camera> getCameras() {
         return cameras;
     }
