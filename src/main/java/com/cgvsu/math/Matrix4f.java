@@ -2,7 +2,7 @@ package com.cgvsu.math;
 
 public class Matrix4f {
 
-    float[][] matrix;//мб одномерный
+    float[][] matrix;
 
     public Matrix4f() {
         matrix = new float[4][4];
