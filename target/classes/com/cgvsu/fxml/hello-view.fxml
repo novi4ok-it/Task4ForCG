@@ -4,6 +4,7 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
@@ -17,19 +18,11 @@
 
 <AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="726.0" prefWidth="1538.0" style="-fx-background-color: #474747;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cgvsu.HelloController">
    <SplitPane layoutY="1.0" prefHeight="725.0" prefWidth="966.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="1.0">
-      <AnchorPane prefHeight="724.0" prefWidth="982.0" style="-fx-background-color: #6b6b6b;">
+      <AnchorPane prefHeight="724.0" prefWidth="982.0" styleClass="theme-element">
          <children>
             <Canvas fx:id="canvas" height="697.0" layoutY="26.0" width="1014.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" />
 
-            <MenuBar prefHeight="26.0" prefWidth="1054.0" style="-fx-background-color: #a6a6a6;">
-      
-               <Menu mnemonicParsing="false" text="File">
-                  <MenuItem mnemonicParsing="false" text="Load Model">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                  </MenuItem>
-               </Menu>
+            <MenuBar prefHeight="28.0" prefWidth="1538.0">
       
                <Menu mnemonicParsing="false" text="Camera Options">
                   <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Forward">
@@ -68,80 +61,131 @@
          </children>
       </AnchorPane>
    </SplitPane>
-   <SplitPane dividerPositions="0.9286109573879356" layoutX="1015.0" layoutY="1.0" orientation="VERTICAL" prefHeight="724.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
-      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="643.0" prefWidth="478.0" style="-fx-background-color: #6b6b6b;">
-         <Label layoutX="14.0" layoutY="14.0" prefHeight="18.0" prefWidth="62.0" text="Объекты" textFill="WHITE" AnchorPane.topAnchor="15.0" />
-         <TitledPane animated="false" layoutX="4.0" layoutY="50.0" prefHeight="202.0" prefWidth="514.0" style="-fx-background-color: #6b6b6b;" text="Модели">
-           <content>
-             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="166.0" prefWidth="470.0" style="-fx-background-color: #6b6b6b;">
-                  <children>
-                     <Button layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#addHBoxModel" prefHeight="30.0" prefWidth="136.0" style="-fx-background-color: #858585; -fx-cursor: hand; -fx-border-color: #707070;" text="Добавить модель" textFill="WHITE">
-                        <cursor>
-                           <Cursor fx:constant="DEFAULT" />
-                        </cursor>
-                     </Button>
-                     <VBox fx:id="vboxModel" layoutX="15.0" layoutY="52.0" prefHeight="94.0" prefWidth="494.0">
+   <SplitPane dividerPositions="0" layoutX="1015.0" layoutY="-0.8" orientation="VERTICAL" prefHeight="726.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
+      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="605.0" prefWidth="522.0" styleClass="theme-element">
+         <Label layoutX="14.0" layoutY="14.0" prefHeight="18.0" prefWidth="62.0" styleClass="theme-element" text="Объекты" AnchorPane.topAnchor="15.0" />
+
+         
+                  <VBox layoutX="4.0" layoutY="46.0" prefHeight="666.0" prefWidth="514.0">
+            <children>
+               <TitledPane expanded="false" prefWidth="514.0" text="Модели">
+                 <content>
+                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="166.0" prefWidth="470.0" styleClass="theme-element">
+                        <children>
+                           <Button fx:id="addModelButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#addHBoxModel" prefHeight="30.0" prefWidth="136.0" style="-fx-cursor: hand;" text="Добавить модель">
+                              <cursor>
+                                 <Cursor fx:constant="DEFAULT" />
+                              </cursor>
+                           </Button>
+                           <VBox fx:id="vboxModel" layoutX="15.0" layoutY="52.0" prefHeight="94.0" prefWidth="494.0">
                         
                      </VBox>
-                  </children>
+                        </children>
+                     </AnchorPane>
+                 </content>
+               </TitledPane>
+               <TitledPane expanded="false" prefWidth="514.0" text="Камеры">
+                  <content>
+                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="176.0" prefWidth="520.0" styleClass="theme-element">
+                        <children>
+                           <Button fx:id="addCameraButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#addHBoxCamera" prefHeight="30.0" prefWidth="136.0" style="-fx-cursor: hand;" text="Добавить камеру">
+                              <cursor>
+                                 <Cursor fx:constant="DEFAULT" />
+                              </cursor>
+                           </Button>
+                           <VBox fx:id="vboxCamera" layoutX="14.0" layoutY="51.0" prefHeight="97.0" prefWidth="247.0" />
+                        </children>
+                     </AnchorPane>
+                  </content>
+               </TitledPane>
+               <TitledPane expanded="false" text="Освещение">
+                 <content>
+                   <AnchorPane minHeight="0.0" minWidth="0.0" prefWidth="200.0" styleClass="theme-element">
+                        <children>
+                           <Label layoutX="97.0" layoutY="14.0" prefHeight="18.0" prefWidth="50.0" styleClass="theme-element" text="Позиция" />
+                           <Label layoutX="14.0" layoutY="40.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                           <Label layoutX="14.0" layoutY="68.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                           <Label layoutX="14.0" layoutY="96.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                           <TextField fx:id="lightingCoordX" layoutX="48.0" layoutY="34.0" promptText="Введите координаты" />
+                           <TextField fx:id="lightingCoordY" layoutX="48.0" layoutY="61.0" promptText="Введите координаты" />
+                           <TextField fx:id="lightingCoordZ" layoutX="48.0" layoutY="89.0" promptText="Введите координаты" />
+                           <Button fx:id="addLightButton" layoutX="231.0" layoutY="45.0" mnemonicParsing="false" text="Добавить освещение" />
+                           <Button fx:id="deleteLightButton" layoutX="231.0" layoutY="76.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="134.0" text="Удалить освещение" />
+                           <ColorPicker layoutX="374.0" layoutY="141.0" />
+                        </children>
+                     </AnchorPane>
+                 </content>
+               </TitledPane>
+            </children>
+         </VBox>
+
+         
                </AnchorPane>
-           </content>
-         </TitledPane>
-         <TitledPane animated="false" layoutX="4.0" layoutY="260.0" prefHeight="202.0" prefWidth="514.0" style="-fx-background-color: #6b6b6b;" text="Камеры">
-            <content>
-               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="176.0" prefWidth="520.0" style="-fx-background-color: #6b6b6b;">
-                  <children>
-                     <Button layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#addHBoxCamera" prefHeight="30.0" prefWidth="136.0" style="-fx-background-color: #858585; -fx-cursor: hand; -fx-border-color: #707070;" text="Добавить камеру" textFill="WHITE">
-                        <cursor>
-                           <Cursor fx:constant="DEFAULT" />
-                        </cursor>
-                     </Button>
-                     <VBox fx:id="vboxCamera" layoutX="14.0" layoutY="51.0" prefHeight="97.0" prefWidth="247.0" />
-                  </children>
-               </AnchorPane>
-            </content>
-         </TitledPane>
-         <CheckBox fx:id="poligonalGrid" layoutX="9.0" layoutY="471.0" mnemonicParsing="false" text="Нарисовать полигональную сетку" />
-         <CheckBox fx:id="lighting" layoutX="9.0" layoutY="494.0" mnemonicParsing="false" text="Использовать освещение" />
-         <CheckBox fx:id="texture" layoutX="9.0" layoutY="519.0" mnemonicParsing="false" text="Использовать текстуру" />
-      </AnchorPane>
-      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="366.0" prefWidth="481.0" style="-fx-background-color: #6b6b6b;">
+      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="447.0" prefWidth="522.0" styleClass="theme-element">
          <children>
-            <Label layoutX="14.0" layoutY="5.0" prefHeight="18.0" prefWidth="192.0" text="Масштаб выбранной модели" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="289.0" prefHeight="18.0" prefWidth="192.0" text="Позиция выбранной модели" textFill="WHITE" />
-            <Label layoutX="11.0" layoutY="143.0" prefHeight="18.0" prefWidth="192.0" text="Вращение выбранной модели" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="31.0" prefHeight="18.0" prefWidth="19.0" text="X:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="59.0" prefHeight="18.0" prefWidth="19.0" text="Y:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="87.0" prefHeight="18.0" prefWidth="19.0" text="Z:" textFill="WHITE" />
-            <TextField fx:id="scaleX" layoutX="48.0" layoutY="25.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="scaleY" layoutX="48.0" layoutY="52.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="scaleZ" layoutX="48.0" layoutY="80.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <Label layoutX="14.0" layoutY="171.0" prefHeight="18.0" prefWidth="19.0" text="X:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="199.0" prefHeight="18.0" prefWidth="19.0" text="Y:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="227.0" prefHeight="18.0" prefWidth="19.0" text="Z:" textFill="WHITE" />
-            <TextField fx:id="rotateX" layoutX="48.0" layoutY="165.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="rotateY" layoutX="48.0" layoutY="192.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="rotateZ" layoutX="48.0" layoutY="220.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <Label layoutX="14.0" layoutY="317.0" prefHeight="18.0" prefWidth="19.0" text="X:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="345.0" prefHeight="18.0" prefWidth="19.0" text="Y:" textFill="WHITE" />
-            <Label layoutX="14.0" layoutY="373.0" prefHeight="18.0" prefWidth="19.0" text="Z:" textFill="WHITE" />
-            <TextField fx:id="translateX" layoutX="48.0" layoutY="311.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="translateY" layoutX="48.0" layoutY="338.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="translateZ" layoutX="48.0" layoutY="366.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <Label layoutX="267.0" layoutY="5.0" prefHeight="18.0" prefWidth="192.0" text="Позиция выбранной камеры" textFill="WHITE" />
-            <Label layoutX="264.0" layoutY="143.0" prefHeight="18.0" prefWidth="192.0" text="Точка направления камеры" textFill="WHITE" />
-            <Label layoutX="267.0" layoutY="31.0" prefHeight="18.0" prefWidth="19.0" text="X:" textFill="WHITE" />
-            <Label layoutX="267.0" layoutY="59.0" prefHeight="18.0" prefWidth="19.0" text="Y:" textFill="WHITE" />
-            <Label layoutX="267.0" layoutY="87.0" prefHeight="18.0" prefWidth="19.0" text="Z:" textFill="WHITE" />
-            <TextField fx:id="positionX" layoutX="301.0" layoutY="25.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="positionY" layoutX="301.0" layoutY="52.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="positionZ" layoutX="301.0" layoutY="80.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <Label layoutX="267.0" layoutY="171.0" prefHeight="18.0" prefWidth="19.0" text="X:" textFill="WHITE" />
-            <Label layoutX="267.0" layoutY="199.0" prefHeight="18.0" prefWidth="19.0" text="Y:" textFill="WHITE" />
-            <Label layoutX="267.0" layoutY="227.0" prefHeight="18.0" prefWidth="19.0" text="Z:" textFill="WHITE" />
-            <TextField fx:id="pointOfDirX" layoutX="301.0" layoutY="165.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="pointOfDirY" layoutX="301.0" layoutY="192.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
-            <TextField fx:id="pointOfDirZ" layoutX="301.0" layoutY="220.0" promptText="Введите координаты" style="-fx-background-color: #858585;" />
+            <TitledPane layoutX="14.0" layoutY="14.0" prefHeight="526.0" prefWidth="226.0" text="Взаимодействие с моделью">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="441.0" prefWidth="225.0" styleClass="theme-element">
+                     <children>
+                        <Label layoutX="17.0" layoutY="20.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Масштаб выбранной модели" />
+                        <Label layoutX="17.0" layoutY="335.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Позиция выбранной модели" />
+                        <Label layoutX="13.0" layoutY="173.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Вращение выбранной модели" />
+                        <Label layoutX="17.0" layoutY="46.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                        <Label layoutX="17.0" layoutY="74.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                        <Label layoutX="17.0" layoutY="102.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                        <TextField fx:id="scaleX" layoutX="51.0" layoutY="40.0" promptText="Введите координаты" />
+                        <TextField fx:id="scaleY" layoutX="51.0" layoutY="67.0" promptText="Введите координаты" />
+                        <TextField fx:id="scaleZ" layoutX="51.0" layoutY="95.0" promptText="Введите координаты" />
+                        <Label layoutX="16.0" layoutY="201.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                        <Label layoutX="16.0" layoutY="229.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                        <Label layoutX="16.0" layoutY="257.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                        <TextField fx:id="rotateX" layoutX="50.0" layoutY="195.0" promptText="Введите координаты" />
+                        <TextField fx:id="rotateY" layoutX="50.0" layoutY="222.0" promptText="Введите координаты" />
+                        <TextField fx:id="rotateZ" layoutX="50.0" layoutY="250.0" promptText="Введите координаты" />
+                        <Label layoutX="17.0" layoutY="367.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                        <Label layoutX="17.0" layoutY="395.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                        <Label layoutX="17.0" layoutY="423.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                        <TextField fx:id="translateX" layoutX="51.0" layoutY="361.0" promptText="Введите координаты" />
+                        <TextField fx:id="translateY" layoutX="51.0" layoutY="388.0" promptText="Введите координаты" />
+                        <TextField fx:id="translateZ" layoutX="51.0" layoutY="416.0" promptText="Введите координаты" />
+                        <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" text="Применить" />
+                        <Button layoutX="70.0" layoutY="127.0" mnemonicParsing="false" text="Применить" />
+                        <Button layoutX="70.0" layoutY="284.0" mnemonicParsing="false" text="Применить" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </TitledPane>
+            <VBox layoutX="254.0" layoutY="14.0" prefHeight="381.0" prefWidth="240.0">
+               <children>
+                  <TitledPane prefWidth="240.0" text="Взаимодействие с камерой">
+                    <content>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="294.0" prefWidth="238.0" styleClass="theme-element">
+                           <children>
+                              <Label layoutX="17.0" layoutY="14.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Позиция выбранной камеры" />
+                              <Label layoutX="14.0" layoutY="152.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Точка направления камеры" />
+                              <Label layoutX="17.0" layoutY="40.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                              <Label layoutX="17.0" layoutY="68.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                              <Label layoutX="17.0" layoutY="96.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                              <TextField fx:id="positionX" layoutX="51.0" layoutY="34.0" promptText="Введите координаты" />
+                              <TextField fx:id="positionY" layoutX="51.0" layoutY="61.0" promptText="Введите координаты" />
+                              <TextField fx:id="positionZ" layoutX="51.0" layoutY="89.0" promptText="Введите координаты" />
+                              <Label layoutX="17.0" layoutY="180.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                              <Label layoutX="17.0" layoutY="208.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                              <Label layoutX="17.0" layoutY="236.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                              <TextField fx:id="pointOfDirX" layoutX="51.0" layoutY="174.0" promptText="Введите координаты" />
+                              <TextField fx:id="pointOfDirY" layoutX="51.0" layoutY="201.0" promptText="Введите координаты" />
+                              <TextField fx:id="pointOfDirZ" layoutX="51.0" layoutY="229.0" promptText="Введите координаты" />
+                              <Button layoutX="80.0" layoutY="121.0" mnemonicParsing="false" text="Применить" />
+                              <Button layoutX="80.0" layoutY="260.0" mnemonicParsing="false" text="Применить" />
+                           </children>
+                        </AnchorPane>
+                    </content>
+                  </TitledPane>
+                  <CheckBox fx:id="poligonalGrid" mnemonicParsing="false" styleClass="theme-element" text="Нарисовать полигональную сетку" />
+                  <CheckBox fx:id="texture" mnemonicParsing="false" styleClass="theme-element" text="Использовать текстуру" />
+                  <CheckBox fx:id="themeSwitchButton" mnemonicParsing="false" styleClass="theme-element" text="Использовать светлую тему" />
+               </children>
+            </VBox>
          </children>
       </AnchorPane>
    </SplitPane>
