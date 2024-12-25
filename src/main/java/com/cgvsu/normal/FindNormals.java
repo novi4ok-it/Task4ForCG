@@ -6,6 +6,7 @@ import com.cgvsu.model.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class FindNormals {
     public static ArrayList<Vector3f> findNormals(List<Polygon> polygons, List<Vector3f> vertices) {
         ArrayList<Vector3f> temporaryNormals = new ArrayList<>();
@@ -14,9 +15,9 @@ public class FindNormals {
         // Вычисляем нормали для каждого полигона
         for (Polygon p : polygons) {
             Vector3f normal = findPolygonNormal(
-                vertices.get(p.getVertexIndices().get(0)),
-                vertices.get(p.getVertexIndices().get(1)),
-                vertices.get(p.getVertexIndices().get(2))
+                    vertices.get(p.getVertexIndices().get(0)),
+                    vertices.get(p.getVertexIndices().get(1)),
+                    vertices.get(p.getVertexIndices().get(2))
             );
             temporaryNormals.add(normal);
         }
@@ -36,8 +37,8 @@ public class FindNormals {
                     Vector3f v1 = vertices.get(p.getVertexIndices().get(1));
                     Vector3f v2 = vertices.get(p.getVertexIndices().get(2));
                     float area = vectorProduct(
-                        Vector3f.subtraction(v1, v0),
-                        Vector3f.subtraction(v2, v0)
+                            Vector3f.subtraction(v1, v0),
+                            Vector3f.subtraction(v2, v0)
                     ).length();
                     weights.add(area);
                 }
@@ -77,8 +78,8 @@ public class FindNormals {
 
     public static double determinant(Vector3f a, Vector3f b, Vector3f c) {
         return a.x * (b.y * c.z - b.z * c.y) -
-               a.y * (b.x * c.z - b.z * c.x) +
-               a.z * (b.x * c.y - b.y * c.x);
+                a.y * (b.x * c.z - b.z * c.x) +
+                a.z * (b.x * c.y - b.y * c.x);
     }
 
     public static Vector3f normalize(Vector3f v) {
@@ -92,9 +93,9 @@ public class FindNormals {
 
     public static Vector3f vectorProduct(Vector3f a, Vector3f b) {
         return new Vector3f(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x
         );
     }
 }
