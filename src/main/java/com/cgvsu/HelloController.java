@@ -277,7 +277,7 @@ public class HelloController {
         cameraManager.getActiveCamera().rotateAroundTarget(yaw, pitch, roll);
     }
     /////
-    private boolean isLightingEnabled = false;
+    private boolean isLightingEnabled = true;
     private boolean isPolygonalGridEnabled = false;
     private boolean isTextureEnabled = false;
 
