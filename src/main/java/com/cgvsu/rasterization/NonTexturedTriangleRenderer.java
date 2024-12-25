@@ -61,47 +61,16 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
                 i1 = i2;
                 i2 = tempI;
             }
-            drawLineWithZBuffer(graphicsContext, x1, y, z1, i1, x2, y, z2, i2, zBuffer, useLighting);
-        }
-    }
+            for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
+                float z = Rasterization.interpolate(x, x1, x2, z1, z2);
+                float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
 
-    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, float i0, int x1, int y1, float z1, float i1, double[][] zBuffer, boolean useLighting) {
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int sx = x0 < x1 ? 1 : -1;
-        int sy = y0 < y1 ? 1 : -1;
-        int err = dx - dy;
+                if (z < zBuffer[x][y]) {
+                    zBuffer[x][y] = z;
 
-        while (true) {
-            if (x0 >= 0 && x0 < zBuffer.length && y0 >= 0 && y0 < zBuffer[0].length) {
-                // Интерполяция между вершинами для Z и освещения
-                float t = (float) (Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) / Math.sqrt(dx * dx + dy * dy));
-                float z = z0 * (1 - t) + z1 * t; // Интерполяция Z
-                float intensity = i0 * (1 - t) + i1 * t; // Интерполяция освещения
-
-                if (z < zBuffer[x0][y0]) {
-                    zBuffer[x0][y0] = z;
-
-                    // Учитываем освещение, если оно включено
-                    Color colorToDraw = baseColor;
-                    if (useLighting) {
-                        intensity = Math.max(0, Math.min(1, intensity)); // Ограничиваем интенсивность в пределах [0, 1]
-                        colorToDraw = baseColor.deriveColor(0, 1, intensity, 1);
-                    }
-
-                    gc.getPixelWriter().setColor(x0, y0, colorToDraw);
+                    Color shadedColor = baseColor.deriveColor(0, 1, intensity, 1);
+                    graphicsContext.getPixelWriter().setColor(x, y, shadedColor);
                 }
-            }
-
-            if (x0 == x1 && y0 == y1) break;
-            int e2 = 2 * err;
-            if (e2 > -dy) {
-                err -= dy;
-                x0 += sx;
-            }
-            if (e2 < dx) {
-                err += dx;
-                y0 += sy;
             }
         }
     }
