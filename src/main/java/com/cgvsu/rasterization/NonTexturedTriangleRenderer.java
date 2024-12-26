@@ -29,22 +29,28 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             List<ColorLighting> colorLightings,
             ArrayList<Vector3f> normals) {
 
-        // Расчет интенсивности освещения для каждой вершины
         Color[] vertexColors = new Color[3];
-        for (int i = 0; i < 3; i++) {
-            Vector3f normal = normals.get(i).normalizek();
-            Color accumulatedColor = Color.BLACK;
 
-            for (ColorLighting lighting : colorLightings) {
-                Vector3f lightDirection = lighting.light.normalizek();
-                float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
-
-                Color lightColor = lighting.color;
-                // Учитываем вклад источника света
-                accumulatedColor = accumulatedColor.interpolate(lightColor, intensity);
+        if (colorLightings.isEmpty()) {
+            // Если список освещения пуст, все вершины получают базовый цвет
+            for (int i = 0; i < 3; i++) {
+                vertexColors[i] = null;
             }
+        } else {
+            // Расчёт освещения для каждой вершины
+            for (int i = 0; i < 3; i++) {
+                Vector3f normal = normals.get(i).normalizek();
+                Color accumulatedColor = Color.BLACK;
 
-            vertexColors[i] = accumulatedColor;
+                for (ColorLighting lighting : colorLightings) {
+                    Vector3f lightDirection = lighting.light.normalizek();
+                    float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
+                    Color lightColor = lighting.color;
+                    accumulatedColor = accumulatedColor.interpolate(lightColor, intensity); // Смешиваем цвета
+                }
+
+                vertexColors[i] = accumulatedColor;
+            }
         }
 
         // Сортировка вершин по Y
@@ -93,8 +99,8 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;
 
-                    // Применяем освещение к базовому цвету
-                    Color finalColor = baseColor.interpolate(color, 0.5); // Можно настраивать степень смешивания
+                    // Если освещение пустое, используем только базовый цвет
+                    Color finalColor = colorLightings.isEmpty() ? baseColor : baseColor.interpolate(color, 0.5);
                     graphicsContext.getPixelWriter().setColor(x, y, finalColor);
                 }
             }

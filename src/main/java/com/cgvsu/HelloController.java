@@ -255,7 +255,7 @@ public class HelloController {
     // Метод для добавления нового источника света
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
-        Color color = getSelectedColor();
+        Color color = (getSelectedColor() != null) ? getSelectedColor() : Color.WHITE;
         ColorLighting colorLighting = new ColorLighting(newLight, color);
 
         lightSources.add(newLight);

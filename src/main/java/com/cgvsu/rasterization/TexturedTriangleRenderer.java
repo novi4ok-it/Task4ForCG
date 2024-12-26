@@ -40,27 +40,34 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
 
         Color[] vertexColors = new Color[3];
 
-        // Вычисление цвета и интенсивности освещения для каждой вершины
-        for (int i = 0; i < 3; i++) {
-            Vector3f normal = normals.get(i).normalizek();
-            double r = 0, g = 0, b = 0;
 
-            for (ColorLighting lighting : colorLightings) {
-                Vector3f lightDirection = lighting.light.normalizek();
-                float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
-                Color lightColor = lighting.color;
-
-                r += intensity * lightColor.getRed();
-                g += intensity * lightColor.getGreen();
-                b += intensity * lightColor.getBlue();
+        if (colorLightings.isEmpty()) {
+            for (int i = 0; i < 3; i++) {
+                vertexColors[i] = null; // Или используйте базовый цвет модели, если он задан
             }
+        } else {
+            // Вычисление цвета и интенсивности освещения для каждой вершины
+            for (int i = 0; i < 3; i++) {
+                Vector3f normal = normals.get(i).normalizek();
+                double r = 0, g = 0, b = 0;
 
-            // Ограничиваем цветовые значения в диапазоне [0, 1]
-            r = Math.min(1.0, r);
-            g = Math.min(1.0, g);
-            b = Math.min(1.0, b);
+                for (ColorLighting lighting : colorLightings) {
+                    Vector3f lightDirection = lighting.light.normalizek();
+                    float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
+                    Color lightColor = lighting.color;
 
-            vertexColors[i] = new Color(r, g, b, 1.0);
+                    r += intensity * lightColor.getRed();
+                    g += intensity * lightColor.getGreen();
+                    b += intensity * lightColor.getBlue();
+                }
+
+                // Ограничиваем цветовые значения в диапазоне [0, 1]
+                r = Math.min(1.0, r);
+                g = Math.min(1.0, g);
+                b = Math.min(1.0, b);
+
+                vertexColors[i] = new Color(r, g, b, 1.0);
+            }
         }
 
         // Сортировка вершин
@@ -129,9 +136,12 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                     int textureX = (int) (uClamped * (texture.getWidth() - 1));
                     int textureY = (int) (vClamped * (texture.getHeight() - 1));
                     Color textureColor = textureReader.getColor(textureX, textureY);
-
-                    Color finalColor = interpolatedColor.interpolate(textureColor, 0.5);
-                    graphicsContext.getPixelWriter().setColor(x, y, finalColor);
+                    if (!colorLightings.isEmpty()) {
+                        Color finalColor = interpolatedColor.interpolate(textureColor, 0.5);
+                        graphicsContext.getPixelWriter().setColor(x, y, finalColor);
+                    } else {
+                        graphicsContext.getPixelWriter().setColor(x, y, textureColor);
+                    }
                 }
             }
         }

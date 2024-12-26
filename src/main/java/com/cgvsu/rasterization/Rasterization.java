@@ -251,9 +251,20 @@ public class Rasterization {
     }
 
     public static Color interpolateColor(float value, float start, float end, Color color1, Color color2) {
+        if (color1 == null && color2 == null) {
+            return null; // Если оба цвета null, возвращаем null
+        }
+        if (color1 == null) {
+            return color2; // Если первый цвет null, используем второй
+        }
+        if (color2 == null) {
+            return color1; // Если второй цвет null, используем первый
+        }
+
         if (start == end) {
             return color1; // Если начальная и конечная точки совпадают, возвращаем первый цвет
         }
+
         double t = (value - start) / (end - start);
         t = Math.min(1.0, Math.max(0.0, t)); // Ограничиваем t в диапазоне [0, 1]
 
