@@ -14,7 +14,6 @@ public interface TriangleRenderer {
             int[] arrY,
             float[] arrZ,
             Point2f[] texCoords,
-            float[] lightIntensities,
             List<Vector3f> lightSources,
             ArrayList<Vector3f> normals);
 }

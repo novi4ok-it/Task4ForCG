@@ -46,7 +46,7 @@ public class RenderEngine {
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
             TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
-            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, lightSources, triangleData.normals);
+            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, lightSources, triangleData.normals);
         }
         if (isPolygonalGridEnabled) {
             DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height);

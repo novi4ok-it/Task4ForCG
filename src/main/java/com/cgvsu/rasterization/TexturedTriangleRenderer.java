@@ -28,16 +28,28 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
         this.zBuffer = zBuffer;
     }
 
-    @Override
     public void render(
             final GraphicsContext graphicsContext,
             int[] arrX,
             int[] arrY,
             float[] arrZ,
             Point2f[] texCoords,
-            float[] lightIntensities,
             List<Vector3f> lightSources,
             ArrayList<Vector3f> normals) {
+
+        float[] lightIntensities = new float[3];
+        for (int i = 0; i < 3; i++) {
+            Vector3f normal = normals.get(i).normalizek();
+            float totalIntensity = 0;
+
+            for (Vector3f lightSource : lightSources) {
+                Vector3f lightDirection = lightSource.normalizek();
+                float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
+                totalIntensity += intensity;
+            }
+
+            lightIntensities[i] = Math.min(1, totalIntensity); // Ограничение интенсивности
+        }
 
         Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
 
