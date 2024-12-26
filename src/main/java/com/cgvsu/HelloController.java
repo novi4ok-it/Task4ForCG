@@ -63,7 +63,6 @@ public class HelloController {
     @FXML
     private Button addLightButton;
 
-    private List<Vector3f> lightSources = new ArrayList<>();
     private List<ColorLighting> coloredLightSources = new ArrayList<>();
 
     @FXML
@@ -258,26 +257,15 @@ public class HelloController {
         Color color = (getSelectedColor() != null) ? getSelectedColor() : Color.WHITE;
         ColorLighting colorLighting = new ColorLighting(newLight, color);
 
-        lightSources.add(newLight);
-        System.out.println("Добавлен источник света: " + newLight);
-
         coloredLightSources.add(colorLighting);
 
         renderScene();
     }
 
-    // Метод для удаления источника света
     private void deleteLightSource() {
-        if (!lightSources.isEmpty()) {
-            // Удаляем последний добавленный источник света (можно изменить логику на удаление по выбору)
-
-            Vector3f removedLight = lightSources.remove(lightSources.size() - 1);
+        if (!coloredLightSources.isEmpty()) {
             coloredLightSources.remove(coloredLightSources.size()-1);
-
-            System.out.println("Удалён источник света: " + removedLight);
             renderScene();
-        } else {
-            System.err.println("Нет источников света для удаления!");
         }
     }
 
