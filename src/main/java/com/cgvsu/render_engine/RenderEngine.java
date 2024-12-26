@@ -26,7 +26,7 @@ public class RenderEngine {
             final Model mesh,
             final int width,
             final int height,
-            List<Vector3f> lightSources,
+            List<ColorLighting> lightSources,
             final boolean isTextureEnabled,
             final boolean isPolygonalGridEnabled) {
 

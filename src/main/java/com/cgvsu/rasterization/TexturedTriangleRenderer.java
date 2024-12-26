@@ -7,6 +7,7 @@ import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.render_engine.Camera;
+import com.cgvsu.render_engine.ColorLighting;
 import com.cgvsu.render_engine.GraphicConveyor;
 import com.cgvsu.render_engine.TriangleData;
 import javafx.scene.canvas.GraphicsContext;
@@ -34,30 +35,43 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
             int[] arrY,
             float[] arrZ,
             Point2f[] texCoords,
-            List<Vector3f> lightSources,
+            List<ColorLighting> colorLightings,
             ArrayList<Vector3f> normals) {
 
-        float[] lightIntensities = new float[3];
+        Color[] vertexColors = new Color[3];
+
+        // Вычисление цвета и интенсивности освещения для каждой вершины
         for (int i = 0; i < 3; i++) {
             Vector3f normal = normals.get(i).normalizek();
-            float totalIntensity = 0;
+            double r = 0, g = 0, b = 0;
 
-            for (Vector3f lightSource : lightSources) {
-                Vector3f lightDirection = lightSource.normalizek();
+            for (ColorLighting lighting : colorLightings) {
+                Vector3f lightDirection = lighting.light.normalizek();
                 float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
-                totalIntensity += intensity;
+                Color lightColor = lighting.color;
+
+                r += intensity * lightColor.getRed();
+                g += intensity * lightColor.getGreen();
+                b += intensity * lightColor.getBlue();
             }
 
-            lightIntensities[i] = Math.min(1, totalIntensity); // Ограничение интенсивности
+            // Ограничиваем цветовые значения в диапазоне [0, 1]
+            r = Math.min(1.0, r);
+            g = Math.min(1.0, g);
+            b = Math.min(1.0, b);
+
+            vertexColors[i] = new Color(r, g, b, 1.0);
         }
 
-        Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
+        // Сортировка вершин
+        Rasterization.sortVerticesByY(arrX, arrY, arrZ, vertexColors, texCoords);
 
         for (int y = arrY[0]; y <= arrY[2]; y++) {
             if (y < 0 || y >= zBuffer[0].length) continue;
 
             int x1, x2;
-            float z1, z2, i1, i2;
+            float z1, z2;
+            Color c1, c2;
             float u1, v1, u2, v2;
 
             if (y <= arrY[1]) {
@@ -65,8 +79,8 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 x2 = Rasterization.interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
                 z1 = Rasterization.interpolate(y, arrY[0], arrY[1], arrZ[0], arrZ[1]);
                 z2 = Rasterization.interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                i1 = Rasterization.interpolate(y, arrY[0], arrY[1], lightIntensities[0], lightIntensities[1]);
-                i2 = Rasterization.interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
+                c1 = Rasterization.interpolateColor(y, arrY[0], arrY[1], vertexColors[0], vertexColors[1]);
+                c2 = Rasterization.interpolateColor(y, arrY[0], arrY[2], vertexColors[0], vertexColors[2]);
                 u1 = Rasterization.interpolate(y, arrY[0], arrY[1], texCoords[0].x, texCoords[1].x);
                 v1 = 1.0f - Rasterization.interpolate(y, arrY[0], arrY[1], texCoords[0].y, texCoords[1].y);
                 u2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].x, texCoords[2].x);
@@ -76,8 +90,8 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 x2 = Rasterization.interpolateX(y, arrY[0], arrY[2], arrX[0], arrX[2]);
                 z1 = Rasterization.interpolate(y, arrY[1], arrY[2], arrZ[1], arrZ[2]);
                 z2 = Rasterization.interpolate(y, arrY[0], arrY[2], arrZ[0], arrZ[2]);
-                i1 = Rasterization.interpolate(y, arrY[1], arrY[2], lightIntensities[1], lightIntensities[2]);
-                i2 = Rasterization.interpolate(y, arrY[0], arrY[2], lightIntensities[0], lightIntensities[2]);
+                c1 = Rasterization.interpolateColor(y, arrY[1], arrY[2], vertexColors[1], vertexColors[2]);
+                c2 = Rasterization.interpolateColor(y, arrY[0], arrY[2], vertexColors[0], vertexColors[2]);
                 u1 = Rasterization.interpolate(y, arrY[1], arrY[2], texCoords[1].x, texCoords[2].x);
                 v1 = 1.0f - Rasterization.interpolate(y, arrY[1], arrY[2], texCoords[1].y, texCoords[2].y);
                 u2 = Rasterization.interpolate(y, arrY[0], arrY[2], texCoords[0].x, texCoords[2].x);
@@ -91,9 +105,9 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 float tempZ = z1;
                 z1 = z2;
                 z2 = tempZ;
-                float tempI = i1;
-                i1 = i2;
-                i2 = tempI;
+                Color tempC = c1;
+                c1 = c2;
+                c2 = tempC;
                 float tempU = u1;
                 u1 = u2;
                 u2 = tempU;
@@ -104,7 +118,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
 
             for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
-                float intensity = Rasterization.interpolate(x, x1, x2, i1, i2);
+                Color interpolatedColor = Rasterization.interpolateColor(x, x1, x2, c1, c2);
                 float u = Rasterization.interpolate(x, x1, x2, u1, u2);
                 float v = Rasterization.interpolate(x, x1, x2, v1, v2);
 
@@ -116,9 +130,8 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                     int textureY = (int) (vClamped * (texture.getHeight() - 1));
                     Color textureColor = textureReader.getColor(textureX, textureY);
 
-                    double avgIntensity = 0.5 * (intensity + 1.0);
-                    Color smoothedColor = textureColor.interpolate(Color.BLACK, 1 - avgIntensity);
-                    graphicsContext.getPixelWriter().setColor(x, y, smoothedColor);
+                    Color finalColor = interpolatedColor.interpolate(textureColor, 0.5);
+                    graphicsContext.getPixelWriter().setColor(x, y, finalColor);
                 }
             }
         }

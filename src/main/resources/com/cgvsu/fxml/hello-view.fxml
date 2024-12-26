@@ -111,7 +111,7 @@
                            <TextField fx:id="lightingCoordZ" layoutX="48.0" layoutY="89.0" promptText="Введите координаты" />
                            <Button fx:id="addLightButton" layoutX="231.0" layoutY="45.0" mnemonicParsing="false" text="Добавить освещение" />
                            <Button fx:id="deleteLightButton" layoutX="231.0" layoutY="76.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="134.0" text="Удалить освещение" />
-                           <ColorPicker layoutX="374.0" layoutY="141.0" />
+                           <ColorPicker fx:id="colorPicker" layoutX="374.0" layoutY="141.0" />
                         </children>
                      </AnchorPane>
                  </content>

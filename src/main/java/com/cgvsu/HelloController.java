@@ -10,6 +10,7 @@ import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.CameraManager;
+import com.cgvsu.render_engine.ColorLighting;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.triangulation.DrawWireframe;
@@ -63,12 +64,15 @@ public class HelloController {
     private Button addLightButton;
 
     private List<Vector3f> lightSources = new ArrayList<>();
+    private List<ColorLighting> coloredLightSources = new ArrayList<>();
 
     @FXML
     private Button deleteLightButton;
 
-//    @FXML
-//    private CheckBox lighting;
+    @FXML
+    private ColorPicker colorPicker;
+
+    private Color selectedColor;
 
     @FXML
     private CheckBox poligonalGrid;
@@ -199,6 +203,11 @@ public class HelloController {
         addLightButton.setOnAction(event -> addLightSource());
         deleteLightButton.setOnAction(event -> deleteLightSource());
 
+        colorPicker.setOnAction(event -> {
+            selectedColor = colorPicker.getValue();
+            System.out.println("Selected Color: " + selectedColor);
+        });
+
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
             renderScene();
@@ -235,7 +244,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, lightSources, isTextureEnabled, isPolygonalGridEnabled);
+            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled);
         }
     }
 
@@ -243,26 +252,37 @@ public class HelloController {
 
     private boolean isTextureEnabled = false;
 
-    private boolean isLightingEnabled = true;
-
     // Метод для добавления нового источника света
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
+        Color color = getSelectedColor();
+        ColorLighting colorLighting = new ColorLighting(newLight, color);
+
         lightSources.add(newLight);
         System.out.println("Добавлен источник света: " + newLight);
-        renderScene(); // Перерисовка сцены с учётом нового источника света
+
+        coloredLightSources.add(colorLighting);
+
+        renderScene();
     }
 
     // Метод для удаления источника света
     private void deleteLightSource() {
         if (!lightSources.isEmpty()) {
             // Удаляем последний добавленный источник света (можно изменить логику на удаление по выбору)
+
             Vector3f removedLight = lightSources.remove(lightSources.size() - 1);
+            coloredLightSources.remove(coloredLightSources.size()-1);
+
             System.out.println("Удалён источник света: " + removedLight);
-            renderScene(); // Перерисовка сцены без удалённого источника света
+            renderScene();
         } else {
             System.err.println("Нет источников света для удаления!");
         }
+    }
+
+    public Color getSelectedColor() {
+        return selectedColor;
     }
 
     @FXML
