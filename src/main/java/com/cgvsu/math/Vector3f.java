@@ -10,6 +10,7 @@ public class Vector3f implements Vector<Vector3f> {
         this.y = y;
         this.z = z;
     }
+
     public Vector3f() {
     }
 
@@ -19,6 +20,7 @@ public class Vector3f implements Vector<Vector3f> {
     public float x() {
         return x;
     }
+
     @Override
     public float y() {
         return y;
@@ -28,16 +30,18 @@ public class Vector3f implements Vector<Vector3f> {
         return z;
     }
 
-    public void setX(float x){
+    public void setX(float x) {
         this.x = x;
     }
 
-    public void setY(float y){
+    public void setY(float y) {
         this.y = y;
     }
-    public void setZ(float z){
+
+    public void setZ(float z) {
         this.z = z;
     }
+
     // Линейная интерполяция между двумя векторами
     public static Vector3f lerp(Vector3f start, Vector3f end, float t) {
         return new Vector3f(
@@ -59,7 +63,7 @@ public class Vector3f implements Vector<Vector3f> {
         return Objects.hash(x, y, z);
     }
 
-//    public void add(Vector3f vec) {
+    //    public void add(Vector3f vec) {
 //        this.x += vec.x;
 //        this.y += vec.y;
 //        this.z += vec.z;
@@ -71,7 +75,7 @@ public class Vector3f implements Vector<Vector3f> {
         this.z += var1.z;
     }
 
-    public static Vector3f addition(Vector3f v1, Vector3f v2) {
+    public static Vector3f add(Vector3f v1, Vector3f v2) {
         return new Vector3f(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
     }
 
@@ -89,12 +93,18 @@ public class Vector3f implements Vector<Vector3f> {
         this.z = var1.z - var2.z;
     }
 
+    public static Vector3f scale(Vector3f v, float scalar) {
+        return new Vector3f(v.x * scalar, v.y * scalar, v.z * scalar);
+    }
+
     public static Vector3f subtraction(Vector3f v1, Vector3f v2) {
         return new Vector3f(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
     }
+
     public final float dot(Vector3f var1) {
         return this.x * var1.x + this.y * var1.y + this.z * var1.z;
     }
+
     public Vector3f normalizek() {
         float length = (float) Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         if (length == 0) {
@@ -153,7 +163,7 @@ public class Vector3f implements Vector<Vector3f> {
     }
 
     public final void normalize() {
-        float var1 = (float)(1.0 / Math.sqrt((double)(this.x * this.x + this.y * this.y + this.z * this.z)));
+        float var1 = (float) (1.0 / Math.sqrt((double) (this.x * this.x + this.y * this.y + this.z * this.z)));
         this.x *= var1;
         this.y *= var1;
         this.z *= var1;
@@ -166,6 +176,7 @@ public class Vector3f implements Vector<Vector3f> {
         this.x = var3;
         this.y = var4;
     }
+
     public Vector3f cross(Vector3f other) {
         return new Vector3f(
                 this.y * other.z - this.z * other.y,
@@ -192,11 +203,12 @@ public class Vector3f implements Vector<Vector3f> {
                 && Math.abs(y - other.y) < EPS
                 && Math.abs(z - other.z) < EPS;
     }
+
     public static Vector3f vectorProduct(Vector3f a, Vector3f b) {
-    return new Vector3f(
-        a.y * b.z - a.z * b.y,
-        a.z * b.x - a.x * b.z,
-        a.x * b.y - a.y * b.x
-    );
-}
+        return new Vector3f(
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x
+        );
+    }
 }

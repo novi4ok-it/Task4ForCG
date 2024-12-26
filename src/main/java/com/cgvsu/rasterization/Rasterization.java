@@ -1,6 +1,7 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
+import com.cgvsu.math.Vector3f;
 
 public class Rasterization {
 
@@ -106,5 +107,13 @@ public class Rasterization {
     static float interpolate(float value, float start, float end, float valStart, float valEnd) {
         if (start == end) return valStart;
         return valStart + (valEnd - valStart) * (value - start) / (end - start);
+    }
+
+    public static Vector3f interpolateNormal(int x, int x1, int x2, Vector3f n1, Vector3f n2) {
+        if (x1 == x2) {
+            return n1;
+        }
+        float t = (float) (x - x1) / (x2 - x1); // Вычисляем параметр интерполяции
+        return Vector3f.add(n1.multiply(1 - t), n2.multiply(t)); // Линейная интерполяция между нормалями
     }
 }

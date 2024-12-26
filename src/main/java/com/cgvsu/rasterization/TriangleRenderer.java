@@ -1,7 +1,11 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
+import com.cgvsu.math.Vector3f;
 import javafx.scene.canvas.GraphicsContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface TriangleRenderer {
     void render(
@@ -11,5 +15,6 @@ public interface TriangleRenderer {
             float[] arrZ,
             Point2f[] texCoords,
             float[] lightIntensities,
-            final boolean useLighting);
+            List<Vector3f> lightSources,
+            ArrayList<Vector3f> normals);
 }

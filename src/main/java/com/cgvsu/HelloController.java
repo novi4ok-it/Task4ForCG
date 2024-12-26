@@ -55,11 +55,15 @@ public class HelloController {
 
     @FXML
     private Canvas canvas;
+
     @FXML
     private Button addCameraButton;
 
     @FXML
     private Button addLightButton;
+
+    private List<Vector3f> lightSources = new ArrayList<>();
+
     @FXML
     private Button deleteLightButton;
 
@@ -192,14 +196,13 @@ public class HelloController {
         translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
+        addLightButton.setOnAction(event -> addLightSource());
+        deleteLightButton.setOnAction(event -> deleteLightSource());
+
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
             renderScene();
         });
-//        lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
-//            isLightingEnabled = newValue; // Обновляем флаг освещения
-//            renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
-//        });
         texture.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isTextureEnabled = newValue; // Обновляем состояние текстур
             renderScene(); // Перерисовываем сцену
@@ -232,7 +235,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, isLightingEnabled, isTextureEnabled, isPolygonalGridEnabled);
+            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, lightSources, isTextureEnabled, isPolygonalGridEnabled);
         }
     }
 
@@ -241,6 +244,43 @@ public class HelloController {
     private boolean isTextureEnabled = false;
 
     private boolean isLightingEnabled = true;
+
+    // Метод для добавления нового источника света
+    private void addLightSource() {
+        Vector3f newLight = getLightingCoordinates();
+        lightSources.add(newLight);
+        System.out.println("Добавлен источник света: " + newLight);
+        renderScene(); // Перерисовка сцены с учётом нового источника света
+    }
+
+    // Метод для удаления источника света
+    private void deleteLightSource() {
+        if (!lightSources.isEmpty()) {
+            // Удаляем последний добавленный источник света (можно изменить логику на удаление по выбору)
+            Vector3f removedLight = lightSources.remove(lightSources.size() - 1);
+            System.out.println("Удалён источник света: " + removedLight);
+            renderScene(); // Перерисовка сцены без удалённого источника света
+        } else {
+            System.err.println("Нет источников света для удаления!");
+        }
+    }
+
+    @FXML
+    private Vector3f getLightingCoordinates() {
+        try {
+            // Считывание значений из текстовых полей
+            float x = Float.parseFloat(lightingCoordX.getText().trim());
+            float y = Float.parseFloat(lightingCoordY.getText().trim());
+            float z = Float.parseFloat(lightingCoordZ.getText().trim());
+
+            // Создание объекта Vector3f
+            return new Vector3f(x, y, z);
+        } catch (NumberFormatException e) {
+            // Обработка ошибок: неверный формат чисел
+            System.err.println("Ошибка ввода координат освещения: " + e.getMessage());
+            return new Vector3f(0, 0, 0); // Возвращаем значение по умолчанию
+        }
+    }
 
     @FXML
     private void onOpenModelMenuItemClick() {

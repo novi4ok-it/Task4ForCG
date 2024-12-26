@@ -14,6 +14,9 @@ import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 public class RenderEngine {
 
@@ -23,7 +26,7 @@ public class RenderEngine {
             final Model mesh,
             final int width,
             final int height,
-            final boolean isLightingEnabled,
+            List<Vector3f> lightSources,
             final boolean isTextureEnabled,
             final boolean isPolygonalGridEnabled) {
 
@@ -43,7 +46,7 @@ public class RenderEngine {
 
             TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, camera);
             TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLUE, zBuffer);
-            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, isLightingEnabled);
+            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, triangleData.lightIntensities, lightSources, triangleData.normals);
         }
         if (isPolygonalGridEnabled) {
             DrawWireframe.drawWireframe(graphicsContext, mesh, camera, width, height);
@@ -73,6 +76,7 @@ public class RenderEngine {
         float[] arrZ = new float[3];
         Point2f[] texCoords = new Point2f[3];
         float[] lightIntensities = new float[3];
+        ArrayList<Vector3f> normals = new ArrayList<>();
 
         for (int vertexInd = 0; vertexInd < 3; ++vertexInd) {
             int vertexIndex = polygon.getVertexIndices().get(vertexInd);
@@ -96,11 +100,12 @@ public class RenderEngine {
 
             int normalIndex = polygon.getNormalIndices().get(vertexInd);
             Vector3f normal = mesh.normals.get(normalIndex);
+            normals.add(normal);
             Vector3f lightDir = Vector3f.subtraction(camera.getPosition(), vertex).normalizek();
             lightIntensities[vertexInd] = Math.max(0, normal.dot(lightDir));
         }
 
-        return new TriangleData(arrX, arrY, arrZ, texCoords, lightIntensities);
+        return new TriangleData(arrX, arrY, arrZ, texCoords, lightIntensities, normals);
     }
 
     private static TriangleRenderer chooseTriangleRenderer(Model mesh, boolean isTextureEnabled, Color baseColor, double[][] zBuffer) {

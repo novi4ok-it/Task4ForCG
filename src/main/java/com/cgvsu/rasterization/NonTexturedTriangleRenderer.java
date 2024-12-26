@@ -1,9 +1,13 @@
 package com.cgvsu.rasterization;
 
 import com.cgvsu.math.Point2f;
+import com.cgvsu.math.Vector3f;
 import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
     private static Color baseColor;
@@ -22,7 +26,8 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             float[] arrZ,
             Point2f[] texCoords,
             float[] lightIntensities,
-            final boolean useLighting) {
+            List<Vector3f> lightSources,
+            ArrayList<Vector3f> normals) {
 
         // Сортировка вершин по Y
         Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities);
@@ -63,7 +68,7 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
             }
             for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
-                float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
+                float intensity = Rasterization.interpolate(x, x1, x2, i1, i2);
 
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;

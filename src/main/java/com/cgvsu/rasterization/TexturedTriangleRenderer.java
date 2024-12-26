@@ -14,6 +14,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TexturedTriangleRenderer implements TriangleRenderer {
     private final Image texture;
     private final PixelReader textureReader;
@@ -33,7 +36,8 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
             float[] arrZ,
             Point2f[] texCoords,
             float[] lightIntensities,
-            final boolean useLighting) {
+            List<Vector3f> lightSources,
+            ArrayList<Vector3f> normals) {
 
         Rasterization.sortVerticesByY(arrX, arrY, arrZ, lightIntensities, texCoords);
 
@@ -88,7 +92,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
 
             for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
-                float intensity = useLighting ? Rasterization.interpolate(x, x1, x2, i1, i2) : 1.0f;
+                float intensity = Rasterization.interpolate(x, x1, x2, i1, i2);
                 float u = Rasterization.interpolate(x, x1, x2, u1, u2);
                 float v = Rasterization.interpolate(x, x1, x2, v1, v2);
 
