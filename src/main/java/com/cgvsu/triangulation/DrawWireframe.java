@@ -1,72 +1,93 @@
 package com.cgvsu.triangulation;
-
-import com.cgvsu.math.Matrix4f;
-import com.cgvsu.math.Point2f;
-import com.cgvsu.math.Vector3f;
-import com.cgvsu.model.Model;
-import com.cgvsu.model.Polygon;
-import com.cgvsu.render_engine.Camera;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-import static com.cgvsu.render_engine.GraphicConveyor.*;
-
+import java.util.List;
 
 public class DrawWireframe {
 
-    public static void drawWireframe(GraphicsContext gc, Model mesh, Camera camera, int width, int height, double[][] zBuffer) {
-        // Матрицы трансформации
-        Matrix4f modelMatrix = rotateScaleTranslate();
-        Matrix4f viewMatrix = camera.getViewMatrix();
-        Matrix4f projectionMatrix = camera.getProjectionMatrix();
-
-        // Итоговая матрица Model-View-Projection
-        Matrix4f modelViewProjectionMatrix = new Matrix4f(modelMatrix);
-        modelViewProjectionMatrix.mul(viewMatrix);
-        modelViewProjectionMatrix.mul(projectionMatrix);
-
+    public static void drawWireframe(GraphicsContext gc, double[][] zBuffer, List<Integer> allX, List<Integer> allY, List<Float> allZ) {
         // Настройки графического контекста
         gc.setStroke(Color.GRAY);
         gc.setLineWidth(1.0);
-
-        for (Polygon triangle : mesh.polygons) {
-            final int nVertices = triangle.getVertexIndices().size();
-            double[] xCoords = new double[nVertices];
-            double[] yCoords = new double[nVertices];
-            float[] zCoords = new float[nVertices];
-            Vector3f[] transformedVertices = new Vector3f[nVertices];
-
-            // Трансформация вершин
-            for (int i = 0; i < nVertices; i++) {
-                int vertexIndex = triangle.getVertexIndices().get(i);
-                Vector3f vertex = mesh.vertices.get(vertexIndex);
-
-                Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
-                transformedVertices[i] = transformedVertex;
-                Point2f screenPoint = vertexToPoint(transformedVertex, width, height);
-
-                xCoords[i] = screenPoint.x;
-                yCoords[i] = screenPoint.y;
-            }
-
-            // Проверяем ориентацию нормали
-            if (!isFrontFacing(transformedVertices)) {
-                continue; // Пропускаем невидимые треугольники
+        int[] xCoords = new int[3];
+        int[] yCoords = new int[3];
+        float[] zCoords = new float[3];
+        for (int i = 0; i < allX.size(); i += 3) {
+            // Заполняем массивы координат для текущего треугольника
+            for (int j = 0; j < 3; j++) {
+                xCoords[j] = allX.get(i + j);
+                yCoords[j] = allY.get(i + j);
+                zCoords[j] = allZ.get(i + j);
             }
 
             // Соединяем вершины треугольника с учётом Z-буфера
-            for (int i = 0; i < nVertices; i++) {
-                int next = (i + 1) % nVertices;
-                drawLineWithZBuffer(gc, (int) xCoords[i], (int) yCoords[i], zCoords[i],
-                        (int) xCoords[next], (int) yCoords[next], zCoords[next], zBuffer);
+            for (int j = 0; j < 3; j++) {
+                int next = (j + 1) % 3;
+                drawLineWithZBuffer(
+                        gc, xCoords[j], yCoords[j], zCoords[j],
+                        xCoords[next], yCoords[next], zCoords[next],
+                        zBuffer
+                );
             }
         }
     }
 
-    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {
+
+    public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1,
+                                           double[][] zBuffer) {
         int width = zBuffer.length;
         int height = zBuffer[0].length;
 
+        // Проверка, находятся ли обе вершины в пределах Z-буфера и подходят ли они
+        boolean startVisible = x0 >= 0 && x0 < width && y0 >= 0 && y0 < height && z0 <= zBuffer[x0][y0];
+        boolean endVisible = x1 >= 0 && x1 < width && y1 >= 0 && y1 < height && z1 <= zBuffer[x1][y1];
+
+        if (startVisible && endVisible) {
+            // Если обе вершины видимы, рисуем линию без проверки Z-буфера
+            drawLineWithoutZBufferCheck(gc, x0, y0, x1, y1);
+            return;
+        }
+
+        // Если хотя бы одна вершина невидима, выполняем обычную логику
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        float dz = z1 - z0;
+        float dzx = dx != 0 ? Math.abs(dz / dx) : 0;
+        float dzy = dy != 0 ? Math.abs(dz / dy) : 0;
+        float z = z0;
+
+        while (true) {
+            // Проверка границ Z-буфера
+            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
+                // Проверяем и обновляем Z-буфер
+                if (z <= zBuffer[x0][y0]) {
+                    zBuffer[x0][y0] = z;
+                    gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
+                }
+            }
+
+            if (x0 == x1 && y0 == y1) break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+                z += dzx * sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+                z += dzy * sy;
+            }
+        }
+    }
+
+    // Вспомогательный метод для рисования линии без проверки Z-буфера
+    private static void drawLineWithoutZBufferCheck(GraphicsContext gc, int x0, int y0, int x1, int y1) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -74,18 +95,7 @@ public class DrawWireframe {
         int err = dx - dy;
 
         while (true) {
-            // Проверка границ zBuffer
-            if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height) {
-                // Линейная интерполяция z-координаты
-                float t = dx + dy == 0 ? 0 : (float) (Math.abs(x1 - x0) + Math.abs(y1 - y0)) / (dx + dy);
-                float z = z0 * (1 - t) + z1 * t;
-
-                // Проверяем и обновляем Z-буфер
-                if (z < zBuffer[x0][y0]) {
-                    zBuffer[x0][y0] = z;
-                    gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
-                }
-            }
+            gc.getPixelWriter().setColor(x0, y0, Color.YELLOW);
 
             if (x0 == x1 && y0 == y1) break;
 
@@ -99,19 +109,5 @@ public class DrawWireframe {
                 y0 += sy;
             }
         }
-    }
-
-    private static boolean isFrontFacing(Vector3f[] vertices) {
-        Vector3f v0 = vertices[0];
-        Vector3f v1 = vertices[1];
-        Vector3f v2 = vertices[2];
-
-        // Вычисляем нормаль плоскости
-        Vector3f edge1 = Vector3f.subtraction(v1, v0);
-        Vector3f edge2 = Vector3f.subtraction(v2, v0);
-        Vector3f normal = Vector3f.vectorProduct(edge1, edge2);
-
-        // Проверяем, направлена ли нормаль к камере
-        return normal.z < 0; // Считаем, что камера смотрит в направлении -Z
     }
 }

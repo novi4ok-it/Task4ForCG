@@ -10,17 +10,13 @@ public class TriangleData {
         int[] arrY;
         float[] arrZ;
         Point2f[] texCoords;
-        float[] lightIntensities;
         public ArrayList<Vector3f> normals;
-        Vector3f[] transformedVertices;
 
-        TriangleData(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, float[] lightIntensities, ArrayList<Vector3f> normals, Vector3f[] transformedVertices) {
+        TriangleData(int[] arrX, int[] arrY, float[] arrZ, Point2f[] texCoords, ArrayList<Vector3f> normals) {
             this.arrX = arrX;
             this.arrY = arrY;
             this.arrZ = arrZ;
             this.texCoords = texCoords;
-            this.lightIntensities = lightIntensities;
             this.normals = normals;
-            this.transformedVertices = transformedVertices;
         }
     }

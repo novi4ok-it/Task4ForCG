@@ -3,7 +3,6 @@ package com.cgvsu.rasterization;
 import com.cgvsu.math.Point2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.render_engine.ColorLighting;
-import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -13,14 +12,14 @@ import java.util.List;
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
     private static Color baseColor;
     private final double[][] zBuffer;
-    @Override
-    public double[][] getZBuffer() {
-        return zBuffer;
-    }
 
     public NonTexturedTriangleRenderer(Color baseColor, double[][] zBuffer) {
         this.baseColor = baseColor;
         this.zBuffer = zBuffer;
+    }
+     @Override
+    public double[][] getZBuffer() {
+        return zBuffer;
     }
 
     @Override

@@ -14,18 +14,16 @@ import java.util.List;
 public class TexturedTriangleRenderer implements TriangleRenderer {
     private final Image texture;
     private final PixelReader textureReader;
-
-    @Override
-    public double[][] getZBuffer() {
-        return zBuffer;
-    }
-
     private final double[][] zBuffer;
 
     public TexturedTriangleRenderer(Image texture, double[][] zBuffer) {
         this.texture = texture;
         this.textureReader = texture.getPixelReader();
         this.zBuffer = zBuffer;
+    }
+    @Override
+    public double[][] getZBuffer() {
+        return zBuffer;
     }
 
     @Override
