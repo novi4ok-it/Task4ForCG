@@ -13,6 +13,10 @@ import java.util.List;
 public class NonTexturedTriangleRenderer implements TriangleRenderer {
     private static Color baseColor;
     private final double[][] zBuffer;
+    @Override
+    public double[][] getZBuffer() {
+        return zBuffer;
+    }
 
     public NonTexturedTriangleRenderer(Color baseColor, double[][] zBuffer) {
         this.baseColor = baseColor;
@@ -98,7 +102,6 @@ public class NonTexturedTriangleRenderer implements TriangleRenderer {
 
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;
-
                     // Если освещение пустое, используем только базовый цвет
                     Color finalColor = colorLightings.isEmpty() ? baseColor : baseColor.interpolate(color, 0.5);
                     graphicsContext.getPixelWriter().setColor(x, y, finalColor);

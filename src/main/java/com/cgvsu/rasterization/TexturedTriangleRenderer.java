@@ -1,15 +1,8 @@
 package com.cgvsu.rasterization;
 
-import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
-import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
-import com.cgvsu.model.Model;
-import com.cgvsu.model.Polygon;
-import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.ColorLighting;
-import com.cgvsu.render_engine.GraphicConveyor;
-import com.cgvsu.render_engine.TriangleData;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
@@ -21,6 +14,12 @@ import java.util.List;
 public class TexturedTriangleRenderer implements TriangleRenderer {
     private final Image texture;
     private final PixelReader textureReader;
+
+    @Override
+    public double[][] getZBuffer() {
+        return zBuffer;
+    }
+
     private final double[][] zBuffer;
 
     public TexturedTriangleRenderer(Image texture, double[][] zBuffer) {
@@ -29,6 +28,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
         this.zBuffer = zBuffer;
     }
 
+    @Override
     public void render(
             final GraphicsContext graphicsContext,
             int[] arrX,

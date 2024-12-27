@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface TriangleRenderer {
+    double[][] getZBuffer();
+
     void render(
             final GraphicsContext graphicsContext,
             int[] arrX,

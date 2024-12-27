@@ -204,7 +204,6 @@ public class HelloController {
 
         colorPicker.setOnAction(event -> {
             selectedColor = colorPicker.getValue();
-            System.out.println("Selected Color: " + selectedColor);
         });
 
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -231,7 +230,7 @@ public class HelloController {
     private void renderScene() {
         double width = canvas.getWidth();
         double height = canvas.getHeight();
-
+        double[][] zBuffer = initializeZBuffer((int) width, (int) height);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.clearRect(0, 0, width, height);
 
@@ -243,8 +242,18 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled);
+            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
         }
+    }
+
+    public static double[][] initializeZBuffer(int width, int height) {
+        double[][] zBuffer = new double[width][height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                zBuffer[i][j] = Double.POSITIVE_INFINITY; // Инициализируем максимальной глубиной
+            }
+        }
+        return zBuffer;
     }
 
     private boolean isPolygonalGridEnabled = false;
@@ -264,7 +273,7 @@ public class HelloController {
 
     private void deleteLightSource() {
         if (!coloredLightSources.isEmpty()) {
-            coloredLightSources.remove(coloredLightSources.size()-1);
+            coloredLightSources.remove(coloredLightSources.size() - 1);
             renderScene();
         }
     }
