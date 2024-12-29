@@ -193,9 +193,9 @@ public class HelloController {
             selectedColorOfLightings = colorOfLighting.getValue();
         });
 
-        selectedColorOfModel = Color.WHITE;
         colorOfModel.setOnAction(event -> {
             selectedColorOfModel = colorOfModel.getValue();
+            addActiveModelColor(selectedColorOfModel);
         });
 
         positionX.setOnKeyReleased(event -> handlePositionChange("x"));
@@ -254,7 +254,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             RenderContext context = new RenderContext(
-                    gc, activeCamera, container.mesh, (int) width, (int) height, selectedColorOfModel, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+                    gc, activeCamera, container.mesh, (int) width, (int) height, container.mesh.getColorOfModel(), coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
             RenderEngine.render(context);
         }
     }
@@ -273,6 +273,13 @@ public class HelloController {
 
     private boolean isTextureEnabled = false;
 
+    private void addActiveModelColor(Color color) {
+        if (activeModelIndex != -1) {
+            meshes.get(activeModelIndex).setColorOfModel(color);
+        } else {
+            System.out.println("Нет активной модели");
+        }
+    }
 
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
@@ -699,13 +706,11 @@ public class HelloController {
         }
     }
 
-    private void deleteTextureButton() {
-
-    }
-
     private void removeHBoxMod(HBox hboxMod) {
         ModelContainer containerToRemove = null;
+        int flag = -1;
         for (ModelContainer container : modelContainers) {
+            flag++;
             if (container.hbox == hboxMod) {
                 containerToRemove = container;
                 break;
@@ -725,6 +730,9 @@ public class HelloController {
             translateZ.setText("");
 
             modelCounter--;
+            if (modelCounter == 0 || flag == activeModelIndex) {
+                activeModelIndex = -1;
+            }
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
