@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static com.cgvsu.alerts.Alerts.*;
 import static com.cgvsu.render_engine.GraphicConveyor.multiplyMatrix4ByVector3;
 import static com.cgvsu.render_engine.GraphicConveyor.vertexToPoint;
 
@@ -178,14 +179,6 @@ public class HelloController {
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
 
-        canvas.setFocusTraversable(true);
-        canvas.setOnMouseClicked(event -> {
-            if (!canvas.isFocused()) {
-                canvas.requestFocus();
-                event.consume();
-            }
-        });
-
         addLightButton.setOnAction(event -> addLightSource());
         deleteLightButton.setOnAction(event -> deleteLightSource());
 
@@ -211,7 +204,6 @@ public class HelloController {
             handleMouseClicked(event);
         });
 
-
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
             renderScene();
@@ -221,12 +213,10 @@ public class HelloController {
             renderScene(); // Перерисовываем сцену
         });
 
-
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
         timeline.play();
-
 
         themeSwitchButton.setSelected(false);
         themeSwitchButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -441,26 +431,9 @@ public class HelloController {
         handlePositionChange("z");
     }
 
-    @FXML
-    private void applyPointOfDir() {
-        handlePointToDirChange("x");
-        handlePointToDirChange("y");
-        handlePointToDirChange("z");
-    }
-
-
     private void handlePositionChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
-            updateCamPosition(axis, value);
-        } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
-        }
-    }
-
-    private void handlePointToDirChange(String axis) {
-        try {
-            float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
             showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
@@ -627,7 +600,6 @@ public class HelloController {
         Button addTextureButton = new Button("Добавить текстуру");
         Button deleteTextureButton = new Button("Удалить текстуру");
 
-
         int currentModelIndex = hboxesMod.size();
 
         modelButton.setOnAction(e -> selectActiveModel(currentModelIndex));
@@ -667,7 +639,6 @@ public class HelloController {
             System.out.println("Нет активной модели");
         }
     }
-
 
     private void addTexture() {
         FileChooser fileChooser = new FileChooser();
@@ -943,27 +914,6 @@ public class HelloController {
         cameraManager.getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
-    private void showSuccessAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
     @FXML
     private void handleApplyTransformations(ActionEvent event) {
         try {
@@ -989,7 +939,6 @@ public class HelloController {
         }
     }
 
-
     @FXML
     private void handleRemoveVerticesButtonClick(ActionEvent event) {
         if (activeModelIndex != -1) {
@@ -1013,7 +962,6 @@ public class HelloController {
             renderScene();
         }
     }
-
 
     @FXML
     private void handleMouseClicked(MouseEvent event) {
@@ -1095,6 +1043,4 @@ public class HelloController {
         }
         return inside;
     }
-
-
 }
