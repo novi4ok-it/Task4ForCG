@@ -223,7 +223,6 @@ public class HelloController {
         });
 
 
-
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
@@ -491,7 +490,6 @@ public class HelloController {
     }
 
 
-
     private String getTextFieldValue(String axis) {
         switch (axis) {
             case "xPosition":
@@ -631,13 +629,13 @@ public class HelloController {
             onOpenModelMenuItemClick();
         }
         if (!fileSelected || mesh == null) {
-            if (mesh == null && tempMesh != null){
+            if (mesh == null && tempMesh != null) {
                 mesh = tempMesh;
             }
-            if (mesh == null){
+            if (mesh == null) {
                 return;
             }
-            if (!fileSelected){
+            if (!fileSelected) {
                 return;
             }
         }
@@ -663,7 +661,7 @@ public class HelloController {
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
         addTextureButton.setOnAction(e -> addTexture());
-
+        deleteTextureButton.setOnAction(e -> {mesh.texture = null;});
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
         windowIsCalled = false;
@@ -710,7 +708,7 @@ public class HelloController {
             // Загружаем изображение из файла
             Image texture = new Image(file.toURI().toString());
             // Устанавливаем текстуру для модели
-            if (activeModelIndex != -1){
+            if (activeModelIndex != -1) {
                 meshes.get(activeModelIndex).texture = texture;
             }
         } catch (Exception exception) {
@@ -732,6 +730,10 @@ public class HelloController {
         } else {
             showErrorAlert("Ошибка!", "Ошибка при сохранении модели");
         }
+    }
+
+    private void deleteTextureButton() {
+
     }
 
     private void removeHBoxMod(HBox hboxMod) {
@@ -764,6 +766,7 @@ public class HelloController {
             updateModelIndices();
         }
     }
+
     private void updateModelIndices() {
         for (int i = 0; i < hboxesMod.size(); i++) {
             HBox hbox = hboxesMod.get(i);
@@ -931,7 +934,7 @@ public class HelloController {
     private void processDroppedFileTexture(File file) {
         try {
             Image texture = new Image(file.toURI().toString());
-            if (activeModelIndex != -1){
+            if (activeModelIndex != -1) {
                 meshes.get(activeModelIndex).texture = texture;
             }
             renderScene();
