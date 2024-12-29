@@ -43,6 +43,7 @@ public class ObjReader {
 			}
 		}
 		res = result;
+		result.setOriginalVertices();
 		return result;
 	}
 

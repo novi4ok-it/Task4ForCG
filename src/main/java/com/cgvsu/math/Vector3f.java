@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import static com.cgvsu.math.Global.EPS;
 
-public class Vector3f implements Vector<Vector3f> {
+public class Vector3f implements Vector3D<Vector3f> {
     public Vector3f(float x, float y, float z) {
         this.x = x;
         this.y = y;
@@ -23,21 +23,23 @@ public class Vector3f implements Vector<Vector3f> {
     public float y() {
         return y;
     }
-
+    @Override
     public float z() {
         return z;
     }
-
+    @Override
     public void setX(float x){
         this.x = x;
     }
-
+    @Override
     public void setY(float y){
         this.y = y;
     }
+    @Override
     public void setZ(float z){
         this.z = z;
     }
+
     // Линейная интерполяция между двумя векторами
     public static Vector3f lerp(Vector3f start, Vector3f end, float t) {
         return new Vector3f(
@@ -59,11 +61,6 @@ public class Vector3f implements Vector<Vector3f> {
         return Objects.hash(x, y, z);
     }
 
-//    public void add(Vector3f vec) {
-//        this.x += vec.x;
-//        this.y += vec.y;
-//        this.z += vec.z;
-//    }
     @Override
     public final void add(Vector3f var1) {
         this.x += var1.x;
@@ -166,25 +163,6 @@ public class Vector3f implements Vector<Vector3f> {
         this.x = var3;
         this.y = var4;
     }
-    public Vector3f cross(Vector3f other) {
-        return new Vector3f(
-                this.y * other.z - this.z * other.y,
-                this.z * other.x - this.x * other.z,
-                this.x * other.y - this.y * other.x
-        );
-    }
-
-    public static Vector3f crossProduct(Vector3f v1, Vector3f v2) {
-        return new Vector3f(
-                v1.y * v2.z - v1.z * v2.y,
-                v1.z * v2.x - v1.x * v2.z,
-                v1.x * v2.y - v1.y * v2.x
-        );
-    }
-
-    public static float dotProduct(Vector3f v1, Vector3f v2) {
-        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-    }
 
     @Override
     public boolean equals(Vector3f other) {
@@ -192,11 +170,16 @@ public class Vector3f implements Vector<Vector3f> {
                 && Math.abs(y - other.y) < EPS
                 && Math.abs(z - other.z) < EPS;
     }
+
+    public String toString() {
+        return "Vector3f: x = " + this.x + ", y = " + this.y + ", z = " + this.z;
+    }
+
     public static Vector3f vectorProduct(Vector3f a, Vector3f b) {
-    return new Vector3f(
-        a.y * b.z - a.z * b.y,
-        a.z * b.x - a.x * b.z,
-        a.x * b.y - a.y * b.x
-    );
-}
+        return new Vector3f(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        );
+    }
 }

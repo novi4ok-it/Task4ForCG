@@ -1,9 +1,7 @@
 package com.cgvsu;
 
 import com.cgvsu.container.ModelContainer;
-import com.cgvsu.math.Matrix4f;
-import com.cgvsu.math.Point2f;
-import com.cgvsu.math.Vector2f;
+import com.cgvsu.math.*;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
@@ -26,6 +24,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,8 +33,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
-import com.cgvsu.math.Vector3f;
 
 import java.io.File;
 import java.io.IOException;
@@ -146,6 +144,10 @@ public class HelloController {
     private final int MAX_MODELS = 4;
     private final int MAX_CAMERAS = 4;
 
+    private double lastMouseX = 0;
+    private double lastMouseY = 0;
+    private boolean isMousePressed = false;
+
     private ObservableList<ModelContainer> modelContainers = FXCollections.observableArrayList();
 
     private CameraManager cameraManager = new CameraManager();
@@ -172,26 +174,6 @@ public class HelloController {
             }
         });
 
-        positionX.setOnKeyReleased(event -> handlePositionChange("x"));
-        positionY.setOnKeyReleased(event -> handlePositionChange("y"));
-        positionZ.setOnKeyReleased(event -> handlePositionChange("z"));
-
-        pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
-        pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
-        pointOfDirZ.setOnKeyReleased(event -> handlePointToDirChange("z"));
-
-        scaleX.setOnKeyReleased(event -> handleScaleChange("x"));
-        scaleY.setOnKeyReleased(event -> handleScaleChange("y"));
-        scaleZ.setOnKeyReleased(event -> handleScaleChange("z"));
-
-        rotateX.setOnKeyReleased(event -> handleRotateChange("x"));
-        rotateY.setOnKeyReleased(event -> handleRotateChange("y"));
-        rotateZ.setOnKeyReleased(event -> handleRotateChange("z"));
-
-        translateX.setOnKeyReleased(event -> handleTranslateChange("x"));
-        translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
-        translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
-
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
             renderScene();
@@ -214,6 +196,11 @@ public class HelloController {
         themeSwitchButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
             switchTheme();
         });
+        canvas.setOnMousePressed(event -> handleMousePressed(event));
+        canvas.setOnMouseDragged(event -> handleMouseDragged(event));
+        canvas.setOnMouseReleased(event -> handleMouseReleased(event));
+        canvas.setOnScroll(event -> handleMouseScrolled(event)); // колесо
+
     }
 
     // Основной рендер сцены
@@ -280,13 +267,100 @@ public class HelloController {
         }
     }
 
+    private void handleMousePressed(MouseEvent event) {
+        lastMouseX = event.getSceneX();
+        lastMouseY = event.getSceneY();
+        isMousePressed = true;
+    }
+
+    private void handleMouseDragged(MouseEvent event) {
+        if (isMousePressed) {
+            double deltaX = event.getSceneX() - lastMouseX;
+            double deltaY = event.getSceneY() - lastMouseY;
+
+            // Обновляем вращение камеры в зависимости от движения мыши
+            updateCameraRotation(deltaX, deltaY);
+
+            lastMouseX = event.getSceneX();
+            lastMouseY = event.getSceneY();
+        }
+    }
+
+    private void handleMouseReleased(MouseEvent event) {
+        isMousePressed = false;
+    }
+
+    private void updateCameraRotation(double deltaX, double deltaY) {
+        float sensitivity = 0.5f; // Чувствительность мыши
+        float yaw = (float) (-deltaX * sensitivity); // Инвертируем направление вращения по горизонтали
+        float pitch = (float) (-deltaY * sensitivity);
+        float roll = (float) (deltaY * sensitivity);
+
+        // Обновляем углы вращения камеры
+        cameraManager.getActiveCamera().rotateAroundTarget(yaw, pitch, roll);
+    }
+
+    @FXML
+    private void handleMouseScrolled(ScrollEvent event) {
+        double deltaY = event.getDeltaY();
+        if (deltaY > 0) {
+            cameraManager.getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
+        } else {
+            cameraManager.getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
+        }
+    }
+
+    @FXML
+    private void applyScale() {
+        handleScaleChange("x");
+        handleScaleChange("y");
+        handleScaleChange("z");
+    }
+
+    @FXML
+    private void applyRotate() {
+        handleRotateChange("x");
+        handleRotateChange("y");
+        handleRotateChange("z");
+    }
+
+    @FXML
+    private void applyTranslate() {
+        if (!mesh.areVerticesEqual()) {
+            mesh.setVertices();
+        }
+        handleScaleChange("x");
+        handleScaleChange("y");
+        handleScaleChange("z");
+        handleRotateChange("x");
+        handleRotateChange("y");
+        handleRotateChange("z");
+        handleTranslateChange("x");
+        handleTranslateChange("y");
+        handleTranslateChange("z");
+    }
+
+    @FXML
+    private void applyCamPosition() {
+        handlePositionChange("x");
+        handlePositionChange("y");
+        handlePositionChange("z");
+    }
+
+    @FXML
+    private void applyPointOfDir() {
+        handlePointToDirChange("x");
+        handlePointToDirChange("y");
+        handlePointToDirChange("z");
+    }
+
 
     private void handlePositionChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
         }
     }
 
@@ -295,34 +369,34 @@ public class HelloController {
             float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
         }
     }
 
     private void handleScaleChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Scale"));
-            updateModelPosition(axis, value);
+            updateScale(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
         }
     }
 
     private void handleRotateChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Rotate"));
-            updateModelPosition(axis, value);
+            updateRotation(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
         }
     }
 
     private void handleTranslateChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Translate"));
-            updateModelPosition(axis, value);
+            updateTranslation(axis, value);
         } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
         }
     }
 
@@ -400,6 +474,64 @@ public class HelloController {
         //renderScene();
     }
 
+    //////////
+    private void updateScale(String axis, float value) {
+        switch (axis) {
+            case "x":
+                mesh.setScale(new Vector3f(value, 1, 1));
+                AffineTransformations.applyScale(mesh);
+                break;
+            case "y":
+                mesh.setScale(new Vector3f(1, value, 1));
+                AffineTransformations.applyScale(mesh);
+                break;
+            case "z":
+                mesh.setScale(new Vector3f(1, 1, value));
+                AffineTransformations.applyScale(mesh);
+                break;
+        }
+        // Обновить отображение вашей модели на канвасе
+        //renderScene();
+    }
+
+    private void updateRotation(String axis, float value) {
+        switch (axis) {
+            case "x":
+                mesh.setRotation(new Vector3f(value, 0, 0));
+                AffineTransformations.applyRotationX(mesh);
+                break;
+            case "y":
+                mesh.setRotation(new Vector3f(0, value, 0));
+                AffineTransformations.applyRotationX(mesh);
+                break;
+            case "z":
+                mesh.setRotation(new Vector3f(0, 0, value));
+                AffineTransformations.applyRotationX(mesh);
+                break;
+        }
+        // Обновить отображение вашей модели на канвасе
+        //renderScene();
+    }
+
+    private void updateTranslation(String axis, float value) {
+        switch (axis) {
+            case "x":
+                mesh.setTranslation(new Vector3f(value, 0, 0));
+                AffineTransformations.applyTranslationX(mesh);
+                break;
+            case "y":
+                mesh.setTranslation(new Vector3f(0, value, 0));
+                AffineTransformations.applyTranslationX(mesh);
+                break;
+            case "z":
+                mesh.setTranslation(new Vector3f(0, 0, value));
+                AffineTransformations.applyTranslationX(mesh);
+                break;
+        }
+        // Обновить отображение вашей модели на канвасе
+        //renderScene();
+    }
+
     @FXML
     private void addHBoxModel() {
         onOpenModelMenuItemClick();
@@ -433,6 +565,19 @@ public class HelloController {
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
+        /////
+        scaleX.setText("1");
+        scaleY.setText("1");
+        scaleZ.setText("1");
+
+        rotateX.setText("0");
+        rotateY.setText("0");
+        rotateZ.setText("0");
+
+        translateX.setText("0");
+        translateY.setText("0");
+        translateZ.setText("0");
+        /////
     }
 
 
@@ -480,6 +625,18 @@ public class HelloController {
             }
         }
         if (containerToRemove != null) {
+            scaleX.setText("");
+            scaleY.setText("");
+            scaleZ.setText("");
+
+            rotateX.setText("");
+            rotateY.setText("");
+            rotateZ.setText("");
+
+            translateX.setText("");
+            translateY.setText("");
+            translateZ.setText("");
+
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
@@ -531,6 +688,13 @@ public class HelloController {
 
 
     private void removeHBoxCam(HBox hboxCam) {
+        positionX.setText("");
+        positionX.setText("");
+        positionX.setText("");
+
+        pointOfDirX.setText("");
+        pointOfDirX.setText("");
+        pointOfDirX.setText("");
         hboxesCam.remove(hboxCam);
         vboxCamera.getChildren().remove(hboxCam);
     }
@@ -592,12 +756,12 @@ public class HelloController {
 
     @FXML
     public void handleCameraLeft(ActionEvent actionEvent) {
-        cameraManager.getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
+        cameraManager.getActiveCamera().movePositionAndTarget(new Vector3f(TRANSLATION, 0, 0));
     }
 
     @FXML
     public void handleCameraRight(ActionEvent actionEvent) {
-        cameraManager.getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
+        cameraManager.getActiveCamera().movePositionAndTarget(new Vector3f(-TRANSLATION, 0, 0));
     }
 
     @FXML
@@ -629,5 +793,29 @@ public class HelloController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.showAndWait();
+    }
+    @FXML
+    private void handleApplyTransformations(ActionEvent event) {
+        try {
+            float scaleX = Float.parseFloat(this.scaleX.getText());
+            float scaleY = Float.parseFloat(this.scaleY.getText());
+            float scaleZ = Float.parseFloat(this.scaleY.getText());
+
+            float rotateX = Float.parseFloat(this.rotateX.getText());
+            float rotateY = Float.parseFloat(this.rotateY.getText());
+            float rotateZ = Float.parseFloat(this.rotateZ.getText());
+
+            float translateX = Float.parseFloat(this.translateX.getText());
+            float translateY = Float.parseFloat(this.translateY.getText());
+            float translateZ = Float.parseFloat(this.translateZ.getText());
+
+            mesh.setScale(new Vector3f(scaleX, scaleY, scaleZ));
+            mesh.setRotation(new Vector3f(rotateX, rotateY, rotateZ));
+            mesh.setTranslation(new Vector3f(translateX, translateY, translateZ));
+
+            timeline.playFromStart();
+        } catch (NumberFormatException e) {
+            System.out.println("Ошибка: введите корректные числа для трансформации.");
+        }
     }
 }

@@ -95,8 +95,6 @@ public class Vector2f implements Vector<Vector2f> {
 		if (length < EPS) {
 			throw new ArithmeticException("Normalization of a zero vector is not allowed.");
 		}
-//		float invLength = 1 / length;
-//		return this.multiply(invLength);
 		return this.divide(length);
 	}
 
@@ -105,8 +103,8 @@ public class Vector2f implements Vector<Vector2f> {
 		return (float) Math.sqrt(this.x * this.x + this.y * this.y);
 	}
 
-	public static float dotProduct(Vector2f v1, Vector2f v2) {
-		return v1.x * v2.x + v1.y * v2.y;
+	public String toString() {
+		return "Vector2f: x = " + this.x + ", y = " + this.y;
 	}
 
 	@Override

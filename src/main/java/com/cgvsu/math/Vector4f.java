@@ -2,7 +2,7 @@ package com.cgvsu.math;
 
 import static com.cgvsu.math.Global.EPS;
 
-public class Vector4f implements Vector<Vector4f> {
+public class Vector4f implements Vector4D<Vector4f> {
 
     public float x, y, z, w;
 
@@ -13,7 +13,8 @@ public class Vector4f implements Vector<Vector4f> {
         this.w = w;
     }
 
-
+    public Vector4f(){
+    }
     @Override
     public float x(){
         return x;
@@ -22,16 +23,33 @@ public class Vector4f implements Vector<Vector4f> {
     public float y(){
         return y;
     }
-
+    @Override
     public float z() {
         return z;
     }
-    public float getZ(){
-        return z;
-    }
-    public float getW(){
+    @Override
+    public float w(){
         return w;
     }
+    @Override
+    public void setX(float x) {
+        this.x = x;
+    }
+    @Override
+    public void setY(float y) {
+        this.y = y;
+    }
+    @Override
+    public void setZ(float z){
+        this.z = z;
+    }
+    @Override
+    public void setW(float w){
+        this.w = w;
+    }
+//    public float getZ(){
+//        return z;
+//    }
 
 
     @Override
@@ -117,27 +135,16 @@ public class Vector4f implements Vector<Vector4f> {
                 && Math.abs(z - other.z) < EPS
                 && Math.abs(w - other.w) < EPS;
     }
-
-    public float getX() {
-        return x;
+    public String toString() {
+        return "Vector4f: x = " + this.x + ", y = " + this.y + ", z = " + this.z + ", w = " + this.w;
     }
 
-    public void setX(float x) {
-        this.x = x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public void setZ(float z){
-        this.z = z;
-    }
-    public void setW(float w){
-        this.w = w;
-    }
+//    public float getX() {
+//        return x;
+//    }
+//
+//
+//    public float getY() {
+//        return y;
+//    }
 }

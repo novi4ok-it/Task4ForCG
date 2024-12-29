@@ -1,7 +1,6 @@
 package com.cgvsu.render_engine;
 
-import com.cgvsu.math.Vector2f;
-import com.cgvsu.math.Vector3f;
+import com.cgvsu.math.*;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.rasterization.NonTexturedTriangleRenderer;
 import com.cgvsu.rasterization.TexturedTriangleRenderer;
@@ -10,8 +9,6 @@ import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
-import com.cgvsu.math.Matrix4f;
-import com.cgvsu.math.Point2f;
 import javafx.scene.paint.Color;
 
 import static com.cgvsu.render_engine.GraphicConveyor.*;
@@ -30,7 +27,12 @@ public class RenderEngine {
         // Инициализируем Z-буфер
         double[][] zBuffer = initializeZBuffer(width, height);
 
-        Matrix4f modelMatrix = rotateScaleTranslate();
+//        Matrix4f modelMatrix = rotateScaleTranslate();
+        Matrix4f modelMatrix = AffineTransformations.rotateScaleTranslate(
+            mesh.getScale().x(), mesh.getScale().y(), mesh.getScale().z(),
+            mesh.getRotation().x(), mesh.getRotation().y(), mesh.getRotation().z(),
+            mesh.getTranslation().x(), mesh.getTranslation().y(), mesh.getTranslation().z()
+        );
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 

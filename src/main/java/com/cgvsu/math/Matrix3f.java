@@ -18,7 +18,6 @@ public class Matrix3f {
         }
     }
 
-
     public Matrix3f add(Matrix3f other) {
         float[][] result = new float[3][3];
         for (int i = 0; i < 3; i++) {
