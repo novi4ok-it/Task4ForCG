@@ -50,7 +50,7 @@ public class DrawWireframe {
         float normalZ = edge1X * edge2Y - edge1Y * edge2X;
 
         // Проверяем, направлена ли нормаль к камере
-        return normalZ < 0; // Считаем, что камера смотрит в направлении -Z
+        return normalZ > 0; // Считаем, что камера смотрит в направлении -Z
     }
 
     public static void drawLineWithZBuffer(GraphicsContext gc, int x0, int y0, float z0, int x1, int y1, float z1, double[][] zBuffer) {

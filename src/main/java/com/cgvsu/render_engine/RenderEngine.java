@@ -51,6 +51,7 @@ public class RenderEngine {
                     triangleData.texCoords,
                     context.getLightSources(),
                     triangleData.normals);
+            context.setZBuffer(triangleRenderer.getZBuffer());
         }
 
         if (context.isPolygonalGridEnabled()) {

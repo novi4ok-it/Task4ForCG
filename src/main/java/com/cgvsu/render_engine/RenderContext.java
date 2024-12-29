@@ -14,7 +14,7 @@ public class RenderContext {
     private final List<ColorLighting> lightSources;
     private final boolean isTextureEnabled;
     private final boolean isPolygonalGridEnabled;
-    private final double[][] zBuffer;
+    private double[][] zBuffer;
 
     public RenderContext(
             GraphicsContext graphicsContext,
@@ -71,5 +71,8 @@ public class RenderContext {
 
     public double[][] getZBuffer() {
         return zBuffer;
+    }
+    public void setZBuffer(double[][] zBuffer){
+        this.zBuffer = zBuffer;
     }
 }
