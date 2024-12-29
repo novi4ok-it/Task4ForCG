@@ -1,5 +1,6 @@
 package com.cgvsu;
 
+import com.cgvsu.math.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

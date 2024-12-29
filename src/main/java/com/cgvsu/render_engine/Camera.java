@@ -87,6 +87,11 @@ public class Camera {
         position = target.subtraction(target, direction);
     }
 
+    public void movePositionAndTarget(final Vector3f translation) {
+        this.position.add(translation);
+        this.target.add(translation);
+    }
+
     private Vector3f position;
     private Vector3f target;
     private float fov;

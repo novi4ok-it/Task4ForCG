@@ -8,6 +8,7 @@ public class Matrix4f {
         matrix = new float[4][4];
     }
 
+
     // Конструктор копирования
     public Matrix4f(Matrix4f other) {
         this();
@@ -15,6 +16,7 @@ public class Matrix4f {
             System.arraycopy(other.matrix[i], 0, this.matrix[i], 0, 4);
         }
     }
+
 
     // Конструктор из массива
     public Matrix4f(float[] values) {
@@ -101,6 +103,22 @@ public class Matrix4f {
         return new Matrix4f(result);
     }
 
+    public static Matrix4f multiplymatt(Matrix4f first, Matrix4f second) {
+        if (first == null || second == null) {
+            throw new NullPointerException("Матрица не может быть нулевая");
+        }
+        float[][] result = new float[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                result[i][j] = 0;
+                for (int k = 0; k < 4; k++) {
+                    result[i][j] += first.matrix[i][k] * second.matrix[k][j];
+                }
+            }
+        }
+        return new Matrix4f(result);
+    }
+
     public Matrix4f multiply(Matrix4f other) {
         float[][] result = new float[4][4];
         for (int i = 0; i < 4; i++) {
@@ -114,12 +132,12 @@ public class Matrix4f {
         return new Matrix4f(result);
     }
 
+    //Умножение матрицы на вектор
     public void multiplyvec(Vector4f vector) {
-        vector.setX(this.matrix[0][0] * vector.x() + this.matrix[0][1] * vector.y() + this.matrix[0][2] * vector.getZ() + this.matrix[0][3] * vector.getW());
-        vector.setY(this.matrix[1][0] * vector.x() + this.matrix[1][1] * vector.y() + this.matrix[1][2] * vector.getZ() + this.matrix[1][3] * vector.getW());
-        vector.setZ(this.matrix[2][0] * vector.x() + this.matrix[2][1] * vector.y() + this.matrix[2][2] * vector.getZ() + this.matrix[2][3] * vector.getW());
-        vector.setW(this.matrix[3][0] * vector.x() + this.matrix[3][1] * vector.y() + this.matrix[3][2] * vector.getZ() + this.matrix[3][3] * vector.getW());
-
+        vector.setX(this.matrix[0][0] * vector.x() + this.matrix[0][1] * vector.y() + this.matrix[0][2] * vector.z() + this.matrix[0][3] * vector.w());
+        vector.setY(this.matrix[1][0] * vector.x() + this.matrix[1][1] * vector.y() + this.matrix[1][2] * vector.z() + this.matrix[1][3] * vector.w());
+        vector.setZ(this.matrix[2][0] * vector.x() + this.matrix[2][1] * vector.y() + this.matrix[2][2] * vector.z() + this.matrix[2][3] * vector.w());
+        vector.setW(this.matrix[3][0] * vector.x() + this.matrix[3][1] * vector.y() + this.matrix[3][2] * vector.z() + this.matrix[3][3] * vector.w());
     }
 
     public void transpose() {
@@ -156,5 +174,69 @@ public class Matrix4f {
             minorRow++;
         }
         return minor;
+    }
+    public static Matrix4f scaleMatrix4f(float scaleX, float scaleY, float scaleZ) {
+        float[][] matrix = new float[][]
+                {
+                        {scaleX, 0,0,0},
+                        {0, scaleY,0,0},
+                        {0,0,scaleZ,0},
+                        {0,0,0,1}
+                };
+        return new Matrix4f(matrix);
+    }
+
+    public static Matrix4f rotateX(float angleX) {
+        float cos = (float) Math.cos(Math.toRadians(angleX));
+        float sin = (float) Math.sin(Math.toRadians(angleX));
+        float[][] matrix = new float[][]
+                {
+                        {1,0,0,0},
+                        {0,cos, sin,0},
+                        {0,-sin, cos, 0},
+                        {0,0,0,1}
+                };
+        return new Matrix4f(matrix);
+    }
+
+    public static Matrix4f rotateY(float angleY) {
+        float cos = (float) Math.cos(Math.toRadians(angleY));
+        float sin = (float) Math.sin(Math.toRadians(angleY));
+        float[][] matrix = new float[][]
+                {
+                        {cos,0,sin,0},
+                        {0,1,0,0},
+                        {-sin,0,cos,0},
+                        {0,0,0,1}
+                };
+        return new Matrix4f(matrix);
+    }
+
+    public static Matrix4f rotateZ(float angleZ) {
+        float cos = (float) Math.cos(Math.toRadians(angleZ));
+        float sin = (float) Math.sin(Math.toRadians(angleZ));
+        float[][] matrix = new float[][]
+                {
+                        {cos,sin,0,0},
+                        {-sin, cos,0,0},
+                        {0,0,1,0},
+                        {0,0,0,1}
+                };
+        return new Matrix4f(matrix);
+    }
+
+    public static Matrix4f rotateMatrix4f(float angleX, float angleY, float angleZ) {
+        return Matrix4f.multiplymatt(rotateZ(angleZ), Matrix4f.multiplymatt(rotateY(angleY), rotateX(angleX)));
+    }
+
+    public static Matrix4f translationMatrix4f(float translationX, float translationY, float translationZ) {
+        float[][] matrix = new float[][]
+                {
+                        {1,0,0,translationX},
+                        {0,1,0,translationY},
+                        {0,0,1,translationZ},
+                        {0,0,0,1}
+                };
+        return new Matrix4f(matrix);
     }
 }

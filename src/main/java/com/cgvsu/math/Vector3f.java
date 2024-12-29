@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import static com.cgvsu.math.Global.EPS;
 
-public class Vector3f implements Vector<Vector3f> {
+public class Vector3f implements Vector3D<Vector3f> {
     public Vector3f(float x, float y, float z) {
         this.x = x;
         this.y = y;
@@ -25,20 +25,21 @@ public class Vector3f implements Vector<Vector3f> {
     public float y() {
         return y;
     }
-
+    @Override
     public float z() {
         return z;
     }
 
-    public void setX(float x) {
+    @Override
+    public void setX(float x){
         this.x = x;
     }
-
-    public void setY(float y) {
+    @Override
+    public void setY(float y){
         this.y = y;
     }
-
-    public void setZ(float z) {
+    @Override
+    public void setZ(float z){
         this.z = z;
     }
 
@@ -63,11 +64,6 @@ public class Vector3f implements Vector<Vector3f> {
         return Objects.hash(x, y, z);
     }
 
-    //    public void add(Vector3f vec) {
-//        this.x += vec.x;
-//        this.y += vec.y;
-//        this.z += vec.z;
-//    }
     @Override
     public final void add(Vector3f var1) {
         this.x += var1.x;
@@ -204,11 +200,15 @@ public class Vector3f implements Vector<Vector3f> {
                 && Math.abs(z - other.z) < EPS;
     }
 
+    public String toString() {
+        return "Vector3f: x = " + this.x + ", y = " + this.y + ", z = " + this.z;
+    }
+
     public static Vector3f vectorProduct(Vector3f a, Vector3f b) {
         return new Vector3f(
-                a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
         );
     }
 }

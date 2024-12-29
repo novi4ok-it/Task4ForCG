@@ -1,7 +1,6 @@
 package com.cgvsu.render_engine;
 
-import com.cgvsu.math.Vector2f;
-import com.cgvsu.math.Vector3f;
+import com.cgvsu.math.*;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.rasterization.NonTexturedTriangleRenderer;
 import com.cgvsu.rasterization.TexturedTriangleRenderer;
@@ -10,8 +9,6 @@ import com.cgvsu.triangulation.DrawWireframe;
 import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
-import com.cgvsu.math.Matrix4f;
-import com.cgvsu.math.Point2f;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -22,7 +19,7 @@ import static com.cgvsu.render_engine.GraphicConveyor.*;
 public class RenderEngine {
 
     public static void render(final RenderContext context) {
-        Matrix4f modelViewProjectionMatrix = calculateMVPMatrix(context.getCamera());
+        Matrix4f modelViewProjectionMatrix = calculateMVPMatrix(context.getCamera(), context);
 
         AllVertexCoordinates allVertexCoordinates = new AllVertexCoordinates(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
@@ -63,8 +60,12 @@ public class RenderEngine {
         }
     }
 
-    private static Matrix4f calculateMVPMatrix(Camera camera) {
-        Matrix4f modelMatrix = rotateScaleTranslate();
+    private static Matrix4f calculateMVPMatrix(Camera camera, final RenderContext context) {
+        Matrix4f modelMatrix = AffineTransformations.rotateScaleTranslate(
+            context.getMesh().getScale().x(), context.getMesh().getScale().y(), context.getMesh().getScale().z(),
+            context.getMesh().getRotation().x(), context.getMesh().getRotation().y(), context.getMesh().getRotation().z(),
+            context.getMesh().getTranslation().x(), context.getMesh().getTranslation().y(), context.getMesh().getTranslation().z()
+        );
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
