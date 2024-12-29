@@ -21,31 +21,45 @@ import static com.cgvsu.render_engine.GraphicConveyor.*;
 
 public class RenderEngine {
 
-    public static void render(
-            final GraphicsContext graphicsContext,
-            final Camera camera,
-            final Model mesh,
-            final int width,
-            final int height,
-            List<ColorLighting> lightSources,
-            final boolean isTextureEnabled,
-            final boolean isPolygonalGridEnabled,
-            double[][] zBuffer) {
-
-        Matrix4f modelViewProjectionMatrix = calculateMVPMatrix(camera);
+    public static void render(final RenderContext context) {
+        Matrix4f modelViewProjectionMatrix = calculateMVPMatrix(context.getCamera());
 
         AllVertexCoordinates allVertexCoordinates = new AllVertexCoordinates(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
-        for (Polygon polygon : mesh.polygons) {
+        for (Polygon polygon : context.getMesh().polygons) {
             if (polygon.getVertexIndices().size() != 3) continue; // Обрабатываем только треугольники
 
-            TriangleData triangleData = prepareTriangleData(polygon, mesh, modelViewProjectionMatrix, width, height, allVertexCoordinates);
-            TriangleRenderer triangleRenderer = chooseTriangleRenderer(mesh, isTextureEnabled, Color.BLACK, zBuffer);
-            triangleRenderer.render(graphicsContext, triangleData.arrX, triangleData.arrY, triangleData.arrZ, triangleData.texCoords, lightSources, triangleData.normals);
-            zBuffer = triangleRenderer.getZBuffer();
+            TriangleData triangleData = prepareTriangleData(
+                    polygon,
+                    context.getMesh(),
+                    modelViewProjectionMatrix,
+                    context.getWidth(),
+                    context.getHeight(),
+                    allVertexCoordinates);
+
+            TriangleRenderer triangleRenderer = chooseTriangleRenderer(
+                    context.getMesh(),
+                    context.isTextureEnabled(),
+                    Color.BLACK,
+                    context.getZBuffer());
+
+            triangleRenderer.render(
+                    context.getGraphicsContext(),
+                    triangleData.arrX,
+                    triangleData.arrY,
+                    triangleData.arrZ,
+                    triangleData.texCoords,
+                    context.getLightSources(),
+                    triangleData.normals);
         }
-        if (isPolygonalGridEnabled) {
-            DrawWireframe.drawWireframe(graphicsContext, zBuffer, allVertexCoordinates.getAllX(), allVertexCoordinates.getAllY(), allVertexCoordinates.getAllZ());
+
+        if (context.isPolygonalGridEnabled()) {
+            DrawWireframe.drawWireframe(
+                    context.getGraphicsContext(),
+                    context.getZBuffer(),
+                    allVertexCoordinates.getAllX(),
+                    allVertexCoordinates.getAllY(),
+                    allVertexCoordinates.getAllZ());
         }
     }
 

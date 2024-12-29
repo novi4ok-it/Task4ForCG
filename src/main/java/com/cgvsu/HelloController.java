@@ -8,10 +8,7 @@ import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
-import com.cgvsu.render_engine.Camera;
-import com.cgvsu.render_engine.CameraManager;
-import com.cgvsu.render_engine.ColorLighting;
-import com.cgvsu.render_engine.RenderEngine;
+import com.cgvsu.render_engine.*;
 import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.triangulation.DrawWireframe;
 import com.cgvsu.triangulation.Triangulation;
@@ -42,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -241,12 +239,13 @@ public class HelloController {
         }
 
         for (ModelContainer container : modelContainers) {
-            // Сначала закрашиваем полигоны
-            RenderEngine.render(gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+            RenderContext context = new RenderContext(
+                    gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+            RenderEngine.render(context);
         }
     }
 
-    public static double[][] initializeZBuffer(int width, int height) {
+    private static double[][] initializeZBuffer(int width, int height) {
         double[][] zBuffer = new double[width][height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {

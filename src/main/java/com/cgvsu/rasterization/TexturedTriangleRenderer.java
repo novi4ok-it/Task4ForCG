@@ -21,6 +21,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
         this.textureReader = texture.getPixelReader();
         this.zBuffer = zBuffer;
     }
+
     @Override
     public double[][] getZBuffer() {
         return zBuffer;
@@ -40,31 +41,24 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
 
 
         if (colorLightings.isEmpty()) {
+            // Если список освещения пуст, все вершины получают базовый цвет
             for (int i = 0; i < 3; i++) {
-                vertexColors[i] = null; // Или используйте базовый цвет модели, если он задан
+                vertexColors[i] = null;
             }
         } else {
-            // Вычисление цвета и интенсивности освещения для каждой вершины
+            // Расчёт освещения для каждой вершины
             for (int i = 0; i < 3; i++) {
                 Vector3f normal = normals.get(i).normalizek();
-                double r = 0, g = 0, b = 0;
+                Color accumulatedColor = Color.BLACK;
 
                 for (ColorLighting lighting : colorLightings) {
                     Vector3f lightDirection = lighting.light.normalizek();
                     float intensity = Math.max(0, Vector3f.dotProduct(normal, lightDirection)); // Ламбертово затенение
                     Color lightColor = lighting.color;
-
-                    r += intensity * lightColor.getRed();
-                    g += intensity * lightColor.getGreen();
-                    b += intensity * lightColor.getBlue();
+                    accumulatedColor = accumulatedColor.interpolate(lightColor, intensity); // Смешиваем цвета
                 }
 
-                // Ограничиваем цветовые значения в диапазоне [0, 1]
-                r = Math.min(1.0, r);
-                g = Math.min(1.0, g);
-                b = Math.min(1.0, b);
-
-                vertexColors[i] = new Color(r, g, b, 1.0);
+                vertexColors[i] = accumulatedColor;
             }
         }
 
@@ -121,19 +115,23 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
                 v2 = tempV;
             }
 
-            for (int x = Math.max(0, x1); x < Math.min(zBuffer.length - 1, x2); x++) {
-                float z = Rasterization.interpolate(x, x1, x2, z1, z2);
-                Color interpolatedColor = Rasterization.interpolateColor(x, x1, x2, c1, c2);
-                float u = Rasterization.interpolate(x, x1, x2, u1, u2);
-                float v = Rasterization.interpolate(x, x1, x2, v1, v2);
+            int xMin = Math.max(0, x1);
+            int xMax = Math.min(zBuffer.length - 1, x2);
 
+            for (int x = xMin; x <= xMax; x++) {
+                float z = Rasterization.interpolate(x, x1, x2, z1, z2);
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;
+                    Color interpolatedColor = Rasterization.interpolateColor(x, x1, x2, c1, c2);
+                    float u = Rasterization.interpolate(x, x1, x2, u1, u2);
+                    float v = Rasterization.interpolate(x, x1, x2, v1, v2);
+
                     float uClamped = Math.min(1.0f, Math.max(0.0f, u));
                     float vClamped = Math.min(1.0f, Math.max(0.0f, v));
                     int textureX = (int) (uClamped * (texture.getWidth() - 1));
                     int textureY = (int) (vClamped * (texture.getHeight() - 1));
                     Color textureColor = textureReader.getColor(textureX, textureY);
+
                     if (!colorLightings.isEmpty()) {
                         Color finalColor = interpolatedColor.interpolate(textureColor, 0.5);
                         graphicsContext.getPixelWriter().setColor(x, y, finalColor);

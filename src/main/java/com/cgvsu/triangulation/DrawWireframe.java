@@ -40,8 +40,8 @@ public class DrawWireframe {
         int height = zBuffer[0].length;
 
         // Проверка, находятся ли обе вершины в пределах Z-буфера и подходят ли они
-        boolean startVisible = x0 >= 0 && x0 < width && y0 >= 0 && y0 < height && z0 <= zBuffer[x0][y0];
-        boolean endVisible = x1 >= 0 && x1 < width && y1 >= 0 && y1 < height && z1 <= zBuffer[x1][y1];
+        boolean startVisible = x0 >= 0 && x0 <= width && y0 >= 0 && y0 <= height && z0 <= zBuffer[x0][y0];
+        boolean endVisible = x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height && z1 <= zBuffer[x1][y1];
 
         if (startVisible && endVisible) {
             // Если обе вершины видимы, рисуем линию без проверки Z-буфера
