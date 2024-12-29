@@ -118,7 +118,7 @@ public class TexturedTriangleRenderer implements TriangleRenderer {
             int xMin = Math.max(0, x1);
             int xMax = Math.min(zBuffer.length - 1, x2);
 
-            for (int x = xMin; x <= xMax; x++) {
+            for (int x = xMin; x < xMax; x++) {
                 float z = Rasterization.interpolate(x, x1, x2, z1, z2);
                 if (z < zBuffer[x][y]) {
                     zBuffer[x][y] = z;

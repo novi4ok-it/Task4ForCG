@@ -138,11 +138,7 @@
                         <TextField fx:id="translateX" layoutX="51.0" layoutY="361.0" promptText="Введите координаты" />
                         <TextField fx:id="translateY" layoutX="51.0" layoutY="388.0" promptText="Введите координаты" />
                         <TextField fx:id="translateZ" layoutX="51.0" layoutY="416.0" promptText="Введите координаты" />
-<<<<<<< HEAD
                         <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" onAction="#handleApplyTransformations" text="Применить" />
-=======
-                        <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" onAction="#applyTranslate" text="Применить" />
->>>>>>> 9ddad01d8e95a46c2b4d3d347d79ca21de67ea90
                         <Button layoutX="70.0" layoutY="127.0" mnemonicParsing="false" onAction="#applyScale" text="Применить" />
                         <Button layoutX="70.0" layoutY="284.0" mnemonicParsing="false" onAction="#applyRotate" text="Применить" />
                      </children>
