@@ -58,8 +58,7 @@ public class RenderEngine {
                     context.getGraphicsContext(),
                     context.getZBuffer(),
                     allVertexCoordinates.getAllX(),
-                    allVertexCoordinates.getAllY(),
-                    allVertexCoordinates.getAllZ());
+                    allVertexCoordinates.getAllY());
         }
     }
 
