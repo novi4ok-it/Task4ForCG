@@ -14,6 +14,8 @@ import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
 import javafx.scene.paint.Color;
 
+import java.util.List;
+
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 public class RenderEngine {
 
@@ -110,4 +112,5 @@ public class RenderEngine {
             return new NonTexturedTriangleRenderer(baseColor, zBuffer);
         }
     }
+
 }

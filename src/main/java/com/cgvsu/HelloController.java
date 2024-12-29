@@ -3,16 +3,15 @@ package com.cgvsu;
 import com.cgvsu.container.ModelContainer;
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Point2f;
-import com.cgvsu.math.Vector2f;
 import com.cgvsu.model.Model;
 import com.cgvsu.model.Polygon;
 import com.cgvsu.normal.FindNormals;
 import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.CameraManager;
+import com.cgvsu.render_engine.GraphicConveyor;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.objwriter.ObjWriter;
-import com.cgvsu.triangulation.DrawWireframe;
 import com.cgvsu.triangulation.Triangulation;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -26,10 +25,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -43,8 +42,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static com.cgvsu.render_engine.GraphicConveyor.*;
 
 public class HelloController {
 
@@ -62,9 +59,6 @@ public class HelloController {
     private Button addLightButton;
     @FXML
     private Button deleteLightButton;
-
-//    @FXML
-//    private CheckBox lighting;
 
     @FXML
     private CheckBox poligonalGrid;
@@ -130,9 +124,9 @@ public class HelloController {
     private TextField translateZ;
 
     private Model mesh = null;
+    private Model tempMesh = null;
     private List<Model> meshes = new ArrayList<>();
-    @FXML
-    private javafx.scene.control.TextField index;
+
 
     @FXML
     private VBox vboxModel;
@@ -142,6 +136,8 @@ public class HelloController {
     private ObservableList<HBox> hboxesMod = FXCollections.observableArrayList();
     private ObservableList<HBox> hboxesCam = FXCollections.observableArrayList();
     private int modelCounter = 1;
+
+    private int activeModelIndex = -1;
     private int cameraCounter = 1;
     private final int MAX_MODELS = 4;
     private final int MAX_CAMERAS = 4;
@@ -151,7 +147,12 @@ public class HelloController {
     private CameraManager cameraManager = new CameraManager();
 
     private Timeline timeline;
+    private List<Integer> selectedVertices = new ArrayList<>();
+    private List<Integer> selectedPolygons = new ArrayList<>();
 
+
+    private boolean fileSelected;
+    private boolean windowIsCalled = false;
     private boolean isDarkTheme = false;
 
     @FXML
@@ -163,22 +164,6 @@ public class HelloController {
 
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
-
-        canvas.setFocusTraversable(true);
-        canvas.setOnMouseClicked(event -> {
-            if (!canvas.isFocused()) {
-                canvas.requestFocus();
-                event.consume();
-            }
-        });
-
-        positionX.setOnKeyReleased(event -> handlePositionChange("x"));
-        positionY.setOnKeyReleased(event -> handlePositionChange("y"));
-        positionZ.setOnKeyReleased(event -> handlePositionChange("z"));
-
-        pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
-        pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
-        pointOfDirZ.setOnKeyReleased(event -> handlePointToDirChange("z"));
 
         scaleX.setOnKeyReleased(event -> handleScaleChange("x"));
         scaleY.setOnKeyReleased(event -> handleScaleChange("y"));
@@ -192,18 +177,33 @@ public class HelloController {
         translateY.setOnKeyReleased(event -> handleTranslateChange("y"));
         translateZ.setOnKeyReleased(event -> handleTranslateChange("z"));
 
+        positionX.setOnKeyReleased(event -> handlePositionChange("x"));
+        positionY.setOnKeyReleased(event -> handlePositionChange("y"));
+        positionZ.setOnKeyReleased(event -> handlePositionChange("z"));
+
+        pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
+        pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
+        pointOfDirZ.setOnKeyReleased(event -> handlePointToDirChange("z"));
+
+        canvas.setFocusTraversable(true);
+        canvas.setOnMouseClicked(event -> {
+            if (!canvas.isFocused()) {
+                canvas.requestFocus();
+                event.consume();
+            }
+        });
+
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isPolygonalGridEnabled = newValue;
             renderScene();
         });
-//        lighting.selectedProperty().addListener((observable, oldValue, newValue) -> {
-//            isLightingEnabled = newValue; // Обновляем флаг освещения
-//            renderScene(); // Перерисовываем сцену с учетом нового состояния освещения
-//        });
         texture.selectedProperty().addListener((observable, oldValue, newValue) -> {
             isTextureEnabled = newValue; // Обновляем состояние текстур
             renderScene(); // Перерисовываем сцену
         });
+
+
+
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
@@ -248,10 +248,14 @@ public class HelloController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
         fileChooser.setTitle("Load Model");
 
+
         File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
         if (file == null) {
+            fileSelected = false;
             return;
         }
+
+        fileSelected = true;
 
         Path fileName = Path.of(file.getAbsolutePath());
 
@@ -280,23 +284,29 @@ public class HelloController {
         }
     }
 
+    @FXML
+    private void applyScale(){
 
-    private void handlePositionChange(String axis) {
-        try {
-            float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
-            updateCamPosition(axis, value);
-        } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
-        }
     }
 
-    private void handlePointToDirChange(String axis) {
-        try {
-            float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
-            updateCamPosition(axis, value);
-        } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Неверный ввод координаты");
-        }
+    @FXML
+    private void applyRotate(){
+
+    }
+
+    @FXML
+    private void applyTranslate(){
+
+    }
+
+    @FXML
+    private void applyCamPosition(){
+
+    }
+
+    @FXML
+    private void applyPointOfDir(){
+
     }
 
     private void handleScaleChange(String axis) {
@@ -325,6 +335,26 @@ public class HelloController {
             showErrorAlert("Предупреждение", "Неверный ввод координаты");
         }
     }
+
+    private void handlePositionChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
+            updateCamPosition(axis, value);
+        } catch (NumberFormatException e) {
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+        }
+    }
+
+    private void handlePointToDirChange(String axis) {
+        try {
+            float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
+            updateCamPosition(axis, value);
+        } catch (NumberFormatException e) {
+            showErrorAlert("Предупреждение", "Неверный ввод координаты");
+        }
+    }
+
+
 
     private String getTextFieldValue(String axis) {
         switch (axis) {
@@ -402,9 +432,20 @@ public class HelloController {
 
     @FXML
     private void addHBoxModel() {
-        onOpenModelMenuItemClick();
-        if (mesh == null) {
-            return;
+        mesh = null;
+        if (!windowIsCalled) {
+            onOpenModelMenuItemClick();
+        }
+        if (!fileSelected || mesh == null) {
+            if (mesh == null && tempMesh != null){
+                mesh = tempMesh;
+            }
+            if (mesh == null){
+                return;
+            }
+            if (!fileSelected){
+                return;
+            }
         }
         if (hboxesMod.size() >= MAX_MODELS) {
             showAlert("Предупреждение", "Вы достигли максимального количества моделей (4).");
@@ -420,36 +461,51 @@ public class HelloController {
         Button deleteModButton = new Button("Удалить");
         Button addTextureButton = new Button("Добавить текстуру");
         Button deleteTextureButton = new Button("Удалить текстуру");
-        //TextField deleteVertexButton = new TextField("Удалить вершину");
 
+
+        int currentModelIndex = hboxesMod.size();
+
+        modelButton.setOnAction(e -> selectActiveModel(currentModelIndex));
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
-        addTextureButton.setOnAction(e -> addTexture(hboxMod, mesh));
-        //deleteVertexButton.setOnAction(e -> deleteButtonIsPressed(deleteVertexButton));
+        addTextureButton.setOnAction(e -> addTexture());
 
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
+        windowIsCalled = false;
         hboxesMod.add(hboxMod);
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
     }
 
+    private void selectActiveModel(int modelIndex) {
+        if (modelIndex >= 0 && modelIndex < meshes.size()) {
+            activeModelIndex = modelIndex;
+            System.out.println("Активная модель: " + activeModelIndex);
+        } else {
+            activeModelIndex = -1;
+            System.out.println("Нет активной модели");
+        }
+    }
 
-    private void addTexture(HBox hboxMod, Model model) {
+
+    private void addTexture() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture (*.png)", "*.png", "*.jpg"));
 
         File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
         if (file == null) {
-            return; // Если файл не выбран, просто выйти из метода
+            return;
         }
 
         try {
             // Загружаем изображение из файла
             Image texture = new Image(file.toURI().toString());
             // Устанавливаем текстуру для модели
-            model.texture = texture;
+            if (activeModelIndex != -1){
+                meshes.get(activeModelIndex).texture = texture;
+            }
         } catch (Exception exception) {
             throw new RuntimeException("Ошибка при загрузке текстуры: " + exception.getMessage(), exception);
         }
@@ -480,10 +536,22 @@ public class HelloController {
             }
         }
         if (containerToRemove != null) {
+            modelCounter--;
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
             meshes.remove(containerToRemove.mesh);
+
+            updateModelIndices();
+        }
+    }
+    private void updateModelIndices() {
+        for (int i = 0; i < hboxesMod.size(); i++) {
+            HBox hbox = hboxesMod.get(i);
+            Button modelButton = (Button) hbox.getChildren().get(0);
+            modelButton.setText("Модель " + (i + 1));
+            int finalI = i;
+            modelButton.setOnAction(e -> selectActiveModel(finalI));
         }
     }
 
@@ -576,8 +644,74 @@ public class HelloController {
     }
 
     @FXML
-    private void deleteButtonIsPressed(TextField deleteVertexButton) {
-        //mesh = Eraser.vertexDelete(mesh, List.of(Integer.valueOf(deleteVertexButton.getText())),true,true,true,true);
+    private void handleDragOver(DragEvent event) {
+        if (event.getGestureSource() != canvas && event.getDragboard().hasFiles()) {
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        }
+        event.consume();
+    }
+
+    @FXML
+    private void handleDragDropped(DragEvent event) {
+        Dragboard db = event.getDragboard();
+        boolean success = false;
+        if (db.hasFiles()) {
+            success = true;
+            List<File> files = db.getFiles();
+            for (File file : files) {
+                if (file.getName().endsWith(".obj")) {
+                    processDroppedFileModel(file);
+                } else if (file.getName().endsWith(".png") || file.getName().endsWith(".jpg")) {
+                    processDroppedFileTexture(file);
+                } else {
+                    showErrorAlert("Ошибка", "Неподдерживаемый тип файла. Пожалуйста, перетащите файл .obj, .png или .jpg.");
+                }
+            }
+        }
+        event.setDropCompleted(success);
+        event.consume();
+    }
+
+    private void processDroppedFileModel(File file) {
+        try {
+            String fileContent = Files.readString(file.toPath());
+            Model mesh = ObjReader.read(fileContent);
+            meshes.add(mesh);
+            Triangulation.triangulateModel(mesh);
+            List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);
+            mesh.normals.clear();
+            mesh.normals.addAll(recalculatedNormals);
+
+            for (Polygon polygon : mesh.polygons) {
+                List<Integer> normalIndices = new ArrayList<>();
+                for (int vertexIndex : polygon.getVertexIndices()) {
+                    normalIndices.add(vertexIndex);
+                }
+                polygon.setNormalIndices(new ArrayList<>(normalIndices));
+            }
+
+            tempMesh = mesh;
+            windowIsCalled = true;
+            fileSelected = true;
+            addHBoxModel();
+            renderScene();
+            tempMesh = null;
+            fileSelected = false;
+        } catch (IOException e) {
+            showErrorAlert("Ошибка", "Не удалось загрузить модель из файла: " + e.getMessage());
+        }
+    }
+
+    private void processDroppedFileTexture(File file) {
+        try {
+            Image texture = new Image(file.toURI().toString());
+            if (activeModelIndex != -1){
+                meshes.get(activeModelIndex).texture = texture;
+            }
+            renderScene();
+        } catch (Exception exception) {
+            throw new RuntimeException("Ошибка при загрузке текстуры: " + exception.getMessage(), exception);
+        }
     }
 
     @FXML
@@ -630,4 +764,5 @@ public class HelloController {
         alert.setHeaderText(null);
         alert.showAndWait();
     }
+
 }

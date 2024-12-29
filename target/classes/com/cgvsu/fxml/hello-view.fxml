@@ -18,9 +18,9 @@
 
 <AnchorPane fx:id="anchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="726.0" prefWidth="1538.0" style="-fx-background-color: #474747;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.cgvsu.HelloController">
    <SplitPane layoutY="1.0" prefHeight="725.0" prefWidth="966.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="1.0">
-      <AnchorPane prefHeight="724.0" prefWidth="982.0" styleClass="theme-element">
+      <AnchorPane prefHeight="724.0" prefWidth="1535.0" styleClass="theme-element">
          <children>
-            <Canvas fx:id="canvas" height="697.0" layoutY="26.0" width="1014.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" />
+            <Canvas fx:id="canvas" height="697.0" layoutY="26.0" onDragDropped="#handleDragDropped" onDragOver="#handleDragOver" width="1014.0" AnchorPane.bottomAnchor="1.0" AnchorPane.leftAnchor="0.0" />
 
             <MenuBar prefHeight="28.0" prefWidth="1538.0">
       
@@ -61,7 +61,7 @@
          </children>
       </AnchorPane>
    </SplitPane>
-   <SplitPane dividerPositions="0" layoutX="1015.0" layoutY="-0.8" orientation="VERTICAL" prefHeight="726.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
+   <SplitPane dividerPositions="0.17874930824571106" layoutX="1015.0" layoutY="-0.8" orientation="VERTICAL" prefHeight="726.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="605.0" prefWidth="522.0" styleClass="theme-element">
          <Label layoutX="14.0" layoutY="14.0" prefHeight="18.0" prefWidth="62.0" styleClass="theme-element" text="Объекты" AnchorPane.topAnchor="15.0" />
 
@@ -148,9 +148,9 @@
                         <TextField fx:id="translateX" layoutX="51.0" layoutY="361.0" promptText="Введите координаты" />
                         <TextField fx:id="translateY" layoutX="51.0" layoutY="388.0" promptText="Введите координаты" />
                         <TextField fx:id="translateZ" layoutX="51.0" layoutY="416.0" promptText="Введите координаты" />
-                        <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" text="Применить" />
-                        <Button layoutX="70.0" layoutY="127.0" mnemonicParsing="false" text="Применить" />
-                        <Button layoutX="70.0" layoutY="284.0" mnemonicParsing="false" text="Применить" />
+                        <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" onAction="#applyTranslate" text="Применить" />
+                        <Button layoutX="70.0" layoutY="127.0" mnemonicParsing="false" onAction="#applyScale" text="Применить" />
+                        <Button layoutX="70.0" layoutY="284.0" mnemonicParsing="false" onAction="#applyRotate" text="Применить" />
                      </children>
                   </AnchorPane>
               </content>
@@ -175,15 +175,15 @@
                               <TextField fx:id="pointOfDirX" layoutX="51.0" layoutY="174.0" promptText="Введите координаты" />
                               <TextField fx:id="pointOfDirY" layoutX="51.0" layoutY="201.0" promptText="Введите координаты" />
                               <TextField fx:id="pointOfDirZ" layoutX="51.0" layoutY="229.0" promptText="Введите координаты" />
-                              <Button layoutX="80.0" layoutY="121.0" mnemonicParsing="false" text="Применить" />
-                              <Button layoutX="80.0" layoutY="260.0" mnemonicParsing="false" text="Применить" />
+                              <Button layoutX="80.0" layoutY="121.0" mnemonicParsing="false" onAction="#applyCamPosition" text="Применить" />
+                              <Button layoutX="80.0" layoutY="260.0" mnemonicParsing="false" onAction="#applyPointOfDir" text="Применить" />
                            </children>
                         </AnchorPane>
                     </content>
                   </TitledPane>
                   <CheckBox fx:id="poligonalGrid" mnemonicParsing="false" styleClass="theme-element" text="Нарисовать полигональную сетку" />
                   <CheckBox fx:id="texture" mnemonicParsing="false" styleClass="theme-element" text="Использовать текстуру" />
-                  <CheckBox fx:id="themeSwitchButton" mnemonicParsing="false" styleClass="theme-element" text="Использовать светлую тему" />
+                  <CheckBox fx:id="themeSwitchButton" mnemonicParsing="false" styleClass="theme-element" text="Использовать тёмную тему" />
                </children>
             </VBox>
          </children>
