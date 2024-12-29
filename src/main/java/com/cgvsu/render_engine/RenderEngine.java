@@ -36,7 +36,7 @@ public class RenderEngine {
             TriangleRenderer triangleRenderer = chooseTriangleRenderer(
                     context.getMesh(),
                     context.isTextureEnabled(),
-                    Color.BLACK,
+                    context.getColorOfModel(),
                     context.getZBuffer());
 
             triangleRenderer.render(

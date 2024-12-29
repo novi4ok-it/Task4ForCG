@@ -2,6 +2,7 @@ package com.cgvsu.render_engine;
 
 import com.cgvsu.model.Model;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ public class RenderContext {
     private final Model mesh;
     private final int width;
     private final int height;
+    private Color colorOfModel;
     private final List<ColorLighting> lightSources;
     private final boolean isTextureEnabled;
     private final boolean isPolygonalGridEnabled;
@@ -22,6 +24,7 @@ public class RenderContext {
             Model mesh,
             int width,
             int height,
+            Color colorOfModel,
             List<ColorLighting> lightSources,
             boolean isTextureEnabled,
             boolean isPolygonalGridEnabled,
@@ -31,6 +34,7 @@ public class RenderContext {
         this.mesh = mesh;
         this.width = width;
         this.height = height;
+        this.colorOfModel = colorOfModel;
         this.lightSources = lightSources;
         this.isTextureEnabled = isTextureEnabled;
         this.isPolygonalGridEnabled = isPolygonalGridEnabled;
@@ -74,5 +78,11 @@ public class RenderContext {
     }
     public void setZBuffer(double[][] zBuffer){
         this.zBuffer = zBuffer;
+    }
+    public Color getColorOfModel() {
+        return colorOfModel;
+    }
+    public void setColorOfModel(Color colorOfModel) {
+        this.colorOfModel = colorOfModel;
     }
 }

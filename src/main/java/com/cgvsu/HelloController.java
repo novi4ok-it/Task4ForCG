@@ -75,8 +75,8 @@ public class HelloController {
 
     @FXML
     private ColorPicker colorOfModel;
-
-    private Color selectedColor;
+    private Color selectedColorOfModel;
+    private Color selectedColorOfLightings;
 
     @FXML
     private CheckBox poligonalGrid;
@@ -190,7 +190,12 @@ public class HelloController {
         deleteLightButton.setOnAction(event -> deleteLightSource());
 
         colorOfLighting.setOnAction(event -> {
-            selectedColor = colorOfLighting.getValue();
+            selectedColorOfLightings = colorOfLighting.getValue();
+        });
+
+        selectedColorOfModel = Color.WHITE;
+        colorOfModel.setOnAction(event -> {
+            selectedColorOfModel = colorOfModel.getValue();
         });
 
         positionX.setOnKeyReleased(event -> handlePositionChange("x"));
@@ -249,7 +254,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             RenderContext context = new RenderContext(
-                    gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+                    gc, activeCamera, container.mesh, (int) width, (int) height, selectedColorOfModel, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
             RenderEngine.render(context);
         }
     }
@@ -268,9 +273,10 @@ public class HelloController {
 
     private boolean isTextureEnabled = false;
 
+
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
-        Color color = (getSelectedColor() != null) ? getSelectedColor() : Color.WHITE;
+        Color color = (getSelectedColorOfLightings() != null) ? getSelectedColorOfLightings() : Color.WHITE;
         ColorLighting colorLighting = new ColorLighting(newLight, color);
 
         coloredLightSources.add(colorLighting);
@@ -285,8 +291,12 @@ public class HelloController {
         }
     }
 
-    public Color getSelectedColor() {
-        return selectedColor;
+    public Color getSelectedColorOfLightings() {
+        return selectedColorOfLightings;
+    }
+
+    public Color getSelectedColorOfModel() {
+        return selectedColorOfModel;
     }
 
     @FXML
@@ -617,7 +627,9 @@ public class HelloController {
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
         addTextureButton.setOnAction(e -> addTexture());
-        deleteTextureButton.setOnAction(e -> {mesh.texture = null;});
+        deleteTextureButton.setOnAction(e -> {
+            mesh.texture = null;
+        });
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
         windowIsCalled = false;
@@ -662,7 +674,7 @@ public class HelloController {
         try {
             Image texture = new Image(file.toURI().toString());
 
-            if (activeModelIndex != -1){
+            if (activeModelIndex != -1) {
 
                 meshes.get(activeModelIndex).texture = texture;
             }
@@ -995,7 +1007,6 @@ public class HelloController {
     }
 
 
-
     @FXML
     private void handleMouseClicked(MouseEvent event) {
         if (isPolygonalGridEnabled) {
@@ -1004,6 +1015,7 @@ public class HelloController {
             selectVertexOrPolygon(x, y);
         }
     }
+
     private void selectVertexOrPolygon(double x, double y) {
         Camera activeCamera = cameraManager.getActiveCamera();
         if (activeCamera != null) {
