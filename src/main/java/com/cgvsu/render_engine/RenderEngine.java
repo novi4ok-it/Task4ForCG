@@ -10,7 +10,6 @@ import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
 
 import javafx.scene.paint.Color;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,4 +127,5 @@ public class RenderEngine {
             return new NonTexturedTriangleRenderer(baseColor, zBuffer);
         }
     }
+
 }

@@ -107,9 +107,6 @@ public class ObjReader {
 		return result;
 	}
 
-	// Обратите внимание, что для чтения полигонов я выделил еще один вспомогательный метод.
-	// Это бывает очень полезно и с точки зрения структурирования алгоритма в голове, и с точки зрения тестирования.
-	// В радикальных случаях не бойтесь выносить в отдельные методы и тестировать код из одной-двух строчек.
 	protected static void parseFaceWord(
 			String wordInLine,
 			ArrayList<Integer> onePolygonVertexIndices,
@@ -145,55 +142,5 @@ public class ObjReader {
 			throw new ObjReaderException("Too few arguments.", lineInd);
 		}
 	}
-	public static Model deleteVertexes(String ind) {
-		Model result = res;
 
-		if (ind.isEmpty()) {
-			System.err.println("Введите индекс вершины для удаления.");
-			return result;
-		}
-
-		try {
-			int index = Integer.parseInt(ind);
-
-			// Проверяем, находится ли индекс в допустимом диапазоне
-			if (index <= 0 || index > result.vertices.size()) {
-				System.err.println("Индекс вершины должен быть в диапазоне от 1 до " + result.vertices.size());
-				return result;
-			}
-
-			// Удаляем вершину
-			result.vertices.remove(index - 1); // Учитываем, что индексация начинается с 0
-
-			// Удаляем соответствующие текстурные координаты и нормали (если они есть)
-			if (!result.textureVertices.isEmpty() && result.textureVertices.size() >= index) {
-				result.textureVertices.remove(index - 1);
-			}
-			if (!result.normals.isEmpty() && result.normals.size() >= index) {
-				result.normals.remove(index - 1);
-			}
-
-			// Обновляем индексы в полигонах
-			for (Polygon polygon : result.polygons) {
-				for (int i = 0; i < polygon.getVertexIndices().size(); i++) {
-					if (polygon.getVertexIndices().get(i) > index) {
-						polygon.getVertexIndices().set(i, polygon.getVertexIndices().get(i) - 1);
-					}
-				}
-				for (int i = 0; i < polygon.getTextureVertexIndices().size(); i++) {
-					if (polygon.getTextureVertexIndices().get(i) > index) {
-						polygon.getTextureVertexIndices().set(i, polygon.getTextureVertexIndices().get(i) - 1);
-					}
-				}
-				for (int i = 0; i < polygon.getNormalIndices().size(); i++) {
-					if (polygon.getNormalIndices().get(i) > index) {
-						polygon.getNormalIndices().set(i, polygon.getNormalIndices().get(i) - 1);
-					}
-				}
-			}
-		} catch (NumberFormatException e) {
-			System.err.println("Некорректный индекс вершины.");
-		}
-		return result;
-	}
 }
