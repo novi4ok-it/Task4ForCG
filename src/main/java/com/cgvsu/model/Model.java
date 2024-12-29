@@ -78,7 +78,6 @@ public class Model {
     }
 
 
-    // Текстура модели
     public Image texture;
 
     public Model() {}
@@ -89,5 +88,36 @@ public class Model {
 
     public boolean hasTexture() {
         return texture != null;
+    }
+
+
+    public void removeVertexAndUpdatePolygons(int vertexIndexToRemove) {
+        if (vertexIndexToRemove < 0 || vertexIndexToRemove >= vertices.size()) {
+            throw new IllegalArgumentException("Invalid vertex index to remove");
+        }
+        vertices.remove(vertexIndexToRemove);
+        updatePolygonIndicesAfterVertexRemoval(vertexIndexToRemove);
+    }
+
+    private void updatePolygonIndicesAfterVertexRemoval(int removedVertexIndex) {
+        // Перебор полигонов
+        for (Polygon polygon : polygons) {
+            ArrayList<Integer> updatedVertexIndices = new ArrayList<>();
+            for (int vertexIndex : polygon.getVertexIndices()) {
+                if (vertexIndex < removedVertexIndex) {
+                    updatedVertexIndices.add(vertexIndex);
+                } else if (vertexIndex > removedVertexIndex) {
+                    updatedVertexIndices.add(vertexIndex - 1);
+                }
+            }
+
+            polygon.setVertexIndices(updatedVertexIndices);
+        }
+
+        polygons.removeIf(polygon -> polygon.getVertexIndices().size() < 3);
+    }
+
+    public void removePolygon(int polygonIndex) {
+        polygons.remove(polygonIndex);
     }
 }
