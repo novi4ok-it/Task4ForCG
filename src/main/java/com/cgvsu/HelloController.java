@@ -76,8 +76,8 @@ public class HelloController {
 
     @FXML
     private ColorPicker colorOfModel;
-
-    private Color selectedColor;
+    private Color selectedColorOfModel;
+    private Color selectedColorOfLightings;
 
     @FXML
     private CheckBox poligonalGrid;
@@ -183,7 +183,12 @@ public class HelloController {
         deleteLightButton.setOnAction(event -> deleteLightSource());
 
         colorOfLighting.setOnAction(event -> {
-            selectedColor = colorOfLighting.getValue();
+            selectedColorOfLightings = colorOfLighting.getValue();
+        });
+
+        colorOfModel.setOnAction(event -> {
+            selectedColorOfModel = colorOfModel.getValue();
+            addActiveModelColor(selectedColorOfModel);
         });
 
         positionX.setOnKeyReleased(event -> handlePositionChange("x"));
@@ -239,7 +244,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             RenderContext context = new RenderContext(
-                    gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+                    gc, activeCamera, container.mesh, (int) width, (int) height, container.mesh.getColorOfModel(), coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
             RenderEngine.render(context);
         }
     }
@@ -258,9 +263,17 @@ public class HelloController {
 
     private boolean isTextureEnabled = false;
 
+    private void addActiveModelColor(Color color) {
+        if (activeModelIndex != -1) {
+            meshes.get(activeModelIndex).setColorOfModel(color);
+        } else {
+            System.out.println("Нет активной модели");
+        }
+    }
+
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
-        Color color = (getSelectedColor() != null) ? getSelectedColor() : Color.WHITE;
+        Color color = (getSelectedColorOfLightings() != null) ? getSelectedColorOfLightings() : Color.WHITE;
         ColorLighting colorLighting = new ColorLighting(newLight, color);
 
         coloredLightSources.add(colorLighting);
@@ -275,8 +288,12 @@ public class HelloController {
         }
     }
 
-    public Color getSelectedColor() {
-        return selectedColor;
+    public Color getSelectedColorOfLightings() {
+        return selectedColorOfLightings;
+    }
+
+    public Color getSelectedColorOfModel() {
+        return selectedColorOfModel;
     }
 
     @FXML
@@ -451,7 +468,6 @@ public class HelloController {
     }
 
 
-
     private String getTextFieldValue(String axis) {
         switch (axis) {
             case "xPosition":
@@ -559,13 +575,13 @@ public class HelloController {
             onOpenModelMenuItemClick();
         }
         if (!fileSelected || mesh == null) {
-            if (mesh == null && tempMesh != null){
+            if (mesh == null && tempMesh != null) {
                 mesh = tempMesh;
             }
-            if (mesh == null){
+            if (mesh == null) {
                 return;
             }
-            if (!fileSelected){
+            if (!fileSelected) {
                 return;
             }
         }
@@ -590,8 +606,9 @@ public class HelloController {
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
         addTextureButton.setOnAction(e -> addTexture());
-        deleteTextureButton.setOnAction(e -> mesh.texture = null);
-
+        deleteTextureButton.setOnAction(e -> {
+            mesh.texture = null;
+        });
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
         windowIsCalled = false;
@@ -635,7 +652,8 @@ public class HelloController {
         try {
             Image texture = new Image(file.toURI().toString());
 
-            if (activeModelIndex != -1){
+            if (activeModelIndex != -1) {
+
                 meshes.get(activeModelIndex).texture = texture;
             }
         } catch (Exception exception) {
@@ -661,7 +679,9 @@ public class HelloController {
 
     private void removeHBoxMod(HBox hboxMod) {
         ModelContainer containerToRemove = null;
+        int flag = -1;
         for (ModelContainer container : modelContainers) {
+            flag++;
             if (container.hbox == hboxMod) {
                 containerToRemove = container;
                 break;
@@ -681,6 +701,9 @@ public class HelloController {
             translateZ.setText("");
 
             modelCounter--;
+            if (modelCounter == 0 || flag == activeModelIndex) {
+                activeModelIndex = -1;
+            }
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
@@ -689,6 +712,7 @@ public class HelloController {
             updateModelIndices();
         }
     }
+
     private void updateModelIndices() {
         for (int i = 0; i < hboxesMod.size(); i++) {
             HBox hbox = hboxesMod.get(i);
@@ -851,7 +875,7 @@ public class HelloController {
     private void processDroppedFileTexture(File file) {
         try {
             Image texture = new Image(file.toURI().toString());
-            if (activeModelIndex != -1){
+            if (activeModelIndex != -1) {
                 meshes.get(activeModelIndex).texture = texture;
             }
             renderScene();
@@ -947,6 +971,7 @@ public class HelloController {
             selectVertexOrPolygon(x, y);
         }
     }
+
     private void selectVertexOrPolygon(double x, double y) {
         Camera activeCamera = cameraManager.getActiveCamera();
         if (activeCamera != null) {

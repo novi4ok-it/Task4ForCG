@@ -1,8 +1,10 @@
 package com.cgvsu.model;
+
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.math.Vector4f;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 import java.util.*;
 
@@ -12,38 +14,36 @@ public class Model {
     public ArrayList<Vector2f> textureVertices = new ArrayList<>();
     public ArrayList<Vector3f> normals = new ArrayList<>();
     public ArrayList<Polygon> polygons = new ArrayList<>();
-
     public ArrayList<Vector3f> originalVertices = new ArrayList<>();
-
-
 
     public Vector3f scale = new Vector3f(1, 1, 1);
     public Vector3f rotation = new Vector3f(0, 0, 0);
     public Vector3f translation = new Vector3f(0, 0, 0);
 
-    public Vector3f getScale(){
+    public Vector3f getScale() {
         return scale;
     }
 
-    public void setScale(Vector3f scale){
+    public void setScale(Vector3f scale) {
         this.scale = scale;
     }
 
-    public Vector3f getRotation(){
+    public Vector3f getRotation() {
         return rotation;
     }
 
-    public void setRotation(Vector3f rotation){
+    public void setRotation(Vector3f rotation) {
         this.rotation = rotation;
     }
 
-    public Vector3f getTranslation(){
+    public Vector3f getTranslation() {
         return translation;
     }
 
-    public void setTranslation(Vector3f translation){
+    public void setTranslation(Vector3f translation) {
         this.translation = translation;
     }
+
     public void setOriginalVertices() {
         originalVertices = new ArrayList<>();
         for (Vector3f vertex : vertices) {
@@ -77,10 +77,23 @@ public class Model {
         return true;
     }
 
+    public Color colorOfModel;
+
+    public Color getColorOfModel() {
+        if (colorOfModel == null) {
+            return Color.BLACK;
+        }
+        return colorOfModel;
+    }
+
+    public void setColorOfModel(Color colorOfModel) {
+        this.colorOfModel = colorOfModel;
+    }
 
     public Image texture;
 
-    public Model() {}
+    public Model() {
+    }
 
     public Model(Image texture) {
         this.texture = texture;
