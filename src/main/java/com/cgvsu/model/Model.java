@@ -21,6 +21,9 @@ public class Model {
     public Vector3f rotation = new Vector3f(0, 0, 0);
     public Vector3f translation = new Vector3f(0, 0, 0);
 
+
+    public Vector3f position = new Vector3f(0, 0, 0);
+
     public Vector3f getScale(){
         return scale;
     }
