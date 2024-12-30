@@ -17,6 +17,7 @@ import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.triangulation.Triangulation;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +55,9 @@ import static com.cgvsu.render_engine.GraphicConveyor.vertexToPoint;
 public class HelloController {
 
     final private float TRANSLATION = 0.5F;
+
+    private float SCALE = 0.1F;
+    private float ROTATION = 10F;
 
     @FXML
     AnchorPane anchorPane;
@@ -132,6 +137,19 @@ public class HelloController {
 
     @FXML
     private TextField translateZ;
+
+    @FXML
+    private TextField randomX1;
+    @FXML
+    private TextField randomY1;
+    @FXML
+    private TextField randomZ1;
+    @FXML
+    private TextField randomX2;
+    @FXML
+    private TextField randomY2;
+    @FXML
+    private TextField randomZ2;
 
     private Model mesh = null;
     private Model tempMesh = null;
@@ -228,7 +246,39 @@ public class HelloController {
         canvas.setOnScroll(event -> handleMouseScrolled(event)); // колесо
 
     }
+    private void updateTransformFields(Model model) {
+        if (model != null) {
+            // Обновляем текстовые поля для масштабирования
+            scaleX.setText(String.valueOf(model.getScale().x()));
+            scaleY.setText(String.valueOf(model.getScale().y()));
+            scaleZ.setText(String.valueOf(model.getScale().z()));
 
+            // Обновляем текстовые поля для вращения
+            rotateX.setText(String.valueOf(model.getRotation().x()));
+            rotateY.setText(String.valueOf(model.getRotation().y()));
+            rotateZ.setText(String.valueOf(model.getRotation().z()));
+
+            // Обновляем текстовые поля для перемещения
+            translateX.setText(String.valueOf(model.getTranslation().x()));
+            translateY.setText(String.valueOf(model.getTranslation().y()));
+            translateZ.setText(String.valueOf(model.getTranslation().z()));
+        } else {
+            // Если модель не выбрана, очищаем текстовые поля
+            scaleX.clear();
+            scaleY.clear();
+            scaleZ.clear();
+
+            rotateX.clear();
+            rotateY.clear();
+            rotateZ.clear();
+
+            translateX.clear();
+            translateY.clear();
+            translateZ.clear();
+        }
+    }
+
+    // Основной рендер сцены
     private void renderScene() {
         double width = canvas.getWidth();
         double height = canvas.getHeight();
@@ -616,18 +666,19 @@ public class HelloController {
         vboxModel.getChildren().add(hboxMod);
         modelCounter++;
         modelContainers.add(new ModelContainer(hboxMod, mesh));
+        /////
+        scaleX.setText("1.0");
+        scaleY.setText("1.0");
+        scaleZ.setText("1.0");
 
-        scaleX.setText("1");
-        scaleY.setText("1");
-        scaleZ.setText("1");
+        rotateX.setText("0.0");
+        rotateY.setText("0.0");
+        rotateZ.setText("0.0");
 
-        rotateX.setText("0");
-        rotateY.setText("0");
-        rotateZ.setText("0");
+        translateX.setText("0.0");
+        translateY.setText("0.0");
+        translateZ.setText("0.0");
 
-        translateX.setText("0");
-        translateY.setText("0");
-        translateZ.setText("0");
     }
 
     private void selectActiveModel(int modelIndex) {
@@ -651,7 +702,7 @@ public class HelloController {
 
         try {
             Image texture = new Image(file.toURI().toString());
-
+            // Устанавливаем текстуру для модели
             if (activeModelIndex != -1) {
                 meshes.get(activeModelIndex).texture = texture;
             }
@@ -916,6 +967,13 @@ public class HelloController {
     @FXML
     private void handleApplyTransformations(ActionEvent event) {
         try {
+            if (!mesh.areVerticesEqual()) {
+                mesh.setVertices();
+            }
+            handleTranslateChange("x");
+            handleTranslateChange("y");
+            handleTranslateChange("z");
+
             float scaleX = Float.parseFloat(this.scaleX.getText());
             float scaleY = Float.parseFloat(this.scaleY.getText());
             float scaleZ = Float.parseFloat(this.scaleY.getText());
@@ -924,13 +982,9 @@ public class HelloController {
             float rotateY = Float.parseFloat(this.rotateY.getText());
             float rotateZ = Float.parseFloat(this.rotateZ.getText());
 
-            float translateX = Float.parseFloat(this.translateX.getText());
-            float translateY = Float.parseFloat(this.translateY.getText());
-            float translateZ = Float.parseFloat(this.translateZ.getText());
-
             mesh.setScale(new Vector3f(scaleX, scaleY, scaleZ));
             mesh.setRotation(new Vector3f(rotateX, rotateY, rotateZ));
-            mesh.setTranslation(new Vector3f(translateX, translateY, translateZ));
+
 
             timeline.playFromStart();
         } catch (NumberFormatException e) {
@@ -938,6 +992,168 @@ public class HelloController {
         }
     }
 
+    @FXML
+    public void handleModelScaleX(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x() + SCALE, scale.y(), scale.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelScaleXNegative(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x() - SCALE, scale.y(), scale.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelScaleY(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x(), scale.y() + SCALE, scale.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelScaleYNegative(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x(), scale.y() - SCALE, scale.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelScaleZ(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x(), scale.y(), scale.z() + SCALE));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelScaleZNegative(ActionEvent actionEvent) {
+        Vector3f scale = mesh.getScale();
+        mesh.setScale(new Vector3f(scale.x(), scale.y(), scale.z() - SCALE));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateX(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x() + ROTATION, rotation.y(), rotation.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateXNegative(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x() - ROTATION, rotation.y(), rotation.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateY(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x(), rotation.y() + ROTATION, rotation.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateYNegative(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x(), rotation.y() - ROTATION, rotation.z()));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateZ(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x(), rotation.y(), rotation.z() + ROTATION));
+        updateTransformFields(mesh);
+    }
+
+    @FXML
+    public void handleModelRotateZNegative(ActionEvent actionEvent) {
+        Vector3f rotation = mesh.getRotation();
+        mesh.setRotation(new Vector3f(rotation.x(), rotation.y(), rotation.z() + ROTATION));
+        updateTransformFields(mesh);
+    }
+    @FXML
+    private Button startButton;
+
+    private PauseTransition pauseTransition;
+    private boolean isRunning = false;
+
+    @FXML
+    public void handleButtonAction(ActionEvent actionEvent) {
+        if (isRunning) {
+            // Останавливаем таймер
+            pauseTransition.stop();
+            isRunning = false;
+            startButton.setText("Применить");
+        } else {
+            // Запускаем таймер
+            if (pauseTransition != null) {
+                pauseTransition.stop();
+            }
+
+            pauseTransition = new PauseTransition(Duration.seconds(1));
+            pauseTransition.setOnFinished(event -> {
+                randomTranslete();
+                randomRotation();
+                randomScale();
+                // Перезапускаем таймер
+                pauseTransition.playFromStart();
+            });
+            pauseTransition.play();
+            isRunning = true;
+            startButton.setText("Остановить");
+        }
+    }
+
+
+    public void randomScale() {
+        float r1x = Float.parseFloat(randomX1.getText().split(" ")[0]);
+        float r2x = Float.parseFloat(randomX1.getText().split(" ")[1]);
+        float r1y = Float.parseFloat(randomX1.getText().split(" ")[2]);
+        float r2y = Float.parseFloat(randomX1.getText().split(" ")[3]);
+        float r1z = Float.parseFloat(randomX1.getText().split(" ")[4]);
+        float r2z = Float.parseFloat(randomX1.getText().split(" ")[5]);
+        Random random = new Random();
+        int randomScaleX = (int) (random.nextInt((int) (r2x - r1x + 1)) + r1x);
+        int randomScaleY = (int) (random.nextInt((int) (r2y - r1y + 1)) + r1y);
+        int randomScaleZ = (int) (random.nextInt((int) (r2z - r1z + 1)) + r1z);
+        mesh.setScale(new Vector3f(randomScaleX, randomScaleY, randomScaleZ));
+        updateTransformFields(mesh);
+    }
+
+
+    public void randomRotation() {
+        float r1x = Float.parseFloat(randomY1.getText().split(" ")[0]);
+        float r2x = Float.parseFloat(randomY1.getText().split(" ")[1]);
+        float r1y = Float.parseFloat(randomY1.getText().split(" ")[2]);
+        float r2y = Float.parseFloat(randomY1.getText().split(" ")[3]);
+        float r1z = Float.parseFloat(randomY1.getText().split(" ")[4]);
+        float r2z = Float.parseFloat(randomY1.getText().split(" ")[5]);
+        Random random = new Random();
+        int randomScaleX = (int) (random.nextInt((int) (r2x - r1x + 1)) + r1x);
+        int randomScaleY = (int) (random.nextInt((int) (r2y - r1y + 1)) + r1y);
+        int randomScaleZ = (int) (random.nextInt((int) (r2z - r1z + 1)) + r1z);
+        mesh.setRotation(new Vector3f(randomScaleX, randomScaleY, randomScaleZ));
+        updateTransformFields(mesh);
+    }
+
+    public void randomTranslete(){
+        float r1x = Float.parseFloat(randomZ1.getText().split(" ")[0]);
+        float r2x = Float.parseFloat(randomZ1.getText().split(" ")[1]);
+        float r1y = Float.parseFloat(randomZ1.getText().split(" ")[2]);
+        float r2y = Float.parseFloat(randomZ1.getText().split(" ")[3]);
+        float r1z = Float.parseFloat(randomZ1.getText().split(" ")[4]);
+        float r2z = Float.parseFloat(randomZ1.getText().split(" ")[5]);
+        Random random = new Random();
+        int randomScaleX = (int) (random.nextInt((int) (r2x - r1x + 1)) + r1x);
+        int randomScaleY = (int) (random.nextInt((int) (r2y - r1y + 1)) + r1y);
+        int randomScaleZ = (int) (random.nextInt((int) (0 - 0 + 1)) + 0);
+        mesh.setTranslation(new Vector3f(randomScaleX, randomScaleY, randomScaleZ));
+        updateTransformFields(mesh);
+    }
     @FXML
     private void handleRemoveVerticesButtonClick(ActionEvent event) {
         if (activeModelIndex != -1) {

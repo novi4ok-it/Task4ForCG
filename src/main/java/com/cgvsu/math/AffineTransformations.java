@@ -29,6 +29,9 @@ public class AffineTransformations {
             rotateZ3(model.rotation.z(), vertex);
         }
     }
+
+
+
 //
     public static void applyTranslationX(Model model){
         for (Vector3f vertex : model.vertices){
@@ -201,7 +204,7 @@ public class AffineTransformations {
                 {0, 0, 0, 1}
         });
         return Matrix4f.multiplymatt(matt,
-                Matrix4f.multiplymatt(rotateMatrix4f(angleX,angleY,angleZ), scaleMatrix4f(scaleX,scaleY,scaleZ)));
+               Matrix4f.multiplymatt(rotateMatrix4f(angleX,angleY,angleZ), scaleMatrix4f(scaleX,scaleY,scaleZ)));
     }
 //
 //    public static void scale4(float scaleX, float scaleY, float scaleZ, Vector4f v) {
