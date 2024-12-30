@@ -653,7 +653,6 @@ public class HelloController {
             Image texture = new Image(file.toURI().toString());
 
             if (activeModelIndex != -1) {
-
                 meshes.get(activeModelIndex).texture = texture;
             }
         } catch (Exception exception) {
