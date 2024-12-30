@@ -47,6 +47,69 @@
                      </accelerator>
                   </MenuItem>
                </Menu>
+               <Menu mnemonicParsing="false" text="Transform">
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleX" text="Scale(X)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="Q"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleXNegative" text="Scale(-X)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="W"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleY" text="Scale(Y)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="A"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleYNegative" text="Scale(-Y)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="S"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleZ" text="Scale(Z)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="Z"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelScaleZNegative" text="Scale(-Z)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="X"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateX" text="Rotate(X)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="E"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateXNegative" text="Rotate(-X)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="R"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateY" text="Rotate(Y)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="D"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateYNegative" text="Rotate(-Y)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="F"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateZ" text="Rotate(Z)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="C"/>
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem mnemonicParsing="false" onAction="#handleModelRotateZNegative" text="Rotate(-Z)">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="V"/>
+                     </accelerator>
+                  </MenuItem>
+               </Menu>
+
 
             </MenuBar>
          </children>
@@ -116,7 +179,7 @@
                </AnchorPane>
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="447.0" prefWidth="522.0" styleClass="theme-element">
          <children>
-            <TitledPane layoutX="14.0" layoutY="14.0" prefHeight="526.0" prefWidth="226.0" text="Взаимодействие с моделью">
+            <TitledPane layoutX="14.0" layoutY="14.0" prefHeight="730.0" prefWidth="226.0" text="Взаимодействие с моделью">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="441.0" prefWidth="225.0" styleClass="theme-element">
                      <children>
@@ -142,8 +205,13 @@
                         <TextField fx:id="translateY" layoutX="51.0" layoutY="388.0" promptText="Введите координаты" />
                         <TextField fx:id="translateZ" layoutX="51.0" layoutY="416.0" promptText="Введите координаты" />
                         <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" onAction="#handleApplyTransformations" text="Применить" />
-                        <Button layoutX="70.0" layoutY="127.0" mnemonicParsing="false" onAction="#applyScale" text="Применить" />
-                        <Button layoutX="70.0" layoutY="284.0" mnemonicParsing="false" onAction="#applyRotate" text="Применить" />
+                        <Label layoutX="17.0" layoutY="480.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (scale)" />
+                        <TextField fx:id="randomX1" layoutX="17.0" layoutY="500.0" />
+                        <Label layoutX="17.0" layoutY="530.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (rotation)" />
+                        <TextField fx:id="randomY1" layoutX="17.0" layoutY="550.0" />
+                        <Label layoutX="17.0" layoutY="580.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (translate)" />
+                        <TextField fx:id="randomZ1" layoutX="17.0" layoutY="600.0" />
+                        <Button layoutX="70.0" layoutY="650.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Применить" fx:id="startButton" />
                      </children>
                   </AnchorPane>
               </content>
