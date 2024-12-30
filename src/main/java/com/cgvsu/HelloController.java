@@ -44,6 +44,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static com.cgvsu.alerts.Alerts.*;
+import static com.cgvsu.render_engine.GraphicConveyor.multiplyMatrix4ByVector3;
+import static com.cgvsu.render_engine.GraphicConveyor.vertexToPoint;
 
 public class HelloController {
 
@@ -70,9 +77,12 @@ public class HelloController {
     private Button deleteLightButton;
 
     @FXML
-    private ColorPicker colorPicker;
+    private ColorPicker colorOfLighting;
 
-    private Color selectedColor;
+    @FXML
+    private ColorPicker colorOfModel;
+    private Color selectedColorOfModel;
+    private Color selectedColorOfLightings;
 
     @FXML
     private CheckBox poligonalGrid;
@@ -82,15 +92,6 @@ public class HelloController {
 
     @FXML
     private CheckBox themeSwitchButton;
-
-    @FXML
-    private TextField pointOfDirX;
-
-    @FXML
-    private TextField pointOfDirY;
-
-    @FXML
-    private TextField pointOfDirZ;
 
     @FXML
     private TextField positionX;
@@ -196,35 +197,29 @@ public class HelloController {
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
 
-        canvas.setFocusTraversable(true);
-        canvas.setOnMouseClicked(event -> {
-            if (!canvas.isFocused()) {
-                canvas.requestFocus();
-                event.consume();
-            }
-        });
-
         addLightButton.setOnAction(event -> addLightSource());
         deleteLightButton.setOnAction(event -> deleteLightSource());
 
-        colorPicker.setOnAction(event -> {
-            selectedColor = colorPicker.getValue();
+        colorOfLighting.setOnAction(event -> {
+            selectedColorOfLightings = colorOfLighting.getValue();
+        });
+
+        colorOfModel.setOnAction(event -> {
+            selectedColorOfModel = colorOfModel.getValue();
+            addActiveModelColor(selectedColorOfModel);
         });
 
         positionX.setOnKeyReleased(event -> handlePositionChange("x"));
         positionY.setOnKeyReleased(event -> handlePositionChange("y"));
         positionZ.setOnKeyReleased(event -> handlePositionChange("z"));
 
-        pointOfDirX.setOnKeyReleased(event -> handlePointToDirChange("x"));
-        pointOfDirY.setOnKeyReleased(event -> handlePointToDirChange("y"));
-        pointOfDirZ.setOnKeyReleased(event -> handlePointToDirChange("z"));
-
         canvas.setFocusTraversable(true);
         canvas.setOnMouseClicked(event -> {
             if (!canvas.isFocused()) {
                 canvas.requestFocus();
                 event.consume();
             }
+            handleMouseClicked(event);
         });
 
         poligonalGrid.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -236,12 +231,10 @@ public class HelloController {
             renderScene(); // Перерисовываем сцену
         });
 
-
         // Анимация для обновления кадра
         KeyFrame frame = new KeyFrame(Duration.millis(15), event -> renderScene());
         timeline.getKeyFrames().add(frame);
         timeline.play();
-
 
         themeSwitchButton.setSelected(false);
         themeSwitchButton.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -253,7 +246,6 @@ public class HelloController {
         canvas.setOnScroll(event -> handleMouseScrolled(event)); // колесо
 
     }
-
     private void updateTransformFields(Model model) {
         if (model != null) {
             // Обновляем текстовые поля для масштабирования
@@ -302,7 +294,7 @@ public class HelloController {
 
         for (ModelContainer container : modelContainers) {
             RenderContext context = new RenderContext(
-                    gc, activeCamera, container.mesh, (int) width, (int) height, coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
+                    gc, activeCamera, container.mesh, (int) width, (int) height, container.mesh.getColorOfModel(), coloredLightSources, isTextureEnabled, isPolygonalGridEnabled, zBuffer);
             RenderEngine.render(context);
         }
     }
@@ -321,10 +313,17 @@ public class HelloController {
 
     private boolean isTextureEnabled = false;
 
-    // Метод для добавления нового источника света
+    private void addActiveModelColor(Color color) {
+        if (activeModelIndex != -1) {
+            meshes.get(activeModelIndex).setColorOfModel(color);
+        } else {
+            System.out.println("Нет активной модели");
+        }
+    }
+
     private void addLightSource() {
         Vector3f newLight = getLightingCoordinates();
-        Color color = (getSelectedColor() != null) ? getSelectedColor() : Color.WHITE;
+        Color color = (getSelectedColorOfLightings() != null) ? getSelectedColorOfLightings() : Color.WHITE;
         ColorLighting colorLighting = new ColorLighting(newLight, color);
 
         coloredLightSources.add(colorLighting);
@@ -339,22 +338,23 @@ public class HelloController {
         }
     }
 
-    public Color getSelectedColor() {
-        return selectedColor;
+    public Color getSelectedColorOfLightings() {
+        return selectedColorOfLightings;
+    }
+
+    public Color getSelectedColorOfModel() {
+        return selectedColorOfModel;
     }
 
     @FXML
     private Vector3f getLightingCoordinates() {
         try {
-            // Считывание значений из текстовых полей
             float x = Float.parseFloat(lightingCoordX.getText().trim());
             float y = Float.parseFloat(lightingCoordY.getText().trim());
             float z = Float.parseFloat(lightingCoordZ.getText().trim());
 
-            // Создание объекта Vector3f
             return new Vector3f(x, y, z);
         } catch (NumberFormatException e) {
-            // Обработка ошибок: неверный формат чисел
             System.err.println("Ошибка ввода координат освещения: " + e.getMessage());
             return new Vector3f(0, 0, 0); // Возвращаем значение по умолчанию
         }
@@ -381,7 +381,6 @@ public class HelloController {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
             meshes.add(mesh);
-            //normalizeTextureCoordinates(mesh.textureVertices);
             Triangulation.triangulateModel(mesh);
             // Пересчёт нормалей
             List<Vector3f> recalculatedNormals = FindNormals.findNormals(mesh.polygons, mesh.vertices);
@@ -482,26 +481,9 @@ public class HelloController {
         handlePositionChange("z");
     }
 
-    @FXML
-    private void applyPointOfDir() {
-        handlePointToDirChange("x");
-        handlePointToDirChange("y");
-        handlePointToDirChange("z");
-    }
-
-
     private void handlePositionChange(String axis) {
         try {
             float value = Float.parseFloat(getTextFieldValue(axis + "Position"));
-            updateCamPosition(axis, value);
-        } catch (NumberFormatException e) {
-            showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
-        }
-    }
-
-    private void handlePointToDirChange(String axis) {
-        try {
-            float value = Float.parseFloat(getTextFieldValue(axis + "PointToDir"));
             updateCamPosition(axis, value);
         } catch (NumberFormatException e) {
             showErrorAlert("Предупреждение", "Пустое поле координаты (или неверное)");
@@ -545,13 +527,6 @@ public class HelloController {
             case "zPosition":
                 return positionZ.getText();
 
-            case "xPointToDir":
-                return pointOfDirX.getText();
-            case "yPointToDir":
-                return pointOfDirY.getText();
-            case "zPointToDir":
-                return pointOfDirZ.getText();
-
             case "xScale":
                 return scaleX.getText();
             case "yScale":
@@ -578,22 +553,6 @@ public class HelloController {
         }
     }
 
-    private void updateModelPosition(String axis, float value) {
-        switch (axis) {
-            case "x":
-                //mesh.translate(new Vector3f(value, 0, 0));
-                break;
-            case "y":
-                //mesh.translate(new Vector3f(0, value, 0));
-                break;
-            case "z":
-                //mesh.translate(new Vector3f(0, 0, value));
-                break;
-        }
-        // Обновить отображение вашей модели на канвасе
-        //renderScene();
-    }
-
     private void updateCamPosition(String axis, float value) {
         switch (axis) {
             case "x":
@@ -606,11 +565,8 @@ public class HelloController {
                 cameraManager.getActiveCamera().setPosition(new Vector3f(0, 0, value));
                 break;
         }
-        // Обновить отображение вашей камеры на канвасе
-        //renderScene();
     }
 
-    //////////
     private void updateScale(String axis, float value) {
         switch (axis) {
             case "x":
@@ -626,8 +582,6 @@ public class HelloController {
                 AffineTransformations.applyScale(mesh);
                 break;
         }
-        // Обновить отображение вашей модели на канвасе
-        //renderScene();
     }
 
     private void updateRotation(String axis, float value) {
@@ -645,8 +599,6 @@ public class HelloController {
                 AffineTransformations.applyRotationX(mesh);
                 break;
         }
-        // Обновить отображение вашей модели на канвасе
-        //renderScene();
     }
 
     private void updateTranslation(String axis, float value) {
@@ -664,8 +616,6 @@ public class HelloController {
                 AffineTransformations.applyTranslationX(mesh);
                 break;
         }
-        // Обновить отображение вашей модели на канвасе
-        //renderScene();
     }
 
     @FXML
@@ -700,14 +650,15 @@ public class HelloController {
         Button addTextureButton = new Button("Добавить текстуру");
         Button deleteTextureButton = new Button("Удалить текстуру");
 
-
         int currentModelIndex = hboxesMod.size();
 
         modelButton.setOnAction(e -> selectActiveModel(currentModelIndex));
         saveObjModInFileButton.setOnAction(e -> saveModelToFile(mesh));
         deleteModButton.setOnAction(e -> removeHBoxMod(hboxMod));
         addTextureButton.setOnAction(e -> addTexture());
-
+        deleteTextureButton.setOnAction(e -> {
+            mesh.texture = null;
+        });
         hboxMod.getChildren().addAll(modelButton, saveObjModInFileButton, deleteModButton, addTextureButton, deleteTextureButton);
 
         windowIsCalled = false;
@@ -727,7 +678,7 @@ public class HelloController {
         translateX.setText("0.0");
         translateY.setText("0.0");
         translateZ.setText("0.0");
-        /////
+
     }
 
     private void selectActiveModel(int modelIndex) {
@@ -740,7 +691,6 @@ public class HelloController {
         }
     }
 
-
     private void addTexture() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Texture (*.png)", "*.png", "*.jpg"));
@@ -751,10 +701,10 @@ public class HelloController {
         }
 
         try {
-            // Загружаем изображение из файла
             Image texture = new Image(file.toURI().toString());
             // Устанавливаем текстуру для модели
             if (activeModelIndex != -1) {
+
                 meshes.get(activeModelIndex).texture = texture;
             }
         } catch (Exception exception) {
@@ -780,7 +730,9 @@ public class HelloController {
 
     private void removeHBoxMod(HBox hboxMod) {
         ModelContainer containerToRemove = null;
+        int flag = -1;
         for (ModelContainer container : modelContainers) {
+            flag++;
             if (container.hbox == hboxMod) {
                 containerToRemove = container;
                 break;
@@ -800,6 +752,9 @@ public class HelloController {
             translateZ.setText("");
 
             modelCounter--;
+            if (modelCounter == 0 || flag == activeModelIndex) {
+                activeModelIndex = -1;
+            }
             modelContainers.remove(containerToRemove);
             hboxesMod.remove(hboxMod);
             vboxModel.getChildren().remove(hboxMod);
@@ -836,18 +791,16 @@ public class HelloController {
                 1.0F, 1, 0.01F, 100);
         cameraManager.addCamera(camera);
 
-        int cameraIndex = cameraManager.getCameras().size() - 1; // Индекс только что добавленной камеры
+        int cameraIndex = cameraManager.getCameras().size() - 1;
 
         Button camButton = new Button("Камера " + cameraCounter);
         Button deleteCamButton = new Button("Удалить");
 
-        // Обработчик переключения на текущую камеру
         camButton.setOnAction(e -> {
             cameraManager.setActiveCamera(cameraIndex);
             renderScene();
         });
 
-        // Обработчик удаления камеры
         deleteCamButton.setOnAction(e -> {
             removeHBoxCam(hboxCam);
             cameraManager.removeCamera(cameraIndex);
@@ -867,9 +820,6 @@ public class HelloController {
         positionX.setText("");
         positionX.setText("");
 
-        pointOfDirX.setText("");
-        pointOfDirX.setText("");
-        pointOfDirX.setText("");
         hboxesCam.remove(hboxCam);
         vboxCamera.getChildren().remove(hboxCam);
     }
@@ -1015,27 +965,6 @@ public class HelloController {
         cameraManager.getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
-    private void showSuccessAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
-    private void showErrorAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.showAndWait();
-    }
-
     @FXML
     private void handleApplyTransformations(ActionEvent event) {
         try {
@@ -1147,44 +1076,6 @@ public class HelloController {
         mesh.setRotation(new Vector3f(rotation.x(), rotation.y(), rotation.z() + ROTATION));
         updateTransformFields(mesh);
     }
-
-    //    @FXML
-//    public void handleModelTranslateX(ActionEvent actionEvent) {
-//        hothandleTranslateChange("x");
-//    }
-//
-//    @FXML
-//    public void handleModelTranslateXNegative(ActionEvent actionEvent) {
-//        NhothandleTranslateChange("x");
-//    }
-//
-//    @FXML
-//    public void handleModelTranslateY(ActionEvent actionEvent) {
-//        hothandleTranslateChange("y");
-//    }
-//
-//    @FXML
-//    public void handleModelTranslateYNegative(ActionEvent actionEvent) {
-//        NhothandleTranslateChange("y");
-//    }
-//
-//    @FXML
-//    public void handleModelTranslateZ(ActionEvent actionEvent) {
-//        hothandleTranslateChange("y");
-//    }
-//
-//    @FXML
-//    public void handleModelTranslateZNegative(ActionEvent actionEvent) {
-//        NhothandleTranslateChange("y");
-//    }
-//    private void hothandleTranslateChange(String axis) {
-//        updateTranslation(axis, TRANSLATION);
-//        updateTransformFields(mesh);
-//    }
-//    private void NhothandleTranslateChange(String axis) {
-//        updateTranslation(axis, -TRANSLATION);
-//        updateTransformFields(mesh);
-//    }
     @FXML
     private Button startButton;
 
@@ -1265,4 +1156,107 @@ public class HelloController {
         updateTransformFields(mesh);
     }
 
+    private void handleRemoveVerticesButtonClick(ActionEvent event) {
+        if (activeModelIndex != -1) {
+            Model activeModel = meshes.get(activeModelIndex);
+            for (int vertexIndex : selectedVertices) {
+                activeModel.removeVertexAndUpdatePolygons(vertexIndex);
+            }
+            selectedVertices.clear();
+            renderScene();
+        }
+    }
+
+    @FXML
+    private void handleRemovePolygonsButtonClick(ActionEvent event) {
+        if (activeModelIndex != -1) {
+            Model activeModel = meshes.get(activeModelIndex);
+            for (int polygonIndex : selectedPolygons) {
+                activeModel.removePolygon(polygonIndex);
+            }
+            selectedPolygons.clear();
+            renderScene();
+        }
+    }
+
+    @FXML
+    private void handleMouseClicked(MouseEvent event) {
+        if (isPolygonalGridEnabled) {
+            double x = event.getX();
+            double y = event.getY();
+            selectVertexOrPolygon(x, y);
+        }
+    }
+
+    private void selectVertexOrPolygon(double x, double y) {
+        Camera activeCamera = cameraManager.getActiveCamera();
+        if (activeCamera != null) {
+            for (ModelContainer container : modelContainers) {
+                Model mesh = container.mesh;
+                Matrix4f modelMatrix = GraphicConveyor.rotateScaleTranslate();
+                Matrix4f viewMatrix = activeCamera.getViewMatrix();
+                Matrix4f projectionMatrix = activeCamera.getProjectionMatrix();
+
+                Matrix4f modelViewProjectionMatrix = new Matrix4f(modelMatrix);
+                modelViewProjectionMatrix.mul(viewMatrix);
+                modelViewProjectionMatrix.mul(projectionMatrix);
+
+                for (int i = 0; i < mesh.vertices.size(); i++) {
+                    Vector3f vertex = mesh.vertices.get(i);
+                    Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+                    Point2f screenPoint = vertexToPoint(transformedVertex, (int) canvas.getWidth(), (int) canvas.getHeight());
+
+                    if (isPointInsideCircle(x, y, screenPoint.x, screenPoint.y, 5)) {
+                        if (!selectedVertices.contains(i)) {
+                            selectedVertices.add(i);
+                        }
+                        break;
+                    }
+                }
+
+                for (int j = 0; j < mesh.polygons.size(); j++) {
+                    Polygon polygon = mesh.polygons.get(j);
+                    if (isPointInsidePolygon(x, y, polygon, modelViewProjectionMatrix, (int) canvas.getWidth(), (int) canvas.getHeight())) {
+                        if (!selectedPolygons.contains(j)) {
+                            selectedPolygons.add(j);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isPointInsideCircle(double x, double y, double cx, double cy, double radius) {
+        return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius * radius;
+    }
+
+    private boolean isPointInsidePolygon(double x, double y, Polygon polygon, Matrix4f modelViewProjectionMatrix, int width, int height) {
+        List<Vector3f> vertices = new ArrayList<>();
+        for (int vertexIndex : polygon.getVertexIndices()) {
+            Vector3f vertex = mesh.vertices.get(vertexIndex);
+            Vector3f transformedVertex = multiplyMatrix4ByVector3(modelViewProjectionMatrix, vertex);
+            vertices.add(transformedVertex);
+        }
+
+        List<Point2f> screenPoints = new ArrayList<>();
+        for (Vector3f vertex : vertices) {
+            screenPoints.add(vertexToPoint(vertex, width, height));
+        }
+
+        // Проверка, находится ли точка внутри полигона
+        return isPointInPolygon(x, y, screenPoints);
+    }
+
+    private boolean isPointInPolygon(double x, double y, List<Point2f> polygon) {
+        boolean inside = false;
+        int n = polygon.size();
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            if (((polygon.get(i).y > y) != (polygon.get(j).y > y)) &&
+                    (x < (polygon.get(j).x - polygon.get(i).x) * (y - polygon.get(i).y) / (polygon.get(j).y - polygon.get(i).y) + polygon.get(i).x)) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
 }
