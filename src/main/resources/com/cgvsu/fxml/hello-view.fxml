@@ -50,62 +50,62 @@
                <Menu mnemonicParsing="false" text="Transform">
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleX" text="Scale(X)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="Q"/>
+                        <KeyCodeCombination alt="UP" code="Q" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleXNegative" text="Scale(-X)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="W"/>
+                        <KeyCodeCombination alt="UP" code="W" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleY" text="Scale(Y)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="A"/>
+                        <KeyCodeCombination alt="UP" code="A" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleYNegative" text="Scale(-Y)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="S"/>
+                        <KeyCodeCombination alt="UP" code="S" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleZ" text="Scale(Z)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="Z"/>
+                        <KeyCodeCombination alt="UP" code="Z" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelScaleZNegative" text="Scale(-Z)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="X"/>
+                        <KeyCodeCombination alt="UP" code="X" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateX" text="Rotate(X)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="E"/>
+                        <KeyCodeCombination alt="UP" code="E" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateXNegative" text="Rotate(-X)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="R"/>
+                        <KeyCodeCombination alt="UP" code="R" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateY" text="Rotate(Y)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="D"/>
+                        <KeyCodeCombination alt="UP" code="D" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateYNegative" text="Rotate(-Y)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="F"/>
+                        <KeyCodeCombination alt="UP" code="F" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateZ" text="Rotate(Z)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="C"/>
+                        <KeyCodeCombination alt="UP" code="C" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#handleModelRotateZNegative" text="Rotate(-Z)">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="DOWN" shortcut="UP" code="V"/>
+                        <KeyCodeCombination alt="UP" code="V" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                </Menu>
@@ -113,7 +113,7 @@
          </children>
       </AnchorPane>
    </SplitPane>
-   <SplitPane dividerPositions="0.1828998339789706" layoutX="1015.0" layoutY="-0.8" orientation="VERTICAL" prefHeight="726.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
+   <SplitPane dividerPositions="0.014111787493082452" layoutX="1015.0" layoutY="-0.8" orientation="VERTICAL" prefHeight="726.0" prefWidth="523.0" AnchorPane.bottomAnchor="1.0" AnchorPane.topAnchor="1.0">
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="605.0" prefWidth="522.0" styleClass="theme-element">
          <Label layoutX="14.0" layoutY="14.0" prefHeight="18.0" prefWidth="62.0" styleClass="theme-element" text="Объекты" AnchorPane.topAnchor="15.0" />
 
@@ -177,39 +177,39 @@
                </AnchorPane>
       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="447.0" prefWidth="522.0" styleClass="theme-element">
          <children>
-            <TitledPane layoutX="14.0" layoutY="14.0" prefHeight="730.0" prefWidth="226.0" text="Взаимодействие с моделью">
+            <TitledPane layoutX="14.0" layoutY="14.0" prefHeight="648.0" prefWidth="226.0" text="Взаимодействие с моделью">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="441.0" prefWidth="225.0" styleClass="theme-element">
                      <children>
                         <Label layoutX="17.0" layoutY="20.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Масштаб выбранной модели" />
-                        <Label layoutX="17.0" layoutY="335.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Позиция выбранной модели" />
-                        <Label layoutX="13.0" layoutY="173.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Вращение выбранной модели" />
+                        <Label layoutX="13.0" layoutY="256.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Позиция выбранной модели" />
+                        <Label layoutX="13.0" layoutY="135.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="Вращение выбранной модели" />
                         <Label layoutX="17.0" layoutY="46.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
                         <Label layoutX="17.0" layoutY="74.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
                         <Label layoutX="17.0" layoutY="102.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
                         <TextField fx:id="scaleX" layoutX="51.0" layoutY="40.0" promptText="Введите координаты" />
                         <TextField fx:id="scaleY" layoutX="51.0" layoutY="67.0" promptText="Введите координаты" />
                         <TextField fx:id="scaleZ" layoutX="51.0" layoutY="95.0" promptText="Введите координаты" />
-                        <Label layoutX="16.0" layoutY="201.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
-                        <Label layoutX="16.0" layoutY="229.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
-                        <Label layoutX="16.0" layoutY="257.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
-                        <TextField fx:id="rotateX" layoutX="50.0" layoutY="195.0" promptText="Введите координаты" />
-                        <TextField fx:id="rotateY" layoutX="50.0" layoutY="222.0" promptText="Введите координаты" />
-                        <TextField fx:id="rotateZ" layoutX="50.0" layoutY="250.0" promptText="Введите координаты" />
-                        <Label layoutX="17.0" layoutY="367.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
-                        <Label layoutX="17.0" layoutY="395.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
-                        <Label layoutX="17.0" layoutY="423.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
-                        <TextField fx:id="translateX" layoutX="51.0" layoutY="361.0" promptText="Введите координаты" />
-                        <TextField fx:id="translateY" layoutX="51.0" layoutY="388.0" promptText="Введите координаты" />
-                        <TextField fx:id="translateZ" layoutX="51.0" layoutY="416.0" promptText="Введите координаты" />
-                        <Button layoutX="70.0" layoutY="449.0" mnemonicParsing="false" onAction="#handleApplyTransformations" text="Применить" />
-                        <Label layoutX="17.0" layoutY="480.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (scale)" />
-                        <TextField fx:id="randomX1" layoutX="17.0" layoutY="500.0" />
-                        <Label layoutX="17.0" layoutY="530.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (rotation)" />
-                        <TextField fx:id="randomY1" layoutX="17.0" layoutY="550.0" />
-                        <Label layoutX="17.0" layoutY="580.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (translate)" />
-                        <TextField fx:id="randomZ1" layoutX="17.0" layoutY="600.0" />
-                        <Button layoutX="70.0" layoutY="650.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Применить" fx:id="startButton" />
+                        <Label layoutX="16.0" layoutY="163.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                        <Label layoutX="16.0" layoutY="191.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                        <Label layoutX="16.0" layoutY="219.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                        <TextField fx:id="rotateX" layoutX="50.0" layoutY="157.0" promptText="Введите координаты" />
+                        <TextField fx:id="rotateY" layoutX="50.0" layoutY="184.0" promptText="Введите координаты" />
+                        <TextField fx:id="rotateZ" layoutX="50.0" layoutY="212.0" promptText="Введите координаты" />
+                        <Label layoutX="13.0" layoutY="288.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="X:" />
+                        <Label layoutX="13.0" layoutY="316.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Y:" />
+                        <Label layoutX="13.0" layoutY="344.0" prefHeight="18.0" prefWidth="19.0" styleClass="theme-element" text="Z:" />
+                        <TextField fx:id="translateX" layoutX="47.0" layoutY="282.0" promptText="Введите координаты" />
+                        <TextField fx:id="translateY" layoutX="47.0" layoutY="309.0" promptText="Введите координаты" />
+                        <TextField fx:id="translateZ" layoutX="47.0" layoutY="337.0" promptText="Введите координаты" />
+                        <Button layoutX="66.0" layoutY="370.0" mnemonicParsing="false" onAction="#handleApplyTransformations" text="Применить" />
+                        <Label layoutX="17.0" layoutY="417.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (scale)" />
+                        <TextField fx:id="randomX1" layoutX="17.0" layoutY="437.0" />
+                        <Label layoutX="17.0" layoutY="467.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (rotation)" />
+                        <TextField fx:id="randomY1" layoutX="17.0" layoutY="487.0" />
+                        <Label layoutX="17.0" layoutY="517.0" prefHeight="18.0" prefWidth="192.0" styleClass="theme-element" text="От и до (translate)" />
+                        <TextField fx:id="randomZ1" layoutX="17.0" layoutY="537.0" />
+                        <Button fx:id="startButton" layoutX="70.0" layoutY="587.0" mnemonicParsing="false" onAction="#handleButtonAction" text="Применить" />
                      </children>
                   </AnchorPane>
               </content>

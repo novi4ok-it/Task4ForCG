@@ -982,9 +982,10 @@ public class HelloController {
             float rotateY = Float.parseFloat(this.rotateY.getText());
             float rotateZ = Float.parseFloat(this.rotateZ.getText());
 
-            mesh.setScale(new Vector3f(scaleX, scaleY, scaleZ));
-            mesh.setRotation(new Vector3f(rotateX, rotateY, rotateZ));
-
+            if (activeModelIndex != -1) {
+                meshes.get(activeModelIndex).setScale(new Vector3f(scaleX, scaleY, scaleZ));
+                meshes.get(activeModelIndex).setRotation(new Vector3f(rotateX, rotateY, rotateZ));
+            }
 
             timeline.playFromStart();
         } catch (NumberFormatException e) {
@@ -1152,6 +1153,7 @@ public class HelloController {
         int randomScaleY = (int) (random.nextInt((int) (r2y - r1y + 1)) + r1y);
         int randomScaleZ = (int) (random.nextInt((int) (0 - 0 + 1)) + 0);
         mesh.setTranslation(new Vector3f(randomScaleX, randomScaleY, randomScaleZ));
+        AffineTransformations.applyTranslationX(mesh);
         updateTransformFields(mesh);
     }
     @FXML
